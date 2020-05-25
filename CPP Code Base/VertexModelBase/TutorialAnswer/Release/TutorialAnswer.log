@@ -1,0 +1,25 @@
+﻿Build started 2/13/2020 12:20:22 PM.
+     1>Project "C:\Users\abmondal\Desktop\CPP Code Base\VertexModelBase\TutorialAnswer\TutorialAnswer.vcxproj" on node 3 (Build target(s)).
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 13.0\VC\bin\CL.exe /c /Zi /nologo /W3 /WX- /sdl /O2 /Oi /Oy- /GL /D _MBCS /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Release\\" /Fd"Release\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt MainTutorial2.cpp PerimCell_Tutorial2.cpp PerimEdge_Tutorial2.cpp
+         MainTutorial2.cpp
+         PerimCell_Tutorial2.cpp
+         PerimEdge_Tutorial2.cpp
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 13.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\abmondal\Desktop\CPP Code Base\VertexModelBase\Release\TutorialAnswer.exe" /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\abmondal\Desktop\CPP Code Base\VertexModelBase\Release\TutorialAnswer.pdb" /OPT:REF /OPT:ICF /LTCG /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\abmondal\Desktop\CPP Code Base\VertexModelBase\Release\TutorialAnswer.lib" /MACHINE:X86 /SAFESEH Release\CellClass.obj
+         Release\EdgeClass.obj
+         Release\TissueClass.obj
+         Release\VectClass.obj
+         Release\VertexClass.obj
+         Release\MainTutorial2.obj
+         Release\PerimCell_Tutorial2.obj
+         Release\PerimEdge_Tutorial2.obj
+     1>MainTutorial2.obj : error LNK2001: unresolved external symbol "public: virtual void __thiscall Tissue_Perim::HelperReadInputData_CreateObjects(class std::basic_ifstream<char,struct std::char_traits<char> > *)" (?HelperReadInputData_CreateObjects@Tissue_Perim@@UAEXPAV?$basic_ifstream@DU?$char_traits@D@std@@@std@@@Z)
+     1>MainTutorial2.obj : error LNK2001: unresolved external symbol "public: virtual void __thiscall Tissue_Perim::HelperReadInputData_SetGlobalValues(class std::basic_ifstream<char,struct std::char_traits<char> > *)" (?HelperReadInputData_SetGlobalValues@Tissue_Perim@@UAEXPAV?$basic_ifstream@DU?$char_traits@D@std@@@std@@@Z)
+     1>MainTutorial2.obj : error LNK2001: unresolved external symbol "public: virtual bool __thiscall Tissue_Perim::ReadInputData(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> >)" (?ReadInputData@Tissue_Perim@@UAE_NV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z)
+     1>C:\Users\abmondal\Desktop\CPP Code Base\VertexModelBase\Release\TutorialAnswer.exe : fatal error LNK1120: 3 unresolved externals
+     1>Done Building Project "C:\Users\abmondal\Desktop\CPP Code Base\VertexModelBase\TutorialAnswer\TutorialAnswer.vcxproj" (Build target(s)) -- FAILED.
+
+Build FAILED.
+
+Time Elapsed 00:00:01.82

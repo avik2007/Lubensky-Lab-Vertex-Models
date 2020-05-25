@@ -1,0 +1,135 @@
+INTEGRATORNAME	Euiler
+CURRENTTIME	10.001
+Global:
+SEED	5
+TIMEINTERVAL	1
+LX	-1.#IND
+LY	-1.#IND
+MINAREA	0
+MINLENGTH	1
+NEWEDGELENGTH	5
+K	5e-006
+GAMMA	20
+TOTALTIME	10
+INITIALSTEPSIZE	0.001
+error_tolerance_absolute_mechanical	0.2
+TISSUE_ALPHA	50
+TISSUE_EXT_STRESS_X	0
+TISSUE_EXT_STRESS_Y	0
+endGlobal
+Vertices
+id	x	y	_EdgesNumber
+Edges
+id	vertex1	vertex2	xflag	yflag	tension	_cell1	_cell2
+Cells
+id	A0	EdgeNumb	Type	_xflag	_yflag	_Area	_Pressure	_Center_x	_Center_y	EdgeList	_CWVertices
+End
+
+INTEGRATORNAME	Euiler
+CURRENTTIME	10.002
+Global:
+SEED	5
+TIMEINTERVAL	1
+LX	-1.#IND
+LY	-1.#IND
+MINAREA	0
+MINLENGTH	1
+NEWEDGELENGTH	5
+K	5e-006
+GAMMA	20
+TOTALTIME	10
+INITIALSTEPSIZE	0.001
+error_tolerance_absolute_mechanical	0.2
+TISSUE_ALPHA	50
+TISSUE_EXT_STRESS_X	0
+TISSUE_EXT_STRESS_Y	0
+endGlobal
+Vertices
+id	x	y	_EdgesNumber
+Edges
+id	vertex1	vertex2	xflag	yflag	tension	_cell1	_cell2
+Cells
+id	A0	EdgeNumb	Type	_xflag	_yflag	_Area	_Pressure	_Center_x	_Center_y	EdgeList	_CWVertices
+End
+
+INTEGRATORNAME	Euiler
+CURRENTTIME	10.003
+Global:
+SEED	5
+TIMEINTERVAL	1
+LX	-1.#IND
+LY	-1.#IND
+MINAREA	0
+MINLENGTH	1
+NEWEDGELENGTH	5
+K	5e-006
+GAMMA	20
+TOTALTIME	10
+INITIALSTEPSIZE	0.001
+error_tolerance_absolute_mechanical	0.2
+TISSUE_ALPHA	50
+TISSUE_EXT_STRESS_X	0
+TISSUE_EXT_STRESS_Y	0
+endGlobal
+Vertices
+id	x	y	_EdgesNumber
+Edges
+id	vertex1	vertex2	xflag	yflag	tension	_cell1	_cell2
+Cells
+id	A0	EdgeNumb	Type	_xflag	_yflag	_Area	_Pressure	_Center_x	_Center_y	EdgeList	_CWVertices
+End
+
+INTEGRATORNAME	Euiler
+CURRENTTIME	10.004
+Global:
+SEED	5
+TIMEINTERVAL	1
+LX	-1.#IND
+LY	-1.#IND
+MINAREA	0
+MINLENGTH	1
+NEWEDGELENGTH	5
+K	5e-006
+GAMMA	20
+TOTALTIME	10
+INITIALSTEPSIZE	0.001
+error_tolerance_absolute_mechanical	0.2
+TISSUE_ALPHA	50
+TISSUE_EXT_STRESS_X	0
+TISSUE_EXT_STRESS_Y	0
+endGlobal
+Vertices
+id	x	y	_EdgesNumber
+Edges
+id	vertex1	vertex2	xflag	yflag	tension	_cell1	_cell2
+Cells
+id	A0	EdgeNumb	Type	_xflag	_yflag	_Area	_Pressure	_Center_x	_Center_y	EdgeList	_CWVertices
+End
+
+INTEGRATORNAME	Euiler
+CURRENTTIME	10.005
+Global:
+SEED	5
+TIMEINTERVAL	1
+LX	-1.#IND
+LY	-1.#IND
+MINAREA	0
+MINLENGTH	1
+NEWEDGELENGTH	5
+K	5e-006
+GAMMA	20
+TOTALTIME	10
+INITIALSTEPSIZE	0.001
+error_tolerance_absolute_mechanical	0.2
+TISSUE_ALPHA	50
+TISSUE_EXT_STRESS_X	0
+TISSUE_EXT_STRESS_Y	0
+endGlobal
+Vertices
+id	x	y	_EdgesNumber
+Edges
+id	vertex1	vertex2	xflag	yflag	tension	_cell1	_cell2
+Cells
+id	A0	EdgeNumb	Type	_xflag	_yflag	_Area	_Pressure	_Center_x	_Center_y	EdgeList	_CWVertices
+End
+

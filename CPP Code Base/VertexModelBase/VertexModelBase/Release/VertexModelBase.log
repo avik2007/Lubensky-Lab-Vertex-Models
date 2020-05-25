@@ -1,0 +1,108 @@
+﻿Build started 3/17/2020 6:13:14 PM.
+     1>Project "C:\Users\abmondal\Desktop\CPP Code Base\VertexModelBase\VertexModelBase\VertexModelBase.vcxproj" on node 2 (Build target(s)).
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 13.0\VC\bin\CL.exe /c /Zi /nologo /W3 /WX- /sdl /O2 /Oi /Oy- /GL /D WIN32 /D NDEBUG /D _CONSOLE /D _LIB /D _UNICODE /D UNICODE /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Release\\" /Fd"Release\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt ..\..\CellClass.cpp ..\..\TissueClass.cpp
+         CellClass.cpp
+     1>..\..\CellClass.cpp(41): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\CellClass.cpp(48): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\CellClass.cpp(64): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\CellClass.cpp(77): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\CellClass.cpp(96): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\CellClass.cpp(155): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\CellClass.cpp(199): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\CellClass.cpp(205): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\CellClass.cpp(246): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\CellClass.cpp(252): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\CellClass.cpp(287): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\CellClass.cpp(291): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\CellClass.cpp(323): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\CellClass.cpp(327): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\CellClass.cpp(339): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\CellClass.cpp(343): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\CellClass.cpp(344): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\CellClass.cpp(347): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\CellClass.cpp(348): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\CellClass.cpp(353): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\CellClass.cpp(357): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\CellClass.cpp(358): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\CellClass.cpp(361): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\CellClass.cpp(362): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\CellClass.cpp(374): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\CellClass.cpp(403): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\CellClass.cpp(418): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\CellClass.cpp(450): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\CellClass.cpp(459): warning C4101: 'i' : unreferenced local variable
+     1>..\..\CellClass.cpp(459): warning C4101: 'j' : unreferenced local variable
+     1>..\..\CellClass.cpp(491): warning C4101: 'i' : unreferenced local variable
+     1>..\..\CellClass.cpp(491): warning C4101: 'j' : unreferenced local variable
+     1>..\..\CellClass.cpp(566): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\CellClass.cpp(582): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\CellClass.cpp(749): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\CellClass.cpp(777): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\CellClass.cpp(1157): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\CellClass.cpp(1100): warning C4101: 'minx' : unreferenced local variable
+     1>..\..\CellClass.cpp(1100): warning C4101: 'maxx' : unreferenced local variable
+     1>..\..\CellClass.cpp(1218): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\CellClass.cpp(1166): warning C4101: 'miny' : unreferenced local variable
+     1>..\..\CellClass.cpp(1166): warning C4101: 'maxy' : unreferenced local variable
+         TissueClass.cpp
+     1>..\..\TissueClass.cpp(190): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\TissueClass.cpp(155): warning C4101: 'carea' : unreferenced local variable
+     1>..\..\TissueClass.cpp(246): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\TissueClass.cpp(303): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\TissueClass.cpp(334): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\TissueClass.cpp(409): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\TissueClass.cpp(388): warning C4101: 'cellnumber' : unreferenced local variable
+     1>..\..\TissueClass.cpp(654): warning C4101: 'flag0' : unreferenced local variable
+     1>..\..\TissueClass.cpp(742): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\TissueClass.cpp(753): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\TissueClass.cpp(767): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\TissueClass.cpp(722): warning C4101: 'cptr' : unreferenced local variable
+     1>..\..\TissueClass.cpp(805): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\TissueClass.cpp(816): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\TissueClass.cpp(830): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\TissueClass.cpp(785): warning C4101: 'cptr' : unreferenced local variable
+     1>..\..\TissueClass.cpp(891): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\TissueClass.cpp(896): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\TissueClass.cpp(912): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\TissueClass.cpp(933): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\TissueClass.cpp(939): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\TissueClass.cpp(976): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\TissueClass.cpp(978): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\TissueClass.cpp(982): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\TissueClass.cpp(984): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\TissueClass.cpp(1003): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\TissueClass.cpp(1012): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\TissueClass.cpp(1025): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\TissueClass.cpp(1034): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\TissueClass.cpp(962): warning C4101: 'u' : unreferenced local variable
+     1>..\..\TissueClass.cpp(1124): warning C4244: '=' : conversion from 'double' to 'int', possible loss of data
+     1>..\..\TissueClass.cpp(1255): warning C4800: 'int' : forcing value to bool 'true' or 'false' (performance warning)
+     1>..\..\TissueClass.cpp(1256): warning C4800: 'int' : forcing value to bool 'true' or 'false' (performance warning)
+     1>..\..\TissueClass.cpp(1429): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\TissueClass.cpp(1463): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\TissueClass.cpp(1470): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\TissueClass.cpp(1378): warning C4101: 'rawtime' : unreferenced local variable
+     1>..\..\TissueClass.cpp(1379): warning C4101: 'timeinfo' : unreferenced local variable
+     1>..\..\TissueClass.cpp(1529): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\TissueClass.cpp(1774): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\TissueClass.cpp(1788): warning C4018: '<' : signed/unsigned mismatch
+     1>..\..\TissueClass.cpp(2032): warning C4101: 'newx' : unreferenced local variable
+     1>..\..\TissueClass.cpp(2032): warning C4101: 'newy' : unreferenced local variable
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 13.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\abmondal\Desktop\CPP Code Base\VertexModelBase\Release\VertexModelBase.exe" /INCREMENTAL:NO /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\abmondal\Desktop\CPP Code Base\VertexModelBase\Release\VertexModelBase.pdb" /SUBSYSTEM:CONSOLE /OPT:REF /OPT:ICF /LTCG /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\abmondal\Desktop\CPP Code Base\VertexModelBase\Release\VertexModelBase.lib" /MACHINE:X86 /SAFESEH Release\CellClass.obj
+         Release\EdgeClass.obj
+         Release\MainBase.obj
+         Release\TissueClass.obj
+         Release\VectClass.obj
+         Release\VertexClass.obj
+         Generating code
+     1>c:\users\abmondal\desktop\cpp code base\vertexclass.cpp(140): warning C4715: 'Vertex::GetEdgeBetween' : not all control paths return a value
+     1>c:\users\abmondal\desktop\cpp code base\tissueclass.cpp(99): warning C4715: 'Tissue::CreateEdge' : not all control paths return a value
+         Finished generating code
+         VertexModelBase.vcxproj -> C:\Users\abmondal\Desktop\CPP Code Base\VertexModelBase\Release\VertexModelBase.exe
+     1>Done Building Project "C:\Users\abmondal\Desktop\CPP Code Base\VertexModelBase\VertexModelBase\VertexModelBase.vcxproj" (Build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:03.10
