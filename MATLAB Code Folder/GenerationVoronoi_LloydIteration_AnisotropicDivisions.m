@@ -4,9 +4,11 @@ function GenerationVoronoi_LloydIteration_AnisotropicDivisions(r,NbPoints,limit,
 %NbPoints = 10000; %number of cells 
 %limit = 1000; %number of iterations 
 
-%% Generation of a series of points
+%% Store data in the right folder
 close all;
-
+% this is going to need to change 
+addpath(cd);
+cd('..\MATLAB Data Folder');
 %% Parameters
 rng(r);
 Mesh = 250 * sqrt(2) * sqrt(NbPoints / 100);
@@ -57,6 +59,7 @@ T1ON = 1; %boolean, tells code if T1's are turned on
 APOPTOSISON = 1;%boolean, tells code if Apoptosis is turned on
 MITOSISON = 1;% boolean, teslls code if mitosis is turned on
 SIMTIMERES = 10; %picks how often the simulation writes to the outputfile
+
 nomfichier= strcat('LNbC_','NbPts_', num2str(NbPoints,'%4d'), '_rng_', num2str(r,'%4d'),'_pot_', potential, '_lim_', num2str(limit, '%2d'), '.txt');
 
 %%

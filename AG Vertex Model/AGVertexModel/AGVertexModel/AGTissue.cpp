@@ -132,15 +132,15 @@ void AGTissue::HelperReadInputData_SetGlobalValues(ifstream* datafile){
 	else if (globals.count("TISSUE_EXT_STRESS_Y") == 0){ cout << "WARNING: TISSUE_EXT_STRESS_Y is not given in input file, used default value " << TISSUE_EXT_STRESS_Y << endl; }
 	else { cout << "ERROR: Global variable TISSUE_EXT_STRESS_Y has multiple definition in input file, used default value TISSUE_EXT_STRESS_Y = " << TISSUE_EXT_STRESS_Y << endl; }
 
-	if (globals.count("MITOSISON") == 1){ MITOSISON = atof(globals["MITOSISON"].c_str()); }
+	if (globals.count("MITOSISON") == 1){ MITOSISON = (atof(globals["MITOSISON"].c_str()) > 0); }
 	else if (globals.count("MITOSISON") == 0){ cout << "WARNING: MITOSISON is not given in input file, used default value " << MITOSISON << endl; }
 	else { cout << "ERROR: Global variable MITOSISON has multiple definition in input file, used default value MITOSISON = " << MITOSISON << endl; }
 
-	if (globals.count("T1ON") == 1){ T1ON = atof(globals["T1ON"].c_str()); }
+	if (globals.count("T1ON") == 1){ T1ON = (atof(globals["T1ON"].c_str()) > 0); }
 	else if (globals.count("T1ON") == 0){ cout << "WARNING: T1ON is not given in input file, used default value " << T1ON << endl; }
 	else { cout << "ERROR: Global variable T1ON has multiple definition in input file, used default value T1ON = " << T1ON << endl; }
 
-	if (globals.count("APOPTOSISON") == 1){ APOPTOSISON = atof(globals["APOPTOSISON"].c_str()); }
+	if (globals.count("APOPTOSISON") == 1){ APOPTOSISON = (atof(globals["APOPTOSISON"].c_str()) > 0); }
 	else if (globals.count("APOPTOSISON") == 0){ cout << "WARNING: APOPTOSISON is not given in input file, used default value " << APOPTOSISON << endl; }
 	else { cout << "ERROR: Global variable APOPTOSISON has multiple definition in input file, used default value APOPTOSISON = " << APOPTOSISON << endl; }
 
@@ -1091,16 +1091,16 @@ void AGTissue::Evolve(double interval, double *stepsize, ofstream* errorfile)
 
 		//STEP 4: look for topological changes and set flags if any have occured 
 
-		if (APOPTOSISON > 0) flag1 = (*this).Apoptosis(errorfile);
+		if (APOPTOSISON) flag1 = (*this).Apoptosis(errorfile);
 
-		if (T1ON > 0)  flag2 = (*this).T1(errorfile);
+		if (T1ON)  flag2 = (*this).T1(errorfile);
 
 		flag3 = (*this).ResolveVertices(errorfile);
 
 		double timeratio = CURRENTTIME / TAU_STRESS;
 		double floortr = floor(CURRENTTIME / TAU_STRESS);
 		// This needs a proper calculate equilibrium function
-		if (MITOSISON > 0)
+		if (MITOSISON)
 		{
 			if (CURRENTTIME > TAU_STRESS && timeratio > floortr && timeratio < floortr + 2 * INITIALSTEPSIZE)
 			{

@@ -15,9 +15,9 @@ using namespace std;
 extern double TCJSTRENGTH;
 extern double THETAAN;
 extern double ANSTRENGTH;
-extern int MITOSISON;
-extern int APOPTOSISON;
-extern int T1ON;
+extern bool MITOSISON;
+extern bool APOPTOSISON;
+extern bool T1ON;
 extern double SIMTIMERES;
 
 #endif

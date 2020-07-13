@@ -72,10 +72,11 @@ int TOTALT1 = 0;
 double THETAAN = 0;
 double ANSTRENGTH = 0;
 double TCJSTRENGTH = 0;
-int MITOSISON = 1;
-int T1ON = 1;
-int APOPTOSISON = 1;
+bool MITOSISON = true;	// 0 means off, anything else means on
+bool T1ON = true;	// 0 means off, anything else means on
+bool APOPTOSISON = true; // 0 means off, anything else means on
 double SIMTIMERES = 0;
+
 //This is the generator for random numbers to use call "distribution(generator)" 
 mt19937_64 generator;
 uniform_real_distribution<double> distribution(0.0, 1.0);
@@ -113,7 +114,7 @@ int main()
 	*/
 	
 	//Path to the folder that your initial files are in 
-	string PathName = "C:\\Users\\abmondal\\Documents\\Vertex_Model_Repository\\MATLAB Code Folder\\"; // CHANGE THIS TO MATCH YOUR FOLDER
+	string PathName = "C:\\Users\\abmondal\\Documents\\Vertex_Model_Repository\\MATLAB Data Folder\\"; // CHANGE THIS TO MATCH YOUR FOLDER
 	//string PathName = "C:\\Users\\abmondal\\Desktop\\";
 
 	cout << "Enter name of imput file: ";

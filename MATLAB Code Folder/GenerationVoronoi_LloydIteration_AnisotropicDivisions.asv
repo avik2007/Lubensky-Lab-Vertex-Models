@@ -7,6 +7,8 @@ function GenerationVoronoi_LloydIteration_AnisotropicDivisions(r,NbPoints,limit,
 %% Generation of a series of points
 close all;
 
+addpath(cd);
+cd('..\MATLAB Data Folder');
 %% Parameters
 rng(r);
 Mesh = 250 * sqrt(2) * sqrt(NbPoints / 100);
@@ -56,7 +58,8 @@ ANSTRENGTH = 50; %strength of anisotropy
 T1ON = 1; %boolean, tells code if T1's are turned on
 APOPTOSISON = 1;%boolean, tells code if Apoptosis is turned on
 MITOSISON = 1;% boolean, teslls code if mitosis is turned on
-SIMRES = 
+SIMTIMERES = 10; %picks how often the simulation writes to the outputfile
+
 nomfichier= strcat('LNbC_','NbPts_', num2str(NbPoints,'%4d'), '_rng_', num2str(r,'%4d'),'_pot_', potential, '_lim_', num2str(limit, '%2d'), '.txt');
 
 %%
@@ -207,7 +210,7 @@ fprintf(fid, 'LAMBDA\t%f\n', LAMBDA);%for use in perimeter squared model
 fprintf(fid, 'T1ON\t%d\n', T1ON);
 fprintf(fid, 'APOPTOSISON\t%d\n', APOPTOSISON); 
 fprintf(fid, 'MITOSISON\t%d\n', MITOSISON);
-fprintf(fid, 'SIMRES\t%d\n', SIMRES);
+fprintf(fid, 'SIMTIMERES\t%d\n', SIMTIMERES);
 fprintf(fid, 'endGlobal\n');
 fprintf(fid, 'Vertices\n');
 fprintf(fid, 'id\tx\ty\n');
