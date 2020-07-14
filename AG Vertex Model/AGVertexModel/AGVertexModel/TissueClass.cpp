@@ -396,7 +396,8 @@ void Tissue::ForceFunction(ofstream* errorfile){
 	Vect zerovec(0.0, 0.0);
 
 	//First loop through all the cells and find the pressure WARNING!! cell.SavedInfoForEvolve_CWVerts must already be correctly assigned
-	for (list<Cell*>::iterator cit = cells.begin(); cit != cells.end(); cit++){
+	for (list<Cell*>::iterator cit = cells.begin(); cit != cells.end(); cit++)
+	{
 		cwverts = (*(*cit)).SavedInfoForEvolve_CWVerts;							//Get the cw vertices in the cell from the preassigned list 
 		area = (*(*cit)).GetArea(cwverts);										//Get the area quickly using the pre assigned cw vertices
 		(*(*cit)).SavedInfoForEvolve_Pressure = (*(*cit)).GetPressure(area);	//Get the pressure
@@ -434,7 +435,7 @@ void Tissue::ForceFunction(ofstream* errorfile){
 	//Calculate the tissue stress
 	double GammaX = 0; 
 	double GammaY = 0; 
-	calculateexternalstress_linear(TAU_STRESS); 
+	// calculateexternalstress_linear(TAU_STRESS); 
 
 	double cutlineX = distribution(generator) * LX; //Continue to generate random numbers until you cut no concave cells
 	GammaX = TISSUE_EXT_STRESS_X + (*this).CalculateTissueStressX(cutlineX, errorfile);

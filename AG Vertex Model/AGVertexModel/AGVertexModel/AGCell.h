@@ -34,6 +34,8 @@ public:
 	double THETAAN;
 	double ANSTRENGTH;
 	string DIVISIONPOTENTIAL;
+	bool xflag;
+	bool yflag;
 //***************************************************************************************************************
 //*********** CONSTRUCTORS AND DESTRUCTORS **********************************************************************
 //***************************************************************************************************************
@@ -72,6 +74,14 @@ public:
 
 	vector<vector<double>> GetBipolarityTensor(); // uses barycentric unit vectors to calculate bipolarity tensor
 	// this is a helper for GetThetaTCJ()
+
+	bool IsCrossingX(); // checks whether a cell is crossing the X-boundary
+
+	bool IsCrossingY(); // checks whether a cell is crossing the Y-boundary
+
+	double GetdAdLx(); // gets the derivative of the cell's area w.r.t LX
+
+	double GetdAdLy(); // gets the derivative of the cell's area w.r.t. LY
 
 //************************************************************************************************************************
 //********************** Division Angle for Mitosis Functions ***********************************************************

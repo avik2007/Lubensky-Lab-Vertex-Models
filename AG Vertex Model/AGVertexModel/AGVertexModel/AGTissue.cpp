@@ -22,6 +22,8 @@
 #include "CellClass.h"
 #include "VertexClass.h"
 
+
+
 /*
 * void HelperReadInputData_SetGlobalValues(ifstream* datafile)
 *
@@ -150,6 +152,10 @@ void AGTissue::HelperReadInputData_SetGlobalValues(ifstream* datafile){
 
 
 	//******ADD MORE GLOBAL VARIABLES HERE ALSO ADD THEM TO THE CONSTANTS.H FILE AND GIVE THEM A DEFAULT VALUE IN MAIN*********************//
+
+	// setting set the initial box dimensions here
+	LX0 = LX;
+	LY0 = LY;
 }
 
  
@@ -369,9 +375,9 @@ void AGTissue::HelperReadInputData_CreateObjects(ifstream* datafile){
 		//(*cells.back()).NEWDATANAME = NEWDATA
 		//*************************************************************************//
 
-		// this is a bit out of place, but I'll also set the initial box dimensions here
-		LX0 = LX;
-		LY0 = LY;
+	
+		// again, out of place, but I will also set the tissue drag coefficient here 
+		// this 
 	}
 }
 
@@ -515,7 +521,43 @@ void AGTissue::HelperWriteOutputData_Write2File(ofstream* datafile, bool include
 		
 		*datafile << "End" << endl << endl;
 	}
+/*
+* void CountXNumberOfCrossingEdges
+*
+* counts the number of edges who cross the X-boundary
+*/
+double AGTissue::CountNumberOfXCrossingEdges()
+{
+	bool xflag;
+	int numXCrossingEdges = 0;
 
+	// find crossing edges 
+	for (list<Edge*>::iterator eit = edges.begin(); eit != edges.end(); eit++)
+	{
+		xflag = (*(*eit)).xflag;
+		if (xflag) { numXCrossingEdges++; }
+	}
+	return numXCrossingEdges;
+}
+
+/*
+* void CountYNumberOfCrossingEdges
+*
+* counts the number of edges who cross the Y-boundary
+*/
+double AGTissue::CountNumberOfYCrossingEdges()
+{
+	bool yflag;
+	int numYCrossingEdges = 0;
+
+	// find crossing edges 
+	for (list<Edge*>::iterator eit = edges.begin(); eit != edges.end(); eit++)
+	{
+		yflag = (*(*eit)).yflag;
+		if (yflag) { numYCrossingEdges++; }
+	}
+	return numYCrossingEdges;
+}
 
 	//*********************************************************************************************************************
 	//******************* FUNCTIONS FOR PREFORMING TOPOLOGICAL CHANGES (Mostly Overloads) *********************************
@@ -541,8 +583,9 @@ bool AGTissue::Mitosis(){
 	double alpha = 0;
 
 	double p;
-	double angle; 
-
+	double angle;  
+	//int preMitosisNumCells = cells.size();// number of cells before mitosis
+	//int postMitosisNumCells; // number of cells after mitosis
 	//print Feedback Parameters
 	/*
 	if (CURRENTTIME == 1) {
@@ -586,6 +629,9 @@ bool AGTissue::Mitosis(){
 				(*this).HelperMitosis(mitcells[i], angle);
 			}
 		}
+
+		// postMitosisNumCells = cells.size(); // number of cells in packing after mitosis
+		// TISSUE_ALPHA *= postMitosisNumCells / preMitosisNumCells; // updating tissue drag coefficient according to number of cells
 		return true;
 	}
 }
@@ -1088,9 +1134,14 @@ void AGTissue::Evolve(double interval, double *stepsize, ofstream* errorfile)
 		LX = LXnew;				//Update the current box size 
 		LY = LYnew;
 		(*this).HelperEvolve_UpdatePosition();  //Update the vertex positions (this automaticaly updates edge flags if a vertex has crossed the boundary)
-
+		// 
+		// UPDATE EQUILIBRIUM CHECKER 
+		//
 		//STEP 4: look for topological changes and set flags if any have occured 
-
+		flag1 = false;
+		flag2 = false;
+		flag3 = false;
+		flag4 = false;
 		if (APOPTOSISON) flag1 = (*this).Apoptosis(errorfile);
 
 		if (T1ON)  flag2 = (*this).T1(errorfile);
@@ -1181,36 +1232,60 @@ void AGTissue::ForceFunction(ofstream* errorfile){
 		}
 	}
 
-//Calculate the tissue stress
-// This needs to be updated. Maybe get rid of GammaX/Y and figure out how to replace them
-double GammaX = 0;
-double GammaY = 0;
-// calculateexternalstress_linear(TAU_STRESS);
-/*
-double cutlineX = distribution(generator) * LX; //Continue to generate random numbers until you cut no concave cells
-GammaX = TISSUE_EXT_STRESS_X + (*this).CalculateTissueStressX(cutlineX, errorfile);
+	//Calculate the tissue stress
+	// This needs to be updated. Maybe get rid of GammaX/Y and figure out how to replace them
+	 double GammaX = 0;
+	 double GammaY = 0;
+	 double cutlineX = 0;
+	 double cutlineY = 0;
+	 int sampleSize = 1;
+	// calculateexternalstress_linear(TAU_STRESS);
+	 for (int i = 0; i < sampleSize; i++)
+	 {
+		 cutlineX = distribution(generator) * LX; //Continue to generate random numbers until you cut no concave cells
+		 GammaX += ( TISSUE_EXT_STRESS_X + (*this).CalculateTissueStressX(cutlineX, errorfile) ) / sampleSize ;
 
-double cutlineY = distribution(generator) * LY; //Continue to generate random numbers until you cut no concave cells
-GammaY = TISSUE_EXT_STRESS_Y + (*this).CalculateTissueStressY(cutlineY, errorfile);
-*/
-// new code, 5/20/2020
-// p_ext is external pressure
-double p_ext = (TISSUE_EXT_STRESS_X + TISSUE_EXT_STRESS_Y) / 2;
+		 cutlineY = distribution(generator) * LY; //Continue to generate random numbers until you cut no concave cells
+		 GammaY += ( TISSUE_EXT_STRESS_Y + (*this).CalculateTissueStressY(cutlineY, errorfile) ) / sampleSize ;
+	 }
+	 
+	
+	// new code, 5/20/2020
+	// p_ext is external pressure
+	double p_ext = (TISSUE_EXT_STRESS_X + TISSUE_EXT_STRESS_Y) / 2;
+	double internalXstress = GetInternalTissueStressX(errorfile);
+	double internalYstress = GetInternalTissueStressY(errorfile);
+	//Update LY and LX
+	ForceLX = -1 * (LY * LX0 * LX0) * (p_ext + internalXstress); 
+	ForceLY = -1 * (LY0 * LY0 * LX) * (p_ext + internalYstress);
+	// ***** EXTRA LENGTH FACTORS FROM LENGTH DEPENDENT VISCOSITY!
+	ForceLX = ForceLX * ( LX / ( LX0 * LX0 * LY ) )  ;
+	ForceLY = ForceLY * ( LY / ( LX * LY0 * LY0 ) )  ; 
 
-GammaX = -1 * (LY*LX0) * ( p_ext + GetInternalTissueStressX(errorfile) ); // + internalstress (placeholder)
-GammaY = -1 * (LY0*LX) * ( p_ext + GetInternalTissueStressY(errorfile) );
-
-//Update LY and LX
-ForceLX = LX0 * GammaX;
-ForceLY = LY0 * GammaY;
-
-//Add the force from the tissue stress to every vertex
-//Added the length squared scaling in this step
-for (list<Vertex*>::iterator vit = vertices.begin(); vit != vertices.end(); vit++)
-{
-	(*(*vit)).SavedInfoForEvolve_TotalForce.x = LX * LX * (*(*vit)).SavedInfoForEvolve_MechForce.x + (alphaM / TISSUE_ALPHA) * ((*(*vit)).r.x / LX) * ForceLX;
-	(*(*vit)).SavedInfoForEvolve_TotalForce.y = LY * LY * (*(*vit)).SavedInfoForEvolve_MechForce.y + (alphaM / TISSUE_ALPHA) * ((*(*vit)).r.y / LX) * ForceLY;
-}
+	//Add the force from the tissue stress to every vertex
+	//Added the length squared scaling in this step
+	double tempForceX;
+	double tempForceY;
+	double maxForceY = 0;
+	double maxForceX = 0;
+	for (list<Vertex*>::iterator vit = vertices.begin(); vit != vertices.end(); vit++)
+	{
+		tempForceX =  (*(*vit)).SavedInfoForEvolve_MechForce.x  + (alphaM / TISSUE_ALPHA) * ((*(*vit)).r.x / LX) * ForceLX;
+		tempForceY =  (*(*vit)).SavedInfoForEvolve_MechForce.y  + (alphaM / TISSUE_ALPHA) * ((*(*vit)).r.y / LY) * ForceLY;
+		// ***** EXTRA LENGTH FACTORS ADDED FOR DEBUGGING EASE!
+		(*(*vit)).SavedInfoForEvolve_TotalForce.x = tempForceX ;
+		(*(*vit)).SavedInfoForEvolve_TotalForce.y = tempForceY ; 
+		if (abs(tempForceX) > maxForceX) maxForceX = tempForceX;
+		if (abs(tempForceY) > maxForceY) maxForceY = tempForceY;
+	}
+	*errorfile << " Int X Stress: " << internalXstress << " CutlineXStress: " << GammaX <<"\n";
+	*errorfile << " Int Y Stress: " << internalYstress << " CutlineYStress: " << GammaY << endl;
+	/*
+	equilibriumCheckerX.push_back( ( maxForceX*INITIALSTEPSIZE ) / ( MINLENGTH*TISSUE_ALPHA ) );
+	equilibriumCheckerY.push_back( ( maxForceY*INITIALSTEPSIZE ) / ( MINLENGTH*TISSUE_ALPHA ) );
+	if (equilibriumCheckerX.size() > 10) equilibriumCheckerX.pop_front();
+	if (equilibriumCheckerY.size() > 10) equilibriumCheckerY.pop_front();
+	*/
 }
 
 /*
@@ -1224,7 +1299,7 @@ for (list<Vertex*>::iterator vit = vertices.begin(); vit != vertices.end(); vit+
 *	4.1 Loop over crossing cells
 *   4.2 Identify crossing edges specific to each cell
 *   4.3 Calculate dA/dLx using said crossing edges
-* 5. stress = boundary_independent_stress + areacontribution + edgecontribution + A0 *Ly * Lx 
+* 5. stress = boundary_independent_stress + areacontribution + edgecontribution 
 * See Avik's notes for derivation of all this
 */
 double AGTissue::GetInternalTissueStressX(ofstream* errorfile)
@@ -1239,16 +1314,19 @@ double AGTissue::GetInternalTissueStressX(ofstream* errorfile)
 	// derivative of the cell area with respect to Lx
 	bool xflag, c1, c2;
 	double directioncos, angle;
-	Vertex *v1;
+	Vertex *v1, *v2, *v3;
 	vector<Edge*> crossingEdges;									//vector of all crossing edges
 	vector<Edge*> cellEdges;										// vector of edges for a specific cell
-	vector<Cell*> crossingCells;									//vector of all crossing cells
+	vector<AGCell*> crossingCells;									//vector of all crossing cells
 	int i;
-	Cell *cptr;
-	double length;
+	AGCell *acptr1, *acptr2;
+	double length, tempCenterHolder;
 	vector<double> edgecenter;
 
+
+
 	// add in the contributions from within the tissue to the total stress
+	
 	for (list<Vertex*>::iterator vit = vertices.begin(); vit != vertices.end(); vit++)
 	{
 		stressx += (*(*vit)).SavedInfoForEvolve_MechForce.x * (*(*vit)).r.x;
@@ -1271,8 +1349,10 @@ double AGTissue::GetInternalTissueStressX(ofstream* errorfile)
 				if ((*crossingCells[i]).id == c1id) c1 = true;
 				if ((*crossingCells[i]).id == c2id) c2 = true;
 			}
-			if (!c1) crossingCells.push_back(&(*(*(*eit)).cell1));
-			if (!c2) crossingCells.push_back(&(*(*(*eit)).cell2));
+			acptr1 = dynamic_cast<AGCell*>(&(*(*(*eit)).cell1));
+			acptr2 = dynamic_cast<AGCell*>(&(*(*(*eit)).cell2));
+			if (!c1) crossingCells.push_back(acptr1);
+			if (!c2) crossingCells.push_back(acptr2);
 
 			// here, I'll add the edge contribution to the stress
 			v1 = (*(*eit)).vertex1;
@@ -1281,67 +1361,41 @@ double AGTissue::GetInternalTissueStressX(ofstream* errorfile)
 			edgestress += GAMMA * directioncos ;
 		}
 	}
+	
+	// some debugging code
+	double Areadiff;
 
 	for (i = 0; i < crossingCells.size(); i++)
 	{
-		cellEdges = (*crossingCells[i]).edges;
-		 
-		for (vector<Edge*>::iterator eit = cellEdges.begin(); eit != cellEdges.end(); eit++)
-		{
-			if ((*(*eit)).xflag)
-			{ //crossing edge if statement
-				edgecenter.push_back( (*(*eit)).GetCenter().y );
-			} // crossing edge if statement
-		}
-		dAdLx = abs(edgecenter[1] - edgecenter[2]);
-		areastress += (*crossingCells[i]).GetArea() * K * dAdLx;
-
-		edgecenter.pop_back();
-		edgecenter.pop_back();
-		// empty the averageedgecenter list instead of making a new one
-		if (!edgecenter.empty())
-		{
-			cout << "ERROR: Cell with more than two crossing edges \n";
-			*errorfile << "Found cell with more than two crossing edges: " << (*crossingCells[i]).id << "\n";
-			return NULL;
-		}
-	} //end for each cell in crossingCells
-	stressx += ( edgestress + areastress - K * LX0 * LY0 * LY ) * LX;
+		dAdLx = (*crossingCells[i]).GetdAdLx();
+		Areadiff = ( (*crossingCells[i]).GetArea() - (*crossingCells[i]).A0 );
+		areastress += -1 * (*crossingCells[i]).GetPressure( (*crossingCells[i]).GetArea() )  * dAdLx ;
+		*errorfile << "dAdLx " << dAdLx << "area diff " << Areadiff << " area diff ratio " << Areadiff / (*crossingCells[i]).GetArea() << "\n";
+	} 
+	*errorfile << "(X) Vertex Stress at time " << CURRENTTIME << ": " << stressx / (LX * LY) << "\n";
+ 	*errorfile << "(X) Area Stress at time " << CURRENTTIME << ": " << areastress / LY << "\n";
+	*errorfile << "(X) Edge Stress at time " << CURRENTTIME << ": " << edgestress / LY << endl;
+	stressx += (edgestress + areastress ) * LX;
+	
+	stressx = stressx / (LX * LY); // as a reminder that the stress needs an overall area factor out front
 	return stressx;
 }
-// PBC handling code for crossing edges - possibly made redundant by Meryl's GetCenter in EdgeClass
-/*********************************************************************************************************************
-v3 = (*(*eit)).vertex1;
-v4 = (*(*eit)).vertex2;
-if ((*v3).r.x > (*v4).r.x) // look at edges that cross x = Lx, not x = 0
-{
-y3 = (*v3).r.y;
-y4 = (*v4).r.y;
-}
-else
-{
-y4 = (*v3).r.y;
-y3 = (*v4).r.y;
-}
-if ((*(*eit)).yflag) // "undo" pbc
-{
-if (y3 > y4)
-{
-y4 = y4 + LY;
-}
-else if (y3 < y4)
-{
-y4 = y4 - LY;
-}
-}
-edgecenter.push_back( (y4 + y3) / 2.0 );
-*/ 
+
 // ******************************************************************************************************************
 
 /*
 * void CalculateTissueStressY(ofstream* errorfile)
 *
 * Calculates the y-component of the external stress in the tissue.
+* 1. Adds internal stresses that are independent of the boundary
+* 2. Finds crossing edges and crossing cells
+* 3. Finds contributions to stress from crossing edges (happens as crossing edges are identified)
+* 4. Calculate area contribution to stress
+*	4.1 Loop over crossing cells
+*   4.2 Identify crossing edges specific to each cell
+*   4.3 Calculate dA/dLx using said crossing edges
+* 5. stress = boundary_independent_stress + areacontribution + edgecontribution
+* See Avik's notes for derivation of all this
 */
 double AGTissue::GetInternalTissueStressY(ofstream* errorfile)
 {
@@ -1355,21 +1409,21 @@ double AGTissue::GetInternalTissueStressY(ofstream* errorfile)
 	// derivative of the cell area with respect to Ly
 	bool yflag, c1, c2;
 	double directionsin, angle;
-	Vertex *v1;
+	Vertex *v1, *v2, *v3;
 	vector<Edge*> crossingEdges;									//vector of all crossing edges
 	vector<Edge*> cellEdges;										// vector of edges for a specific cell
-	vector<Cell*> crossingCells;									//vector of all crossing cells
+	vector<AGCell*> crossingCells;									//vector of all crossing cells
 	int i;
-	Cell *cptr;
+	AGCell *acptr1, *acptr2;
 	double length;
 	vector<double> edgecenter;
-
+	
 	// add in the contributions from within the tissue to the total stress
 	for (list<Vertex*>::iterator vit = vertices.begin(); vit != vertices.end(); vit++)
 	{
 		stressy += (*(*vit)).SavedInfoForEvolve_MechForce.y * (*(*vit)).r.y;
 	}
-
+	
 	// find crossing edges and crossing cells
 	for (list<Edge*>::iterator eit = edges.begin(); eit != edges.end(); eit++)
 	{
@@ -1387,8 +1441,10 @@ double AGTissue::GetInternalTissueStressY(ofstream* errorfile)
 				if ((*crossingCells[i]).id == c1id) c1 = true;
 				if ((*crossingCells[i]).id == c2id) c2 = true;
 			}
-			if (!c1) crossingCells.push_back(&(*(*(*eit)).cell1));
-			if (!c2) crossingCells.push_back(&(*(*(*eit)).cell2));
+			acptr1 = dynamic_cast<AGCell*>(&(*(*(*eit)).cell1));
+			acptr2 = dynamic_cast<AGCell*>(&(*(*(*eit)).cell2));
+			if (!c1) crossingCells.push_back(acptr1);
+			if (!c2) crossingCells.push_back(acptr2);
 
 			// here, I'll add the edge contribution to the stress
 			v1 = (*(*eit)).vertex1;
@@ -1398,30 +1454,20 @@ double AGTissue::GetInternalTissueStressY(ofstream* errorfile)
 		}
 	}
 
+	// some debugging code
+	double Areadiff;
 	for (i = 0; i < crossingCells.size(); i++)
 	{
-		cellEdges = (*crossingCells[i]).edges;
+		dAdLy = (*crossingCells[i]).GetdAdLy();
+		Areadiff = ((*crossingCells[i]).GetArea() - (*crossingCells[i]).A0);
+		areastress += -1 * (*crossingCells[i]).GetPressure((*crossingCells[i]).GetArea())  * dAdLy ;
+		*errorfile << "dAdLy " << dAdLy << " area diff " << Areadiff << " area diff ratio " << Areadiff / ((*crossingCells[i]).GetArea()) << "\n";
+	}
+	*errorfile << "(Y) Vertex Stress at time " << CURRENTTIME << ": " << stressy / (LX * LY) << "\n";
+	*errorfile << "(Y) Area Stress at time " << CURRENTTIME << ": " << areastress / LX << "\n";
+	*errorfile << "(Y) Edge Stress at time " << CURRENTTIME << ": " << edgestress / LX << endl;
+    stressy += (edgestress + areastress) * LY;
 
-		for (vector<Edge*>::iterator eit = cellEdges.begin(); eit != cellEdges.end(); eit++)
-		{
-			if ((*(*eit)).yflag)
-			{ //crossing edge if statement
-				edgecenter.push_back((*(*eit)).GetCenter().x);
-			} // crossing edge if statement
-		}
-		dAdLy = abs(edgecenter[1] - edgecenter[2]);
-		areastress += (*crossingCells[i]).GetArea() * K * dAdLy;
-
-		edgecenter.pop_back();
-		edgecenter.pop_back();
-		// empty the averageedgecenter list instead of making a new one
-		if (!edgecenter.empty())
-		{
-			cout << "ERROR: Cell with more than two crossing edges \n";
-			*errorfile << "Found cell with more than two crossing edges: " << (*crossingCells[i]).id << "\n";
-			return NULL;
-		}
-	} //end for each cell in crossingCells
-	stressy += (edgestress + areastress - K * LX0 * LY0 * LX) * LY;
+	stressy = stressy / (LX * LY); // as a reminder that the stress needs an overall area factor out front
 	return stressy;
 }

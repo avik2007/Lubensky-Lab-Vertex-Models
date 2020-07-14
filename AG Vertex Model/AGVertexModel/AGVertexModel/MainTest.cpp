@@ -51,7 +51,7 @@ double INITIALSTEPSIZE = 0.001;
 double TOTALTIME = 10.0;
 double CURRENTTIME = 0.0;
 double TIMEINTERVAL = 1.0;
-double TISSUE_ALPHA = 50.0;
+double TISSUE_ALPHA = 500.0;
 double alphaM = 1;
 double TISSUE_EXT_STRESS = 0;
 double TISSUE_EXT_STRESS_X = 0;
@@ -62,7 +62,7 @@ double error_tolerance_absolute_mechanical = 0.2;
 double LXnew = 0;
 double LYnew = 0;
 double TAU = 1;
-double TAU_STRESS = 15;
+double TAU_STRESS = 10;
 double A0SKEW = 1;
 double LX0 = 0;
 double LY0 = 0;
@@ -72,9 +72,9 @@ int TOTALT1 = 0;
 double THETAAN = 0;
 double ANSTRENGTH = 0;
 double TCJSTRENGTH = 0;
-bool MITOSISON = true;	// 0 means off, anything else means on
+bool MITOSISON = false;	// 0 means off, anything else means on
 bool T1ON = true;	// 0 means off, anything else means on
-bool APOPTOSISON = true; // 0 means off, anything else means on
+bool APOPTOSISON = false; // 0 means off, anything else means on
 double SIMTIMERES = 0;
 
 //This is the generator for random numbers to use call "distribution(generator)" 
@@ -84,6 +84,7 @@ chrono::time_point<std::chrono::system_clock> starttime, endtime;
 
 //Constants
 AGTissue tissue;
+// Tissue tissue;
 
 //*****************************************************************************************************
 //********************         MAIN                    ************************************************
@@ -144,7 +145,7 @@ int main()
 	datafile.open(OutputFileName1);
 	errorfile.open(OutputFileName3);
 	cout << "I made output files!" << endl;
-
+	datafile << "write testing\n";
 	//******************************INITIAlIZE***********************************************************************
 	//**********************************************************************************************************
 	Vect o(0, 0);
@@ -166,23 +167,23 @@ int main()
 	// above time variables allow us to pick how often we write to the appendfile
 	while (CURRENTTIME < TOTALTIME)
 	{
-		cout << "CURRENTTIME" << CURRENTTIME << endl;
+		cout << "CURRENTTIME " << CURRENTTIME << endl;
 		tissue.Evolve(TIMEINTERVAL, &stepSize, &errorfile);
 		cout << "exited evolve" << endl;
-		if (SIMTIMERES < INITIALSTEPSIZE && SIMTIMERES > 0) //basically, if the user has given a simulation time resolution 
+		if (SIMTIMERES > INITIALSTEPSIZE ) //basically, if the user has given a simulation time resolution 
 			// that is bigger than the initial stepsize specified
 		{
 			if (CURRENTTIME > lastwritetime + SIMTIMERES)
 			{
 				tissue.WriteOutputDataAppend(&datafile);
-				cout << "CURRENTTIME" << CURRENTTIME << endl;
+				cout << "Writing to output at time " << CURRENTTIME << endl;
 				lastwritetime = CURRENTTIME;
 			}
 		}
 		else
 		{
 			tissue.WriteOutputDataAppend(&datafile);
-			cout << "CURRENTTIME" << CURRENTTIME << endl;
+			cout << "CURRENTTIME " << CURRENTTIME << endl;
 		}
 	}
 	tissue.WriteOutputDataAppend(&datafile);

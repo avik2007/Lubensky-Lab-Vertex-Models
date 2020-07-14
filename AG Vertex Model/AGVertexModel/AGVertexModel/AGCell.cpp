@@ -273,8 +273,7 @@ double AGCell::CombTCJANProbability(double phi, double thetatcj)
 /*
 * double CombTCJANProbMaximum()
 *
-* Returns the maximum of the combined (tcj + anisotropic) division potential using (for now) a gradient descent type algorithm
-* with a step size adaptively determined by anisotropy strength
+* Returns the maximum of the combined (tcj + anisotropic) division potential
 */
 double AGCell::CombTCJANProbMaximum()
 {
@@ -413,3 +412,150 @@ double AGCell::DivisionAngleDistribution()
 	double theta = (*this).DivisionAngleDistribution(DIVISIONPOTENTIAL);
 	return theta;
 }
+/*
+* bool IsCrossingX()
+*
+* Checks whether a cell crosses the X-boundary
+*/
+bool AGCell::IsCrossingX()
+{
+	bool result = false; // true is the edge crosses X-boundary, false otherwise
+	for (vector<Edge*>::iterator eit = (*this).edges.begin(); eit != (*this).edges.end(); eit++)
+	{
+		result = ( (*(*eit)).xflag || result );
+	}
+	return result;
+}
+/*
+* bool IsCrossingY()
+*
+* Checks whether a cell crosses the Y-boundary
+*/
+bool AGCell::IsCrossingY()
+{
+	bool result = false; // true is the edge crosses X-boundary, false otherwise
+	for (vector<Edge*>::iterator eit = (*this).edges.begin(); eit != (*this).edges.end(); eit++)
+	{
+		result = ( (*(*eit)).yflag || result ); 
+	}
+	return result; 
+}
+/*
+* double GetdAdLx();
+*
+* Calculates dA/dLx for this cell
+*/
+double AGCell::GetdAdLx()
+{
+	int xcrossingEdges = 0;
+	vector<Vect> edgeVects;
+	double dAdLx = 0;
+	Vertex *v1, *v2;
+	Edge *e1, *e2;
+	vector<Edge*> clockwiseEdges;
+	vector<Vertex*> clockwiseVertex = (*this).GetClockWiseVertices();
+	int vertexNum = clockwiseVertex.size();
+	double vectDiff;
+
+	clockwiseVertex.push_back(clockwiseVertex[0]);
+	
+	for (int i = 0; i < vertexNum; i++)
+	{
+		v1 = clockwiseVertex[i];
+		v2 = clockwiseVertex[i + 1];
+		e1 = (*v1).GetEdgeBetween(v2);
+		clockwiseEdges.push_back(e1);
+		edgeVects.push_back((*e1).GetVectorDifference(v1, v2));
+	}
+
+	for (int j = 0; j < vertexNum; j++)
+	{
+		e2 = clockwiseEdges[j];
+		vectDiff = (edgeVects[j]).y; 
+		if (xcrossingEdges == 0)
+		{
+			if ((*e2).xflag)
+			{
+				dAdLx += 0.5 * vectDiff;
+				xcrossingEdges++;
+			}
+		}
+		else if (xcrossingEdges == 1)
+		{
+			if ((*e2).xflag)
+			{
+				dAdLx += 0.5 * vectDiff;
+				xcrossingEdges++;
+			}
+			else
+			{
+				dAdLx += vectDiff;
+			}
+		}
+		else if (xcrossingEdges == 2)
+		{
+			j = vertexNum;
+		}
+	}
+	return abs(dAdLx);
+}
+/*
+* double GetdAdLy();
+*
+* Calculates dA/dLy for this cell
+*/
+double AGCell::GetdAdLy()
+{
+	int ycrossingEdges = 0;
+	vector<Vect> edgeVects;
+	double dAdLy = 0;
+	Vertex *v1, *v2;
+	Edge *e1, *e2;
+	vector<Edge*> clockwiseEdges;
+	vector<Vertex*> clockwiseVertex = (*this).GetClockWiseVertices();
+	int vertexNum = clockwiseVertex.size();
+	double vectDiff;
+
+	clockwiseVertex.push_back(clockwiseVertex[0]);
+
+	for (int i = 0; i < vertexNum; i++)
+	{
+		v1 = clockwiseVertex[i];
+		v2 = clockwiseVertex[i + 1];
+		e1 = (*v1).GetEdgeBetween(v2);
+		clockwiseEdges.push_back(e1);
+		edgeVects.push_back((*e1).GetVectorDifference(v1, v2));
+	}
+
+	for (int j = 0; j < vertexNum; j++)
+	{
+		e2 = clockwiseEdges[j];
+		vectDiff = (edgeVects[j]).x;
+		if (ycrossingEdges == 0)
+		{
+			if ((*e2).yflag)
+			{
+				dAdLy += 0.5 * vectDiff;
+				ycrossingEdges++;
+			}
+		}
+		else if (ycrossingEdges == 1)
+		{
+			if ((*e2).yflag)
+			{
+				dAdLy += 0.5 * vectDiff;
+				ycrossingEdges++;
+			}
+			else
+			{
+				dAdLy += vectDiff;
+			}
+		}
+		else if (ycrossingEdges == 2)
+		{
+			j = vertexNum;
+		}
+	}
+	return abs(dAdLy);
+}
+
