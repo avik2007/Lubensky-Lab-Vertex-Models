@@ -1,0 +1,21 @@
+#!/bin/sh
+####  SBATCH preamble
+
+#SBATCH --job-name=relaxed_10K
+
+#SBATCH --nodes=1
+#SBATCH --tasks-per-node=1
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=20g
+#SBATCH --time=5:00:00
+#SBATCH --array=1-6
+
+#SBATCH --account=lsa1
+#SBATCH --partition=standard
+
+###  End SBATCH preamble
+
+#  Put your job commands here:
+./vertmodel_noDivisions $(sed -n ${SLURM_ARRAY_TASK_ID}p parameters1.txt)
+
+
