@@ -1085,6 +1085,32 @@ void AGTissue::HelperMitosis(Cell * parentcell, double divisionangle) {
 */
 void AGTissue::Evolve(double interval, double *stepsize, ofstream* errorfile)
 {
+	// for making a suddesn change in box size
+	// MAKE A FUNCTION FOR THIS! PUT IT IN A SET UP FUNCTION
+	/*
+	double c = 1.1;
+	
+	//if (CURRENTTIME > 100 && CURRENTTIME < 100 + TIMEINTERVAL)
+	//{
+	//for expansion:
+		//LX = c * LX;
+		//LY = c * LY;
+	//for shearing:
+		
+		//LX = c * LX;
+		//LY = LY / c;
+		
+		//for (list<Vertex*>::iterator vit = vertices.begin(); vit != vertices.end(); vit++) 
+		//{
+		//for expansion:
+		//(*(*vit)).r.x = c * (*(*vit)).r.x;
+		//(*(*vit)).r.y = c * (*(*vit)).r.y;
+		//for shearing:
+		//(*(*vit)).r.y = (*(*vit)).r.y / c;
+		//(*(*vit)).r.x = c * (*(*vit)).r.x;
+		//}
+	//}
+
 	//find the end point of this evolve
 	double endtime = CURRENTTIME + interval;
 	bool reinitialize = true;

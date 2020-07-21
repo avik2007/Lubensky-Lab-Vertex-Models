@@ -31,10 +31,11 @@ using namespace std;
 
 class AGTissue : public Tissue{
 public:
-	//ADDITIONAL DATA(no additional data to add here)									// deformation gradient tensor component (22)
+	//ADDITIONAL DATA									// deformation gradient tensor component (22)
 	double LX0;									// initial box length in x dimension
 	double LY0;									// initial box length in y dimension
-
+	list<double> equilibriumCheckerX;      		// contains force (x-components) data from simulation to check whether packing has equilibrated
+	list<double> equilibriumCheckerY;			// contains force (x-components) data from simulation to check whether packing has equilibrated
 	//NOTE: the list cells that is instantiated in the TissueClass will contain AGCells when AGVertex Model code
 	// is being used 
 	//CONSTRUCTOR
@@ -44,7 +45,10 @@ public:
 	virtual ~AGTissue(){};
 
 	//ADDITIONAL FUNCTIONS
-
+	
+	//*********************************************************************************************************************
+	//******************* Helper Functions *********************************
+	//*********************************************************************************************************************
 	// Updates read input function to accept new global variables 
 	virtual void HelperReadInputData_SetGlobalValues(ifstream* datafile);
 
@@ -53,6 +57,12 @@ public:
 
 	//! Writes data into file specified by 'datafile'
 	virtual void HelperWriteOutputData_Write2File(ofstream* datafile, bool includeExtraInfo);
+
+	// Finds the number of X - crossing edges
+	double CountNumberOfXCrossingEdges();
+
+	// Finds the number of Y - crossing edges
+	double CountNumberOfYCrossingEdges();
 
 	//*********************************************************************************************************************
 	//******************* FUNCTIONS FOR PREFORMING TOPOLOGICAL CHANGES (Mostly Overloads) *********************************

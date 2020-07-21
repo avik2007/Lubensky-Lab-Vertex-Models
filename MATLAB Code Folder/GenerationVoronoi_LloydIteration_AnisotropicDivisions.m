@@ -6,29 +6,37 @@ function GenerationVoronoi_LloydIteration_AnisotropicDivisions(r,NbPoints,limit,
 
 %% Store data in the right folder
 close all;
-% this is going to need to change 
-addpath(cd);
-cd('..\MATLAB Data Folder');
 %% Parameters
 rng(r);
-Mesh = 250 * sqrt(2) * sqrt(NbPoints / 100);
-A0 = Mesh * Mesh / NbPoints;
+% units:
+%l0 = 25; %length units
+A0 = 1250;
+GAMMA =	 10;%strength of line tension coefficient
+t0 = 1; %time units
+
+% Variable preferred area
+%Mesh = l0 * sqrt(2) * sqrt(NbPoints);
+%A0 = Mesh * Mesh / NbPoints;
+Mesh = sqrt(A0 * NbPoints);
+% maybe just test mitosis
 
 %Global parameters
 SEED = 48269; %originally 48263
-TIMEINTERVAL =	0.1;
+TIMEINTERVAL =	0.5;
 MINAREA = 0.1;
 MINLENGTH =	1.0;
 NEWEDGELENGTH =	2.0;
-K =	10;%0.003264;  %"young's modulus", strength of area term
-GAMMA =	10; %strength of line tension coefficient
-TOTALTIME = 45;
+K = 10 * GAMMA / sqrt(A0);  %"young's modulus", strength of area term - using equation given in Meryl's thesis
+TOTALTIME = 100.0;
 CURRENTTIME = 0.0;
-INITIALSTEPSIZE = .01;
+INITIALSTEPSIZE = t0 / 1000;
 error_tolerance_absolute_mechanical =	0.001;
-TISSUE_ALPHA = 100;
+ALPHAM = GAMMA * ( t0 / l0 );
+TISSUE_ALPHA = 100 * ALPHAM; % has to scale with cell number apparently - perhaps that makes sense?
+% ^ this functionality has to go into the vertex model, so that for mitosis
+% the packing gets stiffer as the number of cells increases
 TISSUE_EXT_STRESS_X = 0;
-TISSUE_EXT_STRESS_Y = 0;
+TISSUE_EXT_STRESS_Y = 0;    
 P0 = 0;
 LAMBDA = 0; %in meryl's model, strength of (p - p0)^2 term
 %Ratio = 0.3;                %ratio of pressure to tension forces (standard value 0.3) 
@@ -43,23 +51,28 @@ LAMBDA = 0; %in meryl's model, strength of (p - p0)^2 term
 
 
 potential = pot; % DESCRIBED FOR INDIVIDUAL CELLS - - IF YOU WANT DIFFERENT CELLS TO HAVE DIFFERENT 
-% POTENTIALS, YOU'LL HAVE TO DO YOU'RE OWN SPECIAL STUFF!
+% POTENTIALS, YOU'LL HAVE TO DO YOUR OWN SPECIAL STUFF! (see a few sections
+% below)
+
 TCJSTRENGTH = 500;
+
 THETAAN =3.14 / 2.0 ;    %direction of anisotropy
-ANSTRENGTH = 50; %strength of anisotropy
+
+ANSTRENGTH = 0; %strength of anisotropy
 % I think anstrength has an upperbound that is important for its function
 % other options for potential :"tcj" (uses tcj potential), "ani" (uses
 % anisotropic potential), "combined" - uses both!
-%MS: Output should be labled as 'VoronoiCells NbC (number of cells) RNG
-%(the rng number).txt'
 
 %THETAAN AND ANSTRENGTH ARE SPECIFIC TO EVERY CELL, SO THEY GET INPUTED AS
 %ONE OF THE CELL CHARACTERISTICS
-T1ON = 1; %boolean, tells code if T1's are turned on
-APOPTOSISON = 1;%boolean, tells code if Apoptosis is turned on
-MITOSISON = 1;% boolean, teslls code if mitosis is turned on
-SIMTIMERES = 10; %picks how often the simulation writes to the outputfile
 
+
+T1ON = 1; %boolean, tells code if T1's are turned on
+APOPTOSISON = 0;%boolean, tells code if Apoptosis is turned on
+MITOSISON = 0;% boolean, teslls code if mitosis is turned on
+% SET TAU_STRESS!!
+SIMTIMERES = 0.5; %picks how often the simulation writes to the outputfile
+% TEST THE ABOVE FOUR MECHANISMS!
 nomfichier= strcat('LNbC_','NbPts_', num2str(NbPoints,'%4d'), '_rng_', num2str(r,'%4d'),'_pot_', potential, '_lim_', num2str(limit, '%2d'), '.txt');
 
 %%
@@ -198,6 +211,7 @@ fprintf(fid, 'TOTALTIME\t%f\n', TOTALTIME);
 fprintf(fid, 'CURRENTTIME\t%f\n', CURRENTTIME);
 fprintf(fid, 'INITIALSTEPSIZE\t%f\n', INITIALSTEPSIZE);
 fprintf(fid, 'error_tolerance_absolute_mechanical\t%f\n', error_tolerance_absolute_mechanical);
+fprintf(fid, 'ALPHAM\t%f\n', ALPHAM);
 fprintf(fid, 'TISSUE_ALPHA\t%f\n', TISSUE_ALPHA);
 fprintf(fid, 'TISSUE_EXT_STRESS_X\t%f\n', TISSUE_EXT_STRESS_X);
 fprintf(fid, 'TISSUE_EXT_STRESS_Y\t%f\n', TISSUE_EXT_STRESS_Y);
