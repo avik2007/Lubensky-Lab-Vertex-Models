@@ -1328,7 +1328,7 @@ void AGTissue::ForceFunction(ofstream* errorfile){
 	
 	varianceForce = meanSqrForce - pow(meanForce,2.0);
 	
-	equilibriumChecker = (varianceForce < 0.01) && (meanForce < 0.5);
+	equilibriumChecker = (varianceForce < 0.01) && (meanForce < 0.35);
 	
 }
 
