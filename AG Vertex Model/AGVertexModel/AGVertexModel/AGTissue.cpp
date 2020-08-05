@@ -146,11 +146,17 @@ void AGTissue::HelperReadInputData_SetGlobalValues(ifstream* datafile){
 	else if (globals.count("APOPTOSISON") == 0){ cout << "WARNING: APOPTOSISON is not given in input file, used default value " << APOPTOSISON << endl; }
 	else { cout << "ERROR: Global variable APOPTOSISON has multiple definition in input file, used default value APOPTOSISON = " << APOPTOSISON << endl; }
 
-	if (globals.count("SIMTIMERES") == 1){ SIMTIMERES = atof(globals["SIMTIMERES"].c_str()); }
-	else if (globals.count("SIMTIMERES") == 0){ cout << "WARNING: SIMTIMERES is not given in input file, used default value " << SIMTIMERES << endl; }
-	else { cout << "ERROR: Global variable SIMTIMERES has multiple definition in input file, used default value SIMTIMERES = " << SIMTIMERES << endl; }
+	if (globals.count("WRITEMITOSIS") == 1){ WRITEMITOSIS = atof(globals["WRITEMITOSIS"].c_str()); }
+	else if (globals.count("WRITEMITOSIS") == 0){ cout << "WARNING: WRITEMITOSIS is not given in input file, used default value " << WRITEMITOSIS << endl; }
+	else { cout << "ERROR: Global variable WRITEMITOSIS has multiple definition in input file, used default value WRITEMITSOSIS = " << WRITEMITOSIS << endl; }
 
+	if (globals.count("VERBOSEON") == 1){ VERBOSEON = (atof(globals["VERBOSEON"].c_str()) > 0); }
+	else if (globals.count("VERBOSEON") == 0){ cout << "WARNING: VERBOSEON is not given in input file, used default value " << VERBOSEON << endl; }
+	else { cout << "ERROR: Global variable VERBOSEON has multiple definition in input file, used default value APOPTOSISON = " << VERBOSEON << endl; }
 
+	if (globals.count("EQUILIBRIUMMITOSIS") == 1){ EQUILIBRIUMMITOSIS = (atof(globals["EQUILIBRIUMMITOSIS"].c_str()) > 0); }
+	else if (globals.count("EQUILIBRIUMMITOSIS") == 0){ cout << "WARNING: EQUILIBRIUMMITOSIS is not given in input file, used default value " << EQUILIBRIUMMITOSIS << endl; }
+	else { cout << "ERROR: Global variable EQUILIBRIUMMITOSIS has multiple definition in input file, used default value EQUILIBRIUMMITOSIS = " << EQUILIBRIUMMITOSIS << endl; }
 	//******ADD MORE GLOBAL VARIABLES HERE ALSO ADD THEM TO THE CONSTANTS.H FILE AND GIVE THEM A DEFAULT VALUE IN MAIN*********************//
 
 	// setting set the initial box dimensions here
@@ -606,7 +612,8 @@ bool AGTissue::Mitosis(){
 		}
 
 		bernoulli_distribution distribution(p);        //distribution for weighting chance of success
-		if (distribution(generator)) {
+		if (distribution(generator)) 
+		{
 			mitcells.push_back(&(*(*cit)));
 			flag++;
 			//TOTALMITOSES++;
@@ -631,7 +638,7 @@ bool AGTissue::Mitosis(){
 		}
 
 		// postMitosisNumCells = cells.size(); // number of cells in packing after mitosis
-		// TISSUE_ALPHA *= postMitosisNumCells / preMitosisNumCells; // updating tissue drag coefficient according to number of cells
+		
 		return true;
 	}
 }
@@ -1087,8 +1094,8 @@ void AGTissue::Evolve(double interval, double *stepsize, ofstream* errorfile)
 {
 	// for making a suddesn change in box size
 	// MAKE A FUNCTION FOR THIS! PUT IT IN A SET UP FUNCTION
-	/*
-	double c = 1.1;
+	
+	//double c = 1.1;
 	
 	//if (CURRENTTIME > 100 && CURRENTTIME < 100 + TIMEINTERVAL)
 	//{
@@ -1179,19 +1186,23 @@ void AGTissue::Evolve(double interval, double *stepsize, ofstream* errorfile)
 		// This needs a proper calculate equilibrium function
 		if (MITOSISON)
 		{
-			if (CURRENTTIME > TAU_STRESS && timeratio > floortr && timeratio < floortr + 2 * INITIALSTEPSIZE)
+			// only does mitosis if packing is equilibrated 
+			if (EQUILIBRIUMMITOSIS)
 			{
-				// Gives a half second window for mitosis
-				flag4 = (*this).Mitosis();
-				// THIS ACTIVATES MITOSIS!!!
+				if ((*this).IsEquilibrated())
+				{
+					flag4 = (*this).Mitosis();
+				}
+			}
+			else if (timeratio > 1 && timeratio > floortr && timeratio < 2 * INITIALSTEPSIZE + floortr)
+				// Gives two timestep windows for mitosis
+			{ 
+				flag4 = (*this).Mitosis(); 
+			}
+			// THIS ACTIVATES MITOSIS!!!
 
-				if (SIMTIMERES <= 0) (*this).WriteOutputDataAppend(errorfile);
-				// if there is a non-zero "SIMULATION TIME RESOLUTION" inputted, don't write at every mitosis
-			}
-			else
-			{
-				flag4 = false;
-			}
+			if (WRITEMITOSIS) (*this).WriteOutputDataAppend(errorfile);
+			
 		}
 		if (flag1 || flag2 || flag3 || flag4) reinitialize = true;  //Determine if we need to reinitialize
 	}
@@ -1294,6 +1305,12 @@ void AGTissue::ForceFunction(ofstream* errorfile){
 	double tempForceY;
 	double maxForceY = 0;
 	double maxForceX = 0;
+	double forceMag = 0;
+	double meanForce = 0;
+	double meanSqrForce = 0;
+	double varianceForce = 0;
+	vector <double> forceList;
+	double big10meanForce = 0;
 	for (list<Vertex*>::iterator vit = vertices.begin(); vit != vertices.end(); vit++)
 	{
 		tempForceX =  (*(*vit)).SavedInfoForEvolve_MechForce.x  + (alphaM / TISSUE_ALPHA) * ((*(*vit)).r.x / LX) * ForceLX;
@@ -1301,17 +1318,18 @@ void AGTissue::ForceFunction(ofstream* errorfile){
 		// ***** EXTRA LENGTH FACTORS ADDED FOR DEBUGGING EASE!
 		(*(*vit)).SavedInfoForEvolve_TotalForce.x = tempForceX ;
 		(*(*vit)).SavedInfoForEvolve_TotalForce.y = tempForceY ; 
-		if (abs(tempForceX) > maxForceX) maxForceX = tempForceX;
-		if (abs(tempForceY) > maxForceY) maxForceY = tempForceY;
+		forceMag = sqrt(pow(tempForceX, 2.0) + pow(tempForceY, 2.0));
+		meanForce += 1.0 / vertices.size() * forceMag;
+		meanSqrForce += 1.0 / vertices.size() * pow(forceMag,2.0);
+		forceList.push_back(forceMag);
 	}
-	*errorfile << " Int X Stress: " << internalXstress << " CutlineXStress: " << GammaX <<"\n";
-	*errorfile << " Int Y Stress: " << internalYstress << " CutlineYStress: " << GammaY << endl;
-	/*
-	equilibriumCheckerX.push_back( ( maxForceX*INITIALSTEPSIZE ) / ( MINLENGTH*TISSUE_ALPHA ) );
-	equilibriumCheckerY.push_back( ( maxForceY*INITIALSTEPSIZE ) / ( MINLENGTH*TISSUE_ALPHA ) );
-	if (equilibriumCheckerX.size() > 10) equilibriumCheckerX.pop_front();
-	if (equilibriumCheckerY.size() > 10) equilibriumCheckerY.pop_front();
-	*/
+	// debugging code to compare stress derived from sum over Force times position vs cutline
+	// *errorfile << " Int X Stress: " << internalXstress << " CutlineXStress: " << GammaX <<"\n";
+	
+	varianceForce = meanSqrForce - pow(meanForce,2.0);
+	
+	equilibriumChecker = (varianceForce < 0.01) && (meanForce < 0.5);
+	
 }
 
 /*
@@ -1396,11 +1414,13 @@ double AGTissue::GetInternalTissueStressX(ofstream* errorfile)
 		dAdLx = (*crossingCells[i]).GetdAdLx();
 		Areadiff = ( (*crossingCells[i]).GetArea() - (*crossingCells[i]).A0 );
 		areastress += -1 * (*crossingCells[i]).GetPressure( (*crossingCells[i]).GetArea() )  * dAdLx ;
-		*errorfile << "dAdLx " << dAdLx << "area diff " << Areadiff << " area diff ratio " << Areadiff / (*crossingCells[i]).GetArea() << "\n";
+		// debugging code for the dAdLx code (sum over all dAdLx for a packing should equal Ly)
+		//*errorfile << "dAdLx " << dAdLx << "area diff " << Areadiff << " area diff ratio " << Areadiff / (*crossingCells[i]).GetArea() << "\n";
 	} 
-	*errorfile << "(X) Vertex Stress at time " << CURRENTTIME << ": " << stressx / (LX * LY) << "\n";
- 	*errorfile << "(X) Area Stress at time " << CURRENTTIME << ": " << areastress / LY << "\n";
-	*errorfile << "(X) Edge Stress at time " << CURRENTTIME << ": " << edgestress / LY << endl;
+	// debug lines for the stress components
+	//*errorfile << "(X) Vertex Stress at time " << CURRENTTIME << ": " << stressx / (LX * LY) << "\n";
+ 	//*errorfile << "(X) Area Stress at time " << CURRENTTIME << ": " << areastress / LY << "\n";
+	//*errorfile << "(X) Edge Stress at time " << CURRENTTIME << ": " << edgestress / LY << endl;
 	stressx += (edgestress + areastress ) * LX;
 	
 	stressx = stressx / (LX * LY); // as a reminder that the stress needs an overall area factor out front
@@ -1487,13 +1507,29 @@ double AGTissue::GetInternalTissueStressY(ofstream* errorfile)
 		dAdLy = (*crossingCells[i]).GetdAdLy();
 		Areadiff = ((*crossingCells[i]).GetArea() - (*crossingCells[i]).A0);
 		areastress += -1 * (*crossingCells[i]).GetPressure((*crossingCells[i]).GetArea())  * dAdLy ;
-		*errorfile << "dAdLy " << dAdLy << " area diff " << Areadiff << " area diff ratio " << Areadiff / ((*crossingCells[i]).GetArea()) << "\n";
+		// debugging code for the dAdLy code (sum over all dAdLy for a packing should equal Lx)
+		// *errorfile << "dAdLy " << dAdLy << " area diff " << Areadiff << " area diff ratio " << Areadiff / ((*crossingCells[i]).GetArea()) << "\n";
 	}
-	*errorfile << "(Y) Vertex Stress at time " << CURRENTTIME << ": " << stressy / (LX * LY) << "\n";
-	*errorfile << "(Y) Area Stress at time " << CURRENTTIME << ": " << areastress / LX << "\n";
-	*errorfile << "(Y) Edge Stress at time " << CURRENTTIME << ": " << edgestress / LX << endl;
+	// debug code for the components of the stress
+	// *errorfile << "(Y) Vertex Stress at time " << CURRENTTIME << ": " << stressy / (LX * LY) << "\n";
+	// *errorfile << "(Y) Area Stress at time " << CURRENTTIME << ": " << areastress / LX << "\n";
+	// *errorfile << "(Y) Edge Stress at time " << CURRENTTIME << ": " << edgestress / LX << endl;
     stressy += (edgestress + areastress) * LY;
 
 	stressy = stressy / (LX * LY); // as a reminder that the stress needs an overall area factor out front
 	return stressy;
+}
+/*
+* void WriteOutputDatAppend(ofstream* datafile)
+*
+* overload of base tissue class. I want to add a verbosity option to control how much info the helper
+* class writes out. 
+*/
+void AGTissue::WriteOutputDataAppend(ofstream* datafile)
+{
+	(*this).HelperWriteOutputData_Write2File(datafile, VERBOSEON);
+}
+bool AGTissue::IsEquilibrated()
+{
+	return equilibriumChecker;
 }

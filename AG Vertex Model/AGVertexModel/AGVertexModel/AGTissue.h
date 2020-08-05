@@ -34,8 +34,7 @@ public:
 	//ADDITIONAL DATA									// deformation gradient tensor component (22)
 	double LX0;									// initial box length in x dimension
 	double LY0;									// initial box length in y dimension
-	list<double> equilibriumCheckerX;      		// contains force (x-components) data from simulation to check whether packing has equilibrated
-	list<double> equilibriumCheckerY;			// contains force (x-components) data from simulation to check whether packing has equilibrated
+	bool equilibriumChecker;      		// determines whether packing is equilibrated or not
 	//NOTE: the list cells that is instantiated in the TissueClass will contain AGCells when AGVertex Model code
 	// is being used 
 	//CONSTRUCTOR
@@ -92,5 +91,14 @@ public:
 	//! Calculates the y component of the internal stress of the tissue (so sigma_yy)
 	virtual double GetInternalTissueStressY(ofstream* errorfile);
 
+	//*********************************************************************************************************************
+	//***************** Other Functions ******* ************************
+	//*********************************************************************************************************************
+	
+	//! Writes to output file after topology updates/numerical integration - overload will help manage verbosity of the output
+	virtual void WriteOutputDataAppend(ofstream* datafile);
+
+	// checks if packing is equilibrated
+	virtual bool IsEquilibrated();
 };
 #endif

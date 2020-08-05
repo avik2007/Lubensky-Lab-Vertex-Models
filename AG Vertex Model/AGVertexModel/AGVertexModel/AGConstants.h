@@ -18,7 +18,8 @@ extern double ANSTRENGTH;
 extern bool MITOSISON;
 extern bool APOPTOSISON;
 extern bool T1ON;
-extern double SIMTIMERES;
-
+extern bool WRITEMITOSIS;
+extern bool VERBOSEON;
+extern bool EQUILIBRIUMMITOSIS;
 #endif
 

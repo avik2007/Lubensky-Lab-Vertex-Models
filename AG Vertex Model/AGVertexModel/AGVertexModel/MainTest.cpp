@@ -46,7 +46,7 @@ double MINLENGTH = 1;
 double NEWEDGELENGTH = 5;
 int SEED = 5;								//Note: setting seed to 0 or 1 gives unwanted behavior
 double K = 5e-6;
-double GAMMA = 20;
+double GAMMA = 10;
 double INITIALSTEPSIZE = 0.001;
 double TOTALTIME = 10.0;
 double CURRENTTIME = 0.0;
@@ -72,10 +72,12 @@ int TOTALT1 = 0;
 double THETAAN = 0;
 double ANSTRENGTH = 0;
 double TCJSTRENGTH = 0;
-bool MITOSISON = false;	// 0 means off, anything else means on
-bool T1ON = true;	// 0 means off, anything else means on
-bool APOPTOSISON = false; // 0 means off, anything else means on
-double SIMTIMERES = 0;
+bool MITOSISON = false;	
+bool T1ON = true;	
+bool APOPTOSISON = false; 
+bool WRITEMITOSIS = false; 
+bool VERBOSEON = false;
+bool EQUILIBRIUMMITOSIS = true;
 
 //This is the generator for random numbers to use call "distribution(generator)" 
 mt19937_64 generator;
@@ -170,21 +172,9 @@ int main()
 		cout << "CURRENTTIME " << CURRENTTIME << endl;
 		tissue.Evolve(TIMEINTERVAL, &stepSize, &errorfile);
 		cout << "exited evolve" << endl;
-		if (SIMTIMERES > INITIALSTEPSIZE ) //basically, if the user has given a simulation time resolution 
-			// that is bigger than the initial stepsize specified
-		{
-			if (CURRENTTIME > lastwritetime + SIMTIMERES)
-			{
-				tissue.WriteOutputDataAppend(&datafile);
-				cout << "Writing to output at time " << CURRENTTIME << endl;
-				lastwritetime = CURRENTTIME;
-			}
-		}
-		else
-		{
-			tissue.WriteOutputDataAppend(&datafile);
-			cout << "CURRENTTIME " << CURRENTTIME << endl;
-		}
+		tissue.WriteOutputDataAppend(&datafile);
+		cout << "writing at CURRENTTIME: " << CURRENTTIME << endl;
+
 	}
 	tissue.WriteOutputDataAppend(&datafile);
 

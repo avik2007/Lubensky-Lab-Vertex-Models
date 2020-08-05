@@ -299,15 +299,15 @@ bool Tissue::T1(ofstream* errorfile){
 	}
 	else{
 		//Output state of system before and after T1.
-		(*this).WriteOutputDataAppend(errorfile);
+		//(*this).WriteOutputDataAppend(errorfile);
 		for (i = 0; i<t1edges.size(); i++){
 			cout << "T1 of Edge " << (*t1edges[i]).id << "   at location   (" << (*t1edges[i]).GetCenter().x << " , " << (*t1edges[i]).GetCenter().y<< ")" << endl;
 			int nT1; 
 			Vertex* v = (*this).HelperT1_RemoveEdge(t1edges[i],errorfile, &nT1);
-			(*this).WriteOutputDataAppend(errorfile);
+			// (*this).WriteOutputDataAppend(errorfile);
 			HelperResolveVertices_ResolveFourfoldVertex(v); 
 		}
-		(*this).WriteOutputDataAppend(errorfile);
+		// (*this).WriteOutputDataAppend(errorfile);
 		return true; 
 	}
 }
@@ -330,12 +330,12 @@ bool Tissue::ResolveVertices(ofstream* errorfile){
 	if (flag == 0)
 		return false;
 	else{
-		(*this).WriteOutputDataAppend(errorfile);
+		//(*this).WriteOutputDataAppend(errorfile);
 		for (i = 0; i<fourfoldresolved.size(); i++){
 			cout << "Resolving Vertex " << (*fourfoldresolved[i]).id << endl;
 			flg2 = flg2 + (*this).HelperResolveVertices_ResolveFourfoldVertex(fourfoldresolved[i]);
 		}
-		(*this).WriteOutputDataAppend(errorfile);
+		//(*this).WriteOutputDataAppend(errorfile);
 		if (flg2>0)
 			return true;
 		else
@@ -709,7 +709,7 @@ void Tissue::Evolve(double interval, double* stepsize, ofstream* errorfile){
 		if (CURRENTTIME > TAU_STRESS){
 			flag4 = (*this).Mitosis();
 			// THIS ACTIVATES MITOSIS!!!
-			(*this).WriteOutputDataAppend(errorfile);
+			//(*this).WriteOutputDataAppend(errorfile);
 		}
 		else{
 			flag4 = false;
