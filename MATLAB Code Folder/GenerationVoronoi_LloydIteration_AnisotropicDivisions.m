@@ -8,30 +8,31 @@ function GenerationVoronoi_LloydIteration_AnisotropicDivisions(r,NbPoints,limit,
 close all;
 %% Parameters
 rng(r);
+%% Drosophila Wing Disk "Units"
 % units:
 %l0 = 25; %length units
 A0 = 1250;
 GAMMA =	 10;%strength of line tension coefficient
 t0 = 1; %time units
-
+K = 5 * GAMMA / sqrt(A0);  %"young's modulus", strength of area term - using equation given in Meryl's thesis
+%% Simulation Detail Parameters
 % Variable preferred area
 %Mesh = l0 * sqrt(2) * sqrt(NbPoints);
 %A0 = Mesh * Mesh / NbPoints;
 Mesh = sqrt(A0 * NbPoints);
-% maybe just test mitosis
 
 %Global parameters
 SEED = 48269; %originally 48263
-TIMEINTERVAL =	0.5;
+TIMEINTERVAL =	0.1;
 MINAREA = 0.1;
 MINLENGTH =	1.0;
 NEWEDGELENGTH =	2.0;
-K = 10 * GAMMA / sqrt(A0);  %"young's modulus", strength of area term - using equation given in Meryl's thesis
-TOTALTIME = 100.0;
+
+TOTALTIME = 1.0;
 CURRENTTIME = 0.0;
 INITIALSTEPSIZE = t0 / 1000;
 error_tolerance_absolute_mechanical =	0.001;
-ALPHAM = GAMMA * ( t0 / l0 );
+ALPHAM = GAMMA * ( t0 / sqrt(A0));
 TISSUE_ALPHA = 100 * ALPHAM; % has to scale with cell number apparently - perhaps that makes sense?
 % ^ this functionality has to go into the vertex model, so that for mitosis
 % the packing gets stiffer as the number of cells increases
@@ -48,7 +49,6 @@ LAMBDA = 0; %in meryl's model, strength of (p - p0)^2 term
 %else
 %    P0 = 0;
 %end
-
 
 potential = pot; % DESCRIBED FOR INDIVIDUAL CELLS - - IF YOU WANT DIFFERENT CELLS TO HAVE DIFFERENT 
 % POTENTIALS, YOU'LL HAVE TO DO YOUR OWN SPECIAL STUFF! (see a few sections
@@ -69,11 +69,14 @@ ANSTRENGTH = 0; %strength of anisotropy
 
 T1ON = 1; %boolean, tells code if T1's are turned on
 APOPTOSISON = 0;%boolean, tells code if Apoptosis is turned on
-MITOSISON = 0;% boolean, teslls code if mitosis is turned on
+MITOSISON = 1;% boolean, tells code if mitosis is turned on
 % SET TAU_STRESS!!
-SIMTIMERES = 0.5; %picks how often the simulation writes to the outputfile
+WRITEMITOSIS = 0; % boolean, tells code to report mitosis every time it happens if true
 % TEST THE ABOVE FOUR MECHANISMS!
+VERBOSEON = 0; %boolean, tells code to output extra data for cells and edges when true
+EQUILIBRIUMMITOSIS = 1; %boolean, tells code if mitosis should happen at equilibrium
 nomfichier= strcat('LNbC_','NbPts_', num2str(NbPoints,'%4d'), '_rng_', num2str(r,'%4d'),'_pot_', potential, '_lim_', num2str(limit, '%2d'), '.txt');
+
 
 %%
 f1=figure();
@@ -224,7 +227,9 @@ fprintf(fid, 'LAMBDA\t%f\n', LAMBDA);%for use in perimeter squared model
 fprintf(fid, 'T1ON\t%d\n', T1ON);
 fprintf(fid, 'APOPTOSISON\t%d\n', APOPTOSISON); 
 fprintf(fid, 'MITOSISON\t%d\n', MITOSISON);
-fprintf(fid, 'SIMTIMERES\t%d\n', SIMTIMERES);
+fprintf(fid, 'WRITEMITOSIS\t%d\n', WRITEMITOSIS);
+fprintf(fid, 'VERBOSEON\t%d\n', VERBOSEON);
+fprintf(fid, 'EQUILIBRIUMMITOSIS\t%d\n', EQUILIBRIUMMITOSIS);
 fprintf(fid, 'endGlobal\n');
 fprintf(fid, 'Vertices\n');
 fprintf(fid, 'id\tx\ty\n');
