@@ -21,7 +21,7 @@
 #include "Constants.h"
 #include "AGConstants.h"
 #include "AGCell.h"
-#include "Bessel.h"
+
 
 using namespace std;
 
@@ -207,10 +207,7 @@ vector<vector<double>> AGCell::GetBipolarityTensor()
 */
 double AGCell::TCJDivProbability(double phi)
 {
-	Bessel b;
-	return exp(-1 * (*this).TCJSTRENGTH * cos(2 * phi) ) / ( PI * b.bessi(0, (*this).TCJSTRENGTH ));
-	
-	
+	return exp(-1 * (*this).TCJSTRENGTH * cos(2 * phi));
 	// double cosphi = 100 * cos(phi) * cos(phi);
 	// return exp(-1 * cosphi) / (exp(-100 / 2.0) * PI * b.bessi(0, 100 / 2.0));
 	// for debugging, we add a "strength" of 10
@@ -225,9 +222,8 @@ double AGCell::TCJDivProbability(double phi)
 
 double AGCell::AnisotropicDivProbability( double phi)
 {
-	Bessel b;
 	double cosphi = ANSTRENGTH * cos(phi) * cos(phi);
-	return exp( -1 * cosphi ) / ( exp( - ANSTRENGTH / 2.0 ) * PI * b.bessi(0, ANSTRENGTH / 2.0) );
+	return exp( -1 * cosphi );
 }
 
 /*
@@ -240,13 +236,11 @@ double AGCell::AnisotropicDivProbability( double phi)
 */
 double AGCell::CombTCJANProbability( double phi)
 {
-	Bessel b;
 	double ThetaTCJ = (*this).GetThetaTCJ();
 	double cosConst = (TCJSTRENGTH) * cos(2 * ThetaTCJ) + (ANSTRENGTH / 2.0) * cos(2 * THETAAN);
 	double sinConst = (TCJSTRENGTH) * sin(2 * ThetaTCJ) + (ANSTRENGTH / 2.0) * sin(2 * THETAAN);
 	double U = cosConst * cos(2 * phi) + sinConst * sin(2 * phi);
-	double Z = PI * b.bessi(0 , sqrt( pow(cosConst,2) + pow(sinConst,2) ) );
-	return exp(-1 * U) / Z;
+	return exp(-1 * U) ;
 
 }
 /*
@@ -259,14 +253,12 @@ double AGCell::CombTCJANProbability( double phi)
 */
 double AGCell::CombTCJANProbability(double phi, double thetatcj)
 {
-	Bessel b;
 	// double ThetaTCJ = (*this).GetThetaTCJ();
 	double ThetaTCJ = thetatcj;
 	double cosConst = cos(2 * ThetaTCJ) + (ANSTRENGTH / 2.0) * cos(2 * THETAAN);
 	double sinConst = sin(2 * ThetaTCJ) + (ANSTRENGTH / 2.0) * sin(2 * THETAAN);
 	double U = cosConst * cos(2 * phi) + sinConst * sin(2 * phi);
-	double Z = PI * b.bessi(0, sqrt(pow(cosConst, 2) + pow(sinConst, 2)));
-	return exp(-1 * U) / Z;
+	return exp(-1 * U) ;
 
 }
 
@@ -277,31 +269,26 @@ double AGCell::CombTCJANProbability(double phi, double thetatcj)
 */
 double AGCell::CombTCJANProbMaximum()
 {
-	Bessel b;
 	double ThetaTCJ = (*this).GetThetaTCJ();
 	double cosConst = (TCJSTRENGTH)* cos(2 * ThetaTCJ) + (ANSTRENGTH / 2.0) * cos(2 * THETAAN);
 	double sinConst = (TCJSTRENGTH)* sin(2 * ThetaTCJ) + (ANSTRENGTH / 2.0) * sin(2 * THETAAN);
-	double Z = PI * b.bessi(0, sqrt(pow(cosConst, 2) + pow(sinConst, 2)));
 	double Umax = sqrt(pow(cosConst, 2) + pow(sinConst, 2));
 	// maximum of potential 
-	return exp(-1 * Umax) / Z;
+	return exp(-1 * Umax) ;
 }
 /*
 * double CombTCJANProbMaximum()
 *
-* Returns the maximum of the combined (tcj + anisotropic) division potential using (for now) a gradient descent type algorithm
-* with a step size adaptively determined by anisotropy strength
+* Returns the maximum of the combined (tcj + anisotropic) division potential
 */
 double AGCell::CombTCJANProbMaximum(double thetatcj)
 {
-	Bessel b;
 	// double ThetaTCJ = (*this).GetThetaTCJ();
 	double ThetaTCJ = thetatcj;
 	double cosConst = cos(2 * ThetaTCJ) + (ANSTRENGTH / 2.0) * cos(2 * THETAAN);
 	double sinConst = sin(2 * ThetaTCJ) + (ANSTRENGTH / 2.0) * sin(2 * THETAAN);
 	double Umax = sqrt(pow(cosConst,2) + pow(sinConst,2));
-	double Z = PI * b.bessi(0, sqrt(pow(cosConst, 2) + pow(sinConst, 2)));
-	return exp(-1 * Umax) / Z;
+	return exp(-1 * Umax);
 }
 /*
 * double DivisionAngleDistribution(string potential)
@@ -330,7 +317,7 @@ double AGCell::DivisionAngleDistribution(string potential)
 
 
     double ThetaTCJ = (*this).GetThetaTCJ();
-	
+	// double ThetaTCJ = 0;
 
 	// rejection sampler code
 	do
@@ -369,7 +356,6 @@ double AGCell::DivisionAngleDistribution(string potential)
 		else
 		{
 			// if no valid potential is given by user, default to isotropic divisions
-
 			// might be worth changing default to TCJ
 			propPofPhi = propphi;
 			propy = propphi;
@@ -397,15 +383,14 @@ double AGCell::DivisionAngleDistribution(string potential)
 			// make the appropriate angle declaration
 		}
 	} while (flag);
-	
-	
+
 	return angle;
 }
 /*
 * double DivisionAngleDistribution()
 *
 * Generates a random angle that will be used by Mitosis function to help determine the cleavage plane of
-* dividing cells. Same as DivisionAngleDistribution(potential), but will use the field "potential"
+* dividing cells. Same as DivisionAngleDistribution(potential), but will use the field "DIVISIONPOTENTIAL"
 */
 double AGCell::DivisionAngleDistribution()
 {

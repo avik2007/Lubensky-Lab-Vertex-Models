@@ -24,19 +24,19 @@ t0 = 1;                     %Standard unit of time
 RLXLY = 1;                  %Ratio of LX to LY (used to make rectangular boxes) 
 Ratio = 0.3;                %ratio of pressure to tension forces (standard value 0.3)
 Ralpha=100;                   %Ralpha=10 means the box evolves 10 times slower then the vertices
-TOTALTIME =	200;             %How long to run the simulation 
+TOTALTIME =	250;             %How long to run the simulation 
 CURRENTTIME = 0.0;          %The initial time
-TIMEINTERVAL =	2;        %How often to output the current configuration of the tissue
+TIMEINTERVAL =	5;        %How often to output the current configuration of the tissue
 INITIALSTEPSIZE = 0.1;    %Initial stepsize for the numberic integrator 
 error_tolerance_absolute_mechanical = 0.01;  %Error tolerence for use with the adaptive stepsize integrators 
 LX=n*3*l+1;
 LY=m*sqrt(3)*l+1; 
 NCells=n*m*2;
-A0 = LX*LY/NCells;                   %Cells want to have area A0
+A0 = 4033.11; %LX*LY/NCells;                   %Cells want to have area A0, 4033.11; 
 MINAREA = A0/100;                    %Minimum allowed cell area (smaller cells will be removed)
 MINLENGTH =	l/40;                    %Minimum edge length (smaller edges will be merged to form a fourfold vertex
 NEWEDGELENGTH =	l/20;                %Length of a new edge created in the T1 process
-% K = Ratio * GAMMA / l^3 ;           %for pressure=K(A-A0)
+%K = Ratio * GAMMA / l^3 ;           %for pressure=K(A-A0)
 K = Ratio * 10 * GAMMA / l;          %for pressure=K(1-A/A0)
 Alpha_M = GAMMA*t0/l;                % Drag coefficent
 TISSUE_ALPHA = Ralpha*Alpha_M;       % How fast the box size updates relative to the vertex motion

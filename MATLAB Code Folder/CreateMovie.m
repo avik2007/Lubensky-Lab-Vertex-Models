@@ -8,8 +8,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function CreateMovie(inputFileName)
-%Initialize 
-addpath('CreateMovie_HelpperFunctions_depracated');   %add path to where the functions are located
+%Initialize %addpath('CreateMovie_HelpperFunctions_depracated');   %add path to where the functions are located
 outputFileName=strcat(inputFileName, '_movie'); 
 mkdir(outputFileName)                   %make a folder to store tif images in 
 fid = fopen(inputFileName);

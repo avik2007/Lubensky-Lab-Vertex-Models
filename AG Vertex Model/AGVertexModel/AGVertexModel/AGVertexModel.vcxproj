@@ -67,7 +67,6 @@
     <ClInclude Include="AGCell.h" />
     <ClInclude Include="AGConstants.h" />
     <ClInclude Include="AGTissue.h" />
-    <ClInclude Include="Bessel.h" />
     <ClInclude Include="CellClass.h" />
     <ClInclude Include="Constants.h" />
     <ClInclude Include="EdgeClass.h" />
@@ -78,7 +77,6 @@
   <ItemGroup>
     <ClCompile Include="AGCell.cpp" />
     <ClCompile Include="AGTissue.cpp" />
-    <ClCompile Include="Bessel.cpp" />
     <ClCompile Include="CellClass.cpp" />
     <ClCompile Include="EdgeClass.cpp" />
     <ClCompile Include="MainTest.cpp" />

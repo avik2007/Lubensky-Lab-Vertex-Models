@@ -28,7 +28,7 @@
 #include "AGTissue.h"
 #include "Constants.h"
 #include "AGConstants.h"
-#include "Bessel.h"
+
 
 
 
@@ -62,7 +62,7 @@ double error_tolerance_absolute_mechanical = 0.2;
 double LXnew = 0;
 double LYnew = 0;
 double TAU = 1;
-double TAU_STRESS = 10;
+double TAU_STRESS = 5;
 double A0SKEW = 1;
 double LX0 = 0;
 double LY0 = 0;
@@ -103,17 +103,19 @@ int main()
 {
 	/*
 	vector<Edge*> empty;
-	AGCell* ag = new AGCell(0, empty, 0, 1, PI / 4.0, 1, "combined" );
-	AGCell* ag2 = new AGCell(0, empty, 0, 1, PI / 4.0, 10, "combined");
-	AGCell * ag3 = new AGCell(0, empty, 0, 1, PI / 4.0, 20, "combined");
-	for (int index = 0; index < 10000; index++)
+	AGCell* ag = new AGCell(0, empty, 0, 1, 0.5, PI / 4.0, 1,"tcj");
+	cout << "test" << endl;
+	//AGCell* ag2 = new AGCell(1, empty, 0, 1, PI / 4.0, 0, "combined");
+	//AGCell * ag3 = new AGCell(2, empty, 0, 1, PI / 4.0, 0, "combined");
+	for (int index = 0; index < 100000; index++)
 	{
-		cout << (*ag).DivisionAngleDistribution("combined") << "," << (*ag2).DivisionAngleDistribution("combined") << "," << (*ag3).DivisionAngleDistribution("combined") << endl;
+	//	cout << (*ag).DivisionAngleDistribution("combined") << "," << (*ag2).DivisionAngleDistribution("combined") << "," << (*ag3).DivisionAngleDistribution("combined") << endl;
+		cout << (*ag).DivisionAngleDistribution("tcj") << endl;
 	}
 
 	delete ag;
-	delete ag2;
-	delete ag3;
+	//delete ag2;
+	// delete ag3;
 	*/
 	
 	//Path to the folder that your initial files are in 
@@ -184,6 +186,5 @@ int main()
 	std::chrono::duration<double> elapsed_seconds = endtime - starttime;
 	cout << "ELAPSED TIME: " << elapsed_seconds.count() / 60.0 << "  min\n";
 	return 0;
-	
 }
 

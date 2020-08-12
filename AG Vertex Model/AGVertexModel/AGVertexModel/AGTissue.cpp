@@ -420,6 +420,7 @@ void AGTissue::HelperWriteOutputData_Write2File(ofstream* datafile, bool include
 	*datafile << "TISSUE_ALPHA\t" << TISSUE_ALPHA << endl;
 	*datafile << "TISSUE_EXT_STRESS_X\t" << TISSUE_EXT_STRESS_X << endl;
 	*datafile << "TISSUE_EXT_STRESS_Y\t" << TISSUE_EXT_STRESS_Y << endl;
+	*datafile << "NUMBER OF CELLS\t" << cells.size() << endl;
 	//******ADD NEW OUTPUT HERE******//
 	*datafile << "endGlobal" << endl;
 
@@ -1303,14 +1304,12 @@ void AGTissue::ForceFunction(ofstream* errorfile){
 	//Added the length squared scaling in this step
 	double tempForceX;
 	double tempForceY;
-	double maxForceY = 0;
-	double maxForceX = 0;
 	double forceMag = 0;
 	double meanForce = 0;
 	double meanSqrForce = 0;
 	double varianceForce = 0;
 	vector <double> forceList;
-	double big10meanForce = 0;
+
 	for (list<Vertex*>::iterator vit = vertices.begin(); vit != vertices.end(); vit++)
 	{
 		tempForceX =  (*(*vit)).SavedInfoForEvolve_MechForce.x  + (alphaM / TISSUE_ALPHA) * ((*(*vit)).r.x / LX) * ForceLX;
@@ -1529,6 +1528,9 @@ void AGTissue::WriteOutputDataAppend(ofstream* datafile)
 {
 	(*this).HelperWriteOutputData_Write2File(datafile, VERBOSEON);
 }
+/*
+*bool IsEquilibrated()
+*/
 bool AGTissue::IsEquilibrated()
 {
 	return equilibriumChecker;

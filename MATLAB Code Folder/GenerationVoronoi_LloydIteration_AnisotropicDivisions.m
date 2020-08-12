@@ -28,7 +28,7 @@ MINAREA = 0.1;
 MINLENGTH =	1.0;
 NEWEDGELENGTH =	2.0;
 
-TOTALTIME = 1.0;
+TOTALTIME = 20.0;
 CURRENTTIME = 0.0;
 INITIALSTEPSIZE = t0 / 1000;
 error_tolerance_absolute_mechanical =	0.001;
@@ -54,11 +54,11 @@ potential = pot; % DESCRIBED FOR INDIVIDUAL CELLS - - IF YOU WANT DIFFERENT CELL
 % POTENTIALS, YOU'LL HAVE TO DO YOUR OWN SPECIAL STUFF! (see a few sections
 % below)
 
-TCJSTRENGTH = 500;
+TCJSTRENGTH = 2;
 
 THETAAN =3.14 / 2.0 ;    %direction of anisotropy
 
-ANSTRENGTH = 0; %strength of anisotropy
+ANSTRENGTH = 2; %strength of anisotropy
 % I think anstrength has an upperbound that is important for its function
 % other options for potential :"tcj" (uses tcj potential), "ani" (uses
 % anisotropic potential), "combined" - uses both!
