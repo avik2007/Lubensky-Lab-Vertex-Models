@@ -28,7 +28,31 @@ using namespace std;
 //***************************************************************************************************************
 //*********** FUNCTIONS FOR CALCULATING CELL PROPERTIES **********************************************************************
 //***************************************************************************************************************
-
+/*
+* double GetPressure
+*
+*
+* Calculates pressure of the cell based on the cell potential type (here, we're adding an option for the pressure 
+* taking a log or a gaussian potential 
+*/
+double AGCell::GetPressure(double Area)
+{
+	if ((*this).pressureType == "LOG")
+	{
+		return K * (1 / (1 + Area / (*this).A0));
+		// where the energy would look like Ep = - K A0 Log(1 + A/A0)
+	}
+	else if ((*this).pressureType == "GAUSSIAN")
+	{
+		return K * ( 1 - Area / (*this).A0) * exp( pow(( Area / (*this).A0  - 1 ),2.0) ) ;
+		// where the energy would look like Ep = K A0 exp((A/A0-1)^2)
+	}
+	else
+	{
+		return K * (1 - Area / (*this).A0);
+		// where the energy would look like Ep = 1/2 K A0 (A/A0 - 1)^2
+	}
+}
 /*
  * double GetThetaTCJ
  *
@@ -544,3 +568,117 @@ double AGCell::GetdAdLy()
 	return abs(dAdLy);
 }
 
+/*
+* double GetCellStressXX();
+*
+* Calculates the xx component of the Cauchy stress tensor for a cell
+*/
+double AGCell::GetCellStressXX()
+{
+	vector<Vertex*> clockwiseVertex = (*this).GetClockWiseVertices();
+	int vertexNum = clockwiseVertex.size();
+	// clockwiseVertex.push_back(clockwiseVertex[0]);
+	Vertex *v1, *v2;
+	double F1, F2;
+	double x1, x2;
+	double stressxx = 0;
+	for (int i = 0; i < vertexNum; i++)
+	{
+		v1 = clockwiseVertex[i];
+		// v2 = clockwiseVertex[i + 1];
+		x1 = (*v1).r.x; 
+		F1 = (*v1).SavedInfoForEvolve_TotalForce.x;
+		// F2 = (*v1).SavedInfoForEvolve_TotalForce.x;
+		stressxx += ( F1 * x1 ) ;
+	}
+	return stressxx / (*this).GetArea();
+}
+
+/*
+* double GetCellStressYY();
+*
+* Calculates the yy component of the Cauchy stress tensor for a cell
+*/
+double AGCell::GetCellStressYY()
+{
+	vector<Vertex*> clockwiseVertex = (*this).GetClockWiseVertices();
+	int vertexNum = clockwiseVertex.size();
+	Vertex *v1, *v2;
+	double F1, F2;
+	double y1, y2;
+	double stressyy = 0;
+	for (int i = 0; i < vertexNum; i++)
+	{
+		v1 = clockwiseVertex[i];
+		y1 = (*v1).r.y;
+		F1 = (*v1).SavedInfoForEvolve_TotalForce.y;
+		stressyy += (F1 * y1) ;
+	}
+	return stressyy / (*this).GetArea();
+}
+/*
+* double GetCellStressInterpolateXX();
+*
+* Calculates the xx component of the Cauchy stress tensor for a cell using the 
+* interpolating equation defined in Lee and Morishita 2017 
+*
+* THIS IS INHERENTLY DIFFERENT THAT LEE AND MORISHITA'S STRESS TENSOR BECAUSE
+* YOU OVERCOUNT FORCES - LEE AND MORISHITA THINK ONLY ABOUT FORCES FROM AN INDIVIDUAL
+* CELL, MEANWHILE, YOU COUNTED ALL OF THEM
+*/
+double AGCell::GetCellStressInterpolateXX()
+{
+	vector<Vertex*> clockwiseVertex = (*this).GetClockWiseVertices();
+	int vertexNum = clockwiseVertex.size();
+	clockwiseVertex.push_back(clockwiseVertex[0]);
+	Vertex *v1, *v2;
+	double F1, F2;
+	double x1, x2;
+	double stressxx = 0;
+	for (int i = 0; i < vertexNum; i++)
+	{
+		v1 = clockwiseVertex[i];
+		v2 = clockwiseVertex[i + 1];
+		x1 = (*v1).r.x;
+		x2 = (*v2).r.x;
+		F1 = (*v1).SavedInfoForEvolve_TotalForce.x;
+		F2 = (*v1).SavedInfoForEvolve_TotalForce.x;
+		stressxx += ( F1 * x1 + F2 * x2 ) / ( 3.0 ) + (F1 * x2 + F2 * x1 )  / ( 6.0 ) ;
+	}
+	return stressxx / (*this).GetArea();
+}
+
+/*
+* double GetCellStressInterpolateYY();
+*
+* Calculates the yy component of the Cauchy stress tensor for a cell using the
+* interpolating equation defined in Lee and Morishita 2017
+*/
+double AGCell::GetCellStressInterpolateYY()
+{
+	vector<Vertex*> clockwiseVertex = (*this).GetClockWiseVertices();
+	int vertexNum = clockwiseVertex.size();
+	clockwiseVertex.push_back(clockwiseVertex[0]);
+	Vertex *v1, *v2;
+	double F1, F2;
+	double y1, y2;
+	double stressyy = 0;
+	for (int i = 0; i < vertexNum; i++)
+	{
+		v1 = clockwiseVertex[i];
+		v2 = clockwiseVertex[i + 1];
+		y1 = (*v1).r.x;
+		y2 = (*v2).r.x;
+		F1 = (*v1).SavedInfoForEvolve_TotalForce.y;
+		F2 = (*v1).SavedInfoForEvolve_TotalForce.y;
+		stressyy += (F1 * y1 + F2 * y2) / (3.0) + (F1 * y2 + F2 * y1) / (6.0);
+	}
+	return stressyy / (*this).GetArea();
+}
+
+double AGCell::GetEnergy()
+{
+	double energy = 0.5 * (K * pow((*this).GetArea() - (*this).A0, 2) / (*this).A0) + 0.5*GAMMA * (*this).GetPerimeter();
+	return energy;
+
+}

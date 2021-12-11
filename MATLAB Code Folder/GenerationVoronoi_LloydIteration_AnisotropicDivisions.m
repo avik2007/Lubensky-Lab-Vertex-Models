@@ -1,9 +1,12 @@
-function GenerationVoronoi_LloydIteration_AnisotropicDivisions(r,NbPoints,limit, pot)
+function GenerationVoronoi_LloydIteration_AnisotropicDivisions(r,NbPoints,limit, pot, cpt, prefix)
 
 %r = 31; %seed
 %NbPoints = 10000; %number of cells 
 %limit = 1000; %number of iterations 
-
+%cpt is cell pressure type (choose between "quadratic", "log", "gaussian")
+%prefix lets you choose the first four letters of the file name (you could
+%make it more than 4 letters but 4 letters has been my convention and I
+%recommend sticking to that
 %% Store data in the right folder
 close all;
 %% Parameters
@@ -15,6 +18,9 @@ A0 = 1250;
 GAMMA =	 10;%strength of line tension coefficient
 t0 = 1; %time units
 K = 5 * GAMMA / sqrt(A0);  %"young's modulus", strength of area term - using equation given in Meryl's thesis
+% K should have units of pressure!
+%GAMMA = 10;
+%K = 0.001;
 %% Simulation Detail Parameters
 % Variable preferred area
 %Mesh = l0 * sqrt(2) * sqrt(NbPoints);
@@ -29,13 +35,13 @@ MINLENGTH =	1.0;
 NEWEDGELENGTH =	2.0;
 
 TOTALTIME = 20.0;
-CURRENTTIME = 0.0;
+CURRENTTIME = 0.0;  
 INITIALSTEPSIZE = t0 / 1000;
 error_tolerance_absolute_mechanical =	0.001;
 ALPHAM = GAMMA * ( t0 / sqrt(A0));
-TISSUE_ALPHA = 100 * ALPHAM; % has to scale with cell number apparently - perhaps that makes sense?
-% ^ this functionality has to go into the vertex model, so that for mitosis
-% the packing gets stiffer as the number of cells increases
+TISSUE_ALPHA = 10000000000000000000000000000000000 * ALPHAM;
+% this tunes the "stiffness" of the box - make very large if you don't want
+% box to move
 TISSUE_EXT_STRESS_X = 0;
 TISSUE_EXT_STRESS_Y = 0;    
 P0 = 0;
@@ -44,21 +50,21 @@ LAMBDA = 0; %in meryl's model, strength of (p - p0)^2 term
 % trying a new thing with P0 where I use the theory from Manning paper ("a
 % density independent rigidity transition in biological tissues")
 
-%if (LAMBDA ~= 0)
-%    P0 = -1 * GAMMA / (2 * LAMBDA); %THIS IS VERY NONTRIVIAL, LOOK AT NOTES FOR THIS
-%else
-%    P0 = 0;
-%end
+if (LAMBDA ~= 0)
+    P0 = -1 * GAMMA / (2 * LAMBDA); %THIS IS VERY NONTRIVIAL, LOOK AT NOTES FOR THIS
+else
+    P0 = 0;
+end
 
 potential = pot; % DESCRIBED FOR INDIVIDUAL CELLS - - IF YOU WANT DIFFERENT CELLS TO HAVE DIFFERENT 
 % POTENTIALS, YOU'LL HAVE TO DO YOUR OWN SPECIAL STUFF! (see a few sections
 % below)
-
-TCJSTRENGTH = 2;
+CELLPRESSURETYPE = cpt;
+TCJSTRENGTH = 50;
 
 THETAAN =3.14 / 2.0 ;    %direction of anisotropy
 
-ANSTRENGTH = 2; %strength of anisotropy
+ANSTRENGTH = 25; %strength of anisotropy
 % I think anstrength has an upperbound that is important for its function
 % other options for potential :"tcj" (uses tcj potential), "ani" (uses
 % anisotropic potential), "combined" - uses both!
@@ -68,16 +74,14 @@ ANSTRENGTH = 2; %strength of anisotropy
 
 
 T1ON = 1; %boolean, tells code if T1's are turned on
-APOPTOSISON = 0;%boolean, tells code if Apoptosis is turned on
-MITOSISON = 1;% boolean, tells code if mitosis is turned on
+APOPTOSISON = 1;%boolean, tells code if Apoptosis is turned on
+MITOSISON = 0;% boolean, tells code if mitosis is turned on
 % SET TAU_STRESS!!
 WRITEMITOSIS = 0; % boolean, tells code to report mitosis every time it happens if true
 % TEST THE ABOVE FOUR MECHANISMS!
 VERBOSEON = 0; %boolean, tells code to output extra data for cells and edges when true
 EQUILIBRIUMMITOSIS = 1; %boolean, tells code if mitosis should happen at equilibrium
-nomfichier= strcat('LNbC_','NbPts_', num2str(NbPoints,'%4d'), '_rng_', num2str(r,'%4d'),'_pot_', potential, '_lim_', num2str(limit, '%2d'), '.txt');
-
-
+nomfichier= strcat('prefix','_NbPts_', num2str(NbPoints,'%4d'), '_rng_', num2str(r,'%4d'),'_pot_', potential, '_lim_', num2str(limit, '%2d'), '.txt');
 %%
 f1=figure();
 f2=figure();
@@ -454,9 +458,9 @@ cinside2=cinside2(1:CellIncrement);
 % from this list we can write cells
 fprintf(fid, 'Cells\n');
 if (strcmp(potential,"tcj"))
-    fprintf(fid, 'id\tA0\tEdgeNumb\tEdgeList\tPotential\tTCJStrength\n');
+    fprintf(fid, 'id\tA0\tEdgeNumb\tEdgeList\tPotential\tTCJStrength\tCellPressureType\n');
 else
-    fprintf(fid, 'id\tA0\tEdgeNumb\tEdgeList\tPotential\tTCJStrength\tThetaAn\tAnStrength\n');
+    fprintf(fid, 'id\tA0\tEdgeNumb\tEdgeList\tPotential\tTCJStrength\tThetaAn\tAnStrength\tCellPressureType\n');
 end
 for i=1:length(cinside2)
     ListVertex=c{i};
@@ -477,10 +481,10 @@ for i=1:length(cinside2)
         % and is written in the file
         fprintf(fid,'%d,',NumeroEdge);
     end
-    if (strcmp(potential, "tcj"))
-        fprintf(fid,'\t%s\t%f\n', potential, TCJSTRENGTH);
+     if (strcmp(potential, "tcj"))
+        fprintf(fid,'\t%s\t%f\t%s\n', potential, TCJSTRENGTH,CELLPRESSURETYPE);
     else
-        fprintf(fid,'\t%s\t%f\t%f\t%f\n', potential, TCJSTRENGTH, THETAAN, ANSTRENGTH);
+        fprintf(fid,'\t%s\t%f\t%f\t%f\t%s\n', potential, TCJSTRENGTH, THETAAN, ANSTRENGTH,CELLPRESSURETYPE);
     end
 end
 fprintf(fid, 'End\n');

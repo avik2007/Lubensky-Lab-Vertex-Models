@@ -1,37 +1,37 @@
-﻿Build started 8/12/2020 2:15:28 PM.
+﻿Build started 6/25/2021 11:01:17 AM.
      1>Project "C:\Users\abmondal\Documents\Vertex_Model_Repository\AG Vertex Model\AGVertexModel\AGVertexModel\AGVertexModel.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio 13.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt AGTissue.cpp
          AGTissue.cpp
      1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(93): warning C4244: '=' : conversion from 'double' to 'int', possible loss of data
      1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(149): warning C4800: 'double' : forcing value to bool 'true' or 'false' (performance warning)
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(261): warning C4800: 'int' : forcing value to bool 'true' or 'false' (performance warning)
      1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(262): warning C4800: 'int' : forcing value to bool 'true' or 'false' (performance warning)
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(182): warning C4101: 'j' : unreferenced local variable
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(452): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(509): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(517): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(400): warning C4101: 'rawtime' : unreferenced local variable
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(401): warning C4101: 'timeinfo' : unreferenced local variable
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(629): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(797): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1043): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1057): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1125): warning C4101: 'flag0' : unreferenced local variable
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1248): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1227): warning C4101: 'cellnumber' : unreferenced local variable
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1390): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1411): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1366): warning C4101: 'length' : unreferenced local variable
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1360): warning C4101: 'v3' : unreferenced local variable
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1366): warning C4101: 'tempCenterHolder' : unreferenced local variable
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1360): warning C4101: 'v2' : unreferenced local variable
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1484): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1504): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1463): warning C4101: 'length' : unreferenced local variable
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1457): warning C4101: 'v3' : unreferenced local variable
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1457): warning C4101: 'v2' : unreferenced local variable
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(746): warning C4715: 'AGTissue::CreateCell' : not all control paths return a value
+     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(263): warning C4800: 'int' : forcing value to bool 'true' or 'false' (performance warning)
+     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(183): warning C4101: 'j' : unreferenced local variable
+     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(453): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(537): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(545): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(401): warning C4101: 'rawtime' : unreferenced local variable
+     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(402): warning C4101: 'timeinfo' : unreferenced local variable
+     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(656): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(824): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1070): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1084): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1145): warning C4101: 'flag0' : unreferenced local variable
+     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1357): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1334): warning C4101: 'cellnumber' : unreferenced local variable
+     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1514): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1535): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1490): warning C4101: 'length' : unreferenced local variable
+     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1484): warning C4101: 'v3' : unreferenced local variable
+     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1490): warning C4101: 'tempCenterHolder' : unreferenced local variable
+     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1484): warning C4101: 'v2' : unreferenced local variable
+     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1608): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1628): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1587): warning C4101: 'length' : unreferenced local variable
+     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1581): warning C4101: 'v3' : unreferenced local variable
+     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1581): warning C4101: 'v2' : unreferenced local variable
+     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(773): warning C4715: 'AGTissue::CreateCell' : not all control paths return a value
        Link:
          C:\Program Files (x86)\Microsoft Visual Studio 13.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\abmondal\Documents\Vertex_Model_Repository\AG Vertex Model\AGVertexModel\Debug\AGVertexModel.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\abmondal\Documents\Vertex_Model_Repository\AG Vertex Model\AGVertexModel\Debug\AGVertexModel.pdb" /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\abmondal\Documents\Vertex_Model_Repository\AG Vertex Model\AGVertexModel\Debug\AGVertexModel.lib" /MACHINE:X86 Debug\AGCell.obj
          Debug\AGTissue.obj
@@ -46,4 +46,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:01.14
+Time Elapsed 00:00:04.10

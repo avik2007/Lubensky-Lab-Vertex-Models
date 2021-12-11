@@ -1,0 +1,100 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{3C91A3C4-3165-4FD2-BC70-35C8E1B40F40}</ProjectGuid>
+    <RootNamespace>AGPerimVertex</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ReferencePath>C:\Users\abmondal\Documents\Vertex_Model_Repository\CPP Code Base;C:\Users\abmondal\Documents\Vertex_Model_Repository\AG Vertex Model\AGVertexModel\AGVertexModel;C:\Users\abmondal\Documents\Vertex_Model_Repository\AG Vertex Model\AGVertexModel\AGPerimVertex;$(ReferencePath)</ReferencePath>
+    <IncludePath>C:\Users\abmondal\Documents\Vertex_Model_Repository\AG Vertex Model\AGVertexModel\AGVertexModel;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\AGVertexModel\AGCell.cpp" />
+    <ClCompile Include="..\AGVertexModel\AGTissue.cpp" />
+    <ClCompile Include="..\AGVertexModel\CellClass.cpp" />
+    <ClCompile Include="..\AGVertexModel\EdgeClass.cpp" />
+    <ClCompile Include="..\AGVertexModel\TissueClass.cpp" />
+    <ClCompile Include="..\AGVertexModel\VectClass.cpp" />
+    <ClCompile Include="..\AGVertexModel\VertexClass.cpp" />
+    <ClCompile Include="AGPerimCell.cpp" />
+    <ClCompile Include="AGPerimEdge.cpp" />
+    <ClCompile Include="AGPerimTissue.cpp" />
+    <ClCompile Include="MainAGPerim.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\AGVertexModel\AGCell.h" />
+    <ClInclude Include="..\AGVertexModel\AGConstants.h" />
+    <ClInclude Include="..\AGVertexModel\AGTissue.h" />
+    <ClInclude Include="..\AGVertexModel\CellClass.h" />
+    <ClInclude Include="..\AGVertexModel\Constants.h" />
+    <ClInclude Include="..\AGVertexModel\EdgeClass.h" />
+    <ClInclude Include="..\AGVertexModel\TissueClass.h" />
+    <ClInclude Include="..\AGVertexModel\VectClass.h" />
+    <ClInclude Include="..\AGVertexModel\VertexClass.h" />
+    <ClInclude Include="AGPerimCell.h" />
+    <ClInclude Include="AGPerimConstants.h" />
+    <ClInclude Include="AGPerimEdge.h" />
+    <ClInclude Include="AGPerimTissue.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

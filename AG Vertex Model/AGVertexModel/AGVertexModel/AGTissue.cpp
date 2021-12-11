@@ -162,6 +162,7 @@ void AGTissue::HelperReadInputData_SetGlobalValues(ifstream* datafile){
 	// setting set the initial box dimensions here
 	LX0 = LX;
 	LY0 = LY;
+	
 }
 
  
@@ -185,7 +186,7 @@ void AGTissue::HelperReadInputData_CreateObjects(ifstream* datafile){
 	double x, y;
 	bool xf, yf;
 	double A0;
-	string potential;
+	string potential, cellpressuretype;
 	double tcjstrength = 0;
 	double thetaan = 0;
 	double anstrength = 0;
@@ -341,6 +342,14 @@ void AGTissue::HelperReadInputData_CreateObjects(ifstream* datafile){
 		{
 			anstrength = atof(objectInfo["AnStrength"].c_str());
 		}
+		if (objectInfo.count("CellPressureType"))
+		{
+			cellpressuretype = objectInfo["CellPressureType"];
+		}
+		else
+		{
+			cellpressuretype = "QUADRATIC";
+		}
 
 		//make the cell object
 		AGCell* cptr = new AGCell;
@@ -349,6 +358,7 @@ void AGTissue::HelperReadInputData_CreateObjects(ifstream* datafile){
 		(*cptr).A0 = A0;
 		(*cptr).IOEdgeID = listedges;
 		(*cptr).DIVISIONPOTENTIAL = potential;
+		(*cptr).pressureType = cellpressuretype;
 
 		if (tcjstrength != 0)
 		{
@@ -463,7 +473,7 @@ void AGTissue::HelperWriteOutputData_Write2File(ofstream* datafile, bool include
 		*datafile << "Vertices" << endl;
 		*datafile << "id\tx\ty\t_EdgesNumber" << endl;
 		for (list<Vertex*>::iterator vit = vertices.begin(); vit != vertices.end(); vit++){			//loop through all of the vertices in the tissue
-			*datafile << (*(*vit)).id << "\t" << (*(*vit)).r.x << "\t" << (*(*vit)).r.y << "\t" << (*(*vit)).edges.size() << endl;						//write it's info to the file
+			*datafile << (*(*vit)).id << "\t" << (*(*vit)).r.x << "\t" << (*(*vit)).r.y  << "\t" << (*(*vit)).edges.size() << endl;						//write it's info to the file
 		}
 
 		//print the edge info
@@ -473,7 +483,7 @@ void AGTissue::HelperWriteOutputData_Write2File(ofstream* datafile, bool include
 			Vertex* v1 = (*(*eit)).vertex1;
 			Vertex* v2 = (*(*eit)).vertex2;
 			double L = (*(*eit)).GetLength();
-			*datafile << (*(*eit)).id << "\t" << (*v1).id << "\t" << (*v2).id << "\t" << (*(*eit)).xflag << "\t" << (*(*eit)).yflag << "\t" << (*(*eit)).GetTension_Magnitude() << "\t" << (*(*(*eit)).cell1).id << "\t" << (*(*(*eit)).cell2).id << endl;
+			*datafile << (*(*eit)).id << "\t" << (*v1).id << "\t" << (*v2).id << "\t" << (*(*eit)).xflag << "\t" << (*(*eit)).yflag << "\t" << (*(*eit)).GetTension_Magnitude()  << "\t" << (*(*(*eit)).cell1).id << "\t" << (*(*(*eit)).cell2).id << endl;
 		}
 
 		//print the cell info
@@ -500,7 +510,7 @@ void AGTissue::HelperWriteOutputData_Write2File(ofstream* datafile, bool include
 			*datafile << cent.x << "\t" << cent.y << "\t \t" << bVectorListx.str() << "\t \t \t" << bVectorListy.str() << endl;
 			*/
 
-	 
+		/* FOR NORMAL RUNS - - - 
 			*datafile << "id\tA0\tEdgeNumb\tType\txflag\tyflag\tArea\tPressure\tCenterx\tCentery\tEdgeList\tCWVertices\tThetaTCJ\tPotential\tTCJSTRENGTH\tTHETAAN\tANSTRENGTH" << endl;
 			for (list<Cell*>::iterator cit = cells.begin(); cit != cells.end(); cit++)
 			{			//loop through all of the cells in the tissue
@@ -525,6 +535,32 @@ void AGTissue::HelperWriteOutputData_Write2File(ofstream* datafile, bool include
 					<< "\t" << (*agit).TCJSTRENGTH << "\t" << (*agit).THETAAN << "\t" << (*agit).ANSTRENGTH << endl;
 			}
 		}
+		*/
+		// FOR DEBUGGING Manning model
+
+		*datafile << "id\tA0\tEdgeNumb\tType\txflag\tyflag\tArea\tPressure\tPerimeter\tCenterx\tCentery\tEdgeList\tCWVertices\tdEnergy" << endl;
+		for (list<Cell*>::iterator cit = cells.begin(); cit != cells.end(); cit++)
+		{			//loop through all of the cells in the tissue
+			stringstream ssEdgeList;
+			ssEdgeList.clear();
+			for (i = 0; i < (*(*cit)).edges.size(); i++)
+			{				//make comma-separated list of edges
+				ssEdgeList << (*(*(*cit)).edges[i]).id << ",";
+			}
+
+			vector<Vertex*> CWVertices = (*(*cit)).GetClockWiseVertices();
+			stringstream ssCWVertices;
+			ssCWVertices.clear();
+			for (i = 0; i < CWVertices.size(); i++)
+			{			//make comma-separated list of vertices ordered clockwise
+				ssCWVertices << (*CWVertices[i]).id << ",";
+			}
+			Vect centroid = (*(*cit)).GetCenter();
+			AGCell * agit = dynamic_cast<AGCell*>(*cit);
+			*datafile << (*(*cit)).id << "\t" << (*agit).A0 << "\t" << (*(*cit)).edges.size() << "\t" << (*(*cit)).type << "\t" << (*(*cit)).GetXFlag() << "\t" << (*(*cit)).GetYFlag() << "\t"
+				<< (*agit).GetArea() << "\t" << (*agit).GetPerimeter() << "\t" << (*agit).GetPressure((*(*cit)).GetArea()) << "\t" << centroid.x << "\t" << centroid.y << "\t" << ssEdgeList.str() << "\t" << ssCWVertices.str() << "\t" << (*agit).pressureType << endl;
+		}
+	}
 		
 		*datafile << "End" << endl << endl;
 	}
@@ -583,7 +619,7 @@ bool AGTissue::Mitosis(){
 	int i;
 	double pressure;
 	double area;
-	double p0 = .01;
+	double p0 = .03;
 	
 	double f = 0; //feedback strength - between 0 and 1
 	// double alpha = p0 / (K*(A0 - f*A0)); //this defines feedback so that if a cell is smaller than f times the preferred area of cells, it can't divide
@@ -1087,42 +1123,35 @@ void AGTissue::HelperMitosis(Cell * parentcell, double divisionangle) {
 }
 
 /*
+* void DeformTissue( double Fxx, double Fyy)
+*
+* deforms the tissue according to a deformation gradient (defined by parameters).
+* Since this tissue is constrained to remain rectangular, only two matrix parameters
+* are required.
+*/
+void AGTissue::DeformTissue(double Fxx, double Fyy)
+{
+		LX = Fxx * LX;
+		LY = Fyy * LY;
+		for (list<Vertex*>::iterator vit = vertices.begin(); vit != vertices.end(); vit++)
+		{
+			//for expansion:
+			(*(*vit)).r.x = Fxx * (*(*vit)).r.x;
+			(*(*vit)).r.y = Fyy * (*(*vit)).r.y;
+		}
+}
+/*
 * void Evolve( double interval, double *stepsize, ofstream* errorfile)
 *
 * Evolves the tissue one time interval taking steps no larger than dt and updates the vertex positions
 */
 void AGTissue::Evolve(double interval, double *stepsize, ofstream* errorfile)
 {
-	// for making a suddesn change in box size
-	// MAKE A FUNCTION FOR THIS! PUT IT IN A SET UP FUNCTION
 	
-	//double c = 1.1;
-	
-	//if (CURRENTTIME > 100 && CURRENTTIME < 100 + TIMEINTERVAL)
-	//{
-	//for expansion:
-		//LX = c * LX;
-		//LY = c * LY;
-	//for shearing:
-		
-		//LX = c * LX;
-		//LY = LY / c;
-		
-		//for (list<Vertex*>::iterator vit = vertices.begin(); vit != vertices.end(); vit++) 
-		//{
-		//for expansion:
-		//(*(*vit)).r.x = c * (*(*vit)).r.x;
-		//(*(*vit)).r.y = c * (*(*vit)).r.y;
-		//for shearing:
-		//(*(*vit)).r.y = (*(*vit)).r.y / c;
-		//(*(*vit)).r.x = c * (*(*vit)).r.x;
-		//}
-	//}
-
 	//find the end point of this evolve
 	double endtime = CURRENTTIME + interval;
 	bool reinitialize = true;
-	bool flag0, flag1, flag2, flag3, flag4;
+	bool flag0, flag1, flag2, flag3, flag4; //FLAG 2 AND FLAG 0 ARE UNNECESSARY!!
 	int count = 0;
 
 	while (CURRENTTIME < endtime)
@@ -1164,6 +1193,43 @@ void AGTissue::Evolve(double interval, double *stepsize, ofstream* errorfile)
 			CURRENTTIME += *stepsize;	//Update the current time
 		}
 
+		// Testing out two different types of stress tensors for cells
+		/*
+		double interpolateX, interpolateY, virialX, virialY, xrelerror, yrelerror;
+		double totalxerror, totalyerror;
+		double totalinterpolateX = 0;
+		double totalinterpolateY = 0;
+		double totalvirialX = 0;
+		double totalvirialY = 0;
+		bool crossX = false;
+		bool crossY = true;
+		AGCell * acit; 
+		double area, cellarea;
+
+		for (list<Cell*>::iterator cit = cells.begin(); cit != cells.end(); cit++)
+		{
+			acit = dynamic_cast<AGCell*>((*cit));
+			crossX = (*acit).IsCrossingX();
+			crossY = (*acit).IsCrossingY();
+			interpolateX = ((*acit)).GetCellStressInterpolateXX(); 
+			interpolateY = ((*acit)).GetCellStressInterpolateYY();
+			virialX = ((*acit)).GetCellStressXX();
+			virialY = ((*acit)).GetCellStressYY();
+			xrelerror = (interpolateX / virialX) - 1;
+			yrelerror = (interpolateY / virialY) - 1;
+			//*errorfile << "Stress xx Rel Error: " << xrelerror << " \nStress yy Rel Error: " << yrelerror << "    crossing: "<< (crossX || crossY) <<" \n";
+			cellarea = (*acit).GetArea();
+			totalinterpolateX += interpolateX * cellarea / (LX * LY) ;
+			totalinterpolateY += interpolateY * cellarea / (LX * LY);
+			totalvirialX += virialX * cellarea / (LX * LY);
+			totalvirialY += virialY * cellarea / (LX * LY);
+		}
+		totalxerror = totalinterpolateX / totalvirialX - 1;
+		totalyerror = totalinterpolateY / totalvirialY - 1;
+		// *errorfile << "----------------------------------------------------\n";
+		// *errorfile << "Tot Stress xx Rel Error: " << totalxerror << " \n Tot Stress yy Rel Error: " << totalyerror << " \n";
+		// *errorfile << "----------------------------------------------------\n";
+		*/
 		//Step 3: Update
 		LX = LXnew;				//Update the current box size 
 		LY = LYnew;
@@ -1171,16 +1237,24 @@ void AGTissue::Evolve(double interval, double *stepsize, ofstream* errorfile)
 		// 
 		// UPDATE EQUILIBRIUM CHECKER 
 		//
-		//STEP 4: look for topological changes and set flags if any have occured 
+
+		// STEP 4: Update Free Energy
+		
+		//STEP 5: look for topological changes and set flags if any have occured 
 		flag1 = false;
 		flag2 = false;
 		flag3 = false;
 		flag4 = false;
 		if (APOPTOSISON) flag1 = (*this).Apoptosis(errorfile);
 
-		if (T1ON)  flag2 = (*this).T1(errorfile);
+		if (T1ON)
+		{
+			*errorfile << "Free Energy BEFORE T1: " << (*this).CalculateFreeEnergy() << endl;
+			flag2 = (*this).T1(errorfile);
+		}
 
 		flag3 = (*this).ResolveVertices(errorfile);
+		if (flag2) { *errorfile << "Free Energy AFTER T1: " << (*this).CalculateFreeEnergy() << endl; }
 
 		double timeratio = CURRENTTIME / TAU_STRESS;
 		double floortr = floor(CURRENTTIME / TAU_STRESS);
@@ -1206,6 +1280,48 @@ void AGTissue::Evolve(double interval, double *stepsize, ofstream* errorfile)
 			
 		}
 		if (flag1 || flag2 || flag3 || flag4) reinitialize = true;  //Determine if we need to reinitialize
+
+		// STEP 5: Update Free Energy (after topological changes)
+		/*
+		bool fr = 1;
+		for (list<Vertex*>::iterator vit = vertices.begin(); vit != vertices.end(); vit++)
+		{
+			fr = fr && ((*(*vit)).SavedInfoForEvolve_TotalForce.DotProduct((*(*vit)).rnew - (*(*vit)).rold) > 0);
+		}
+		*/
+
+		pastFreeEnergy = currentFreeEnergy;
+		currentFreeEnergy = (*this).CalculateFreeEnergy();	
+
+		*errorfile << "Current Time \t" << CURRENTTIME << "\tEnergy\t" << currentFreeEnergy << "\tFractional E Change \t" << (currentFreeEnergy - pastFreeEnergy) / pastFreeEnergy << "\n";
+		/*
+		if (CURRENTTIME > 0.348 && CURRENTTIME < 0.350)
+		{
+			for (list<Vertex*>::iterator vit = vertices.begin(); vit != vertices.end(); vit++)
+			{
+				*errorfile << "CURRENT TIME\t" << CURRENTTIME <<"\t"<< (*(*vit)).id << "\t" << (*(*vit)).SavedInfoForEvolve_TotalForce.x << "\t" << (*(*vit)).SavedInfoForEvolve_TotalForce.y << endl;
+			}
+			*errorfile << "*******************************************************************************************************\n";
+		}
+		*/
+		/*
+		double averagePastCellEnergy = 0;
+		double averageCurrentCellEnergy = 0;
+		double totalarea = 0;
+		for (list<Cell*>::iterator cit = cells.begin(); cit != cells.end(); cit++)
+		{		//Loop through the cells 
+			AGCell * agit = dynamic_cast<AGCell*>(*cit);
+			(*agit).pastEnergy = (*agit).currentEnergy;
+			(*agit).currentEnergy = (*agit).GetEnergy();
+			averagePastCellEnergy += (*agit).pastEnergy / cells.size();
+			averageCurrentCellEnergy += (*agit).currentEnergy / cells.size();
+			//totalarea += (*agit).GetArea();
+		}
+
+		pastFreeEnergy = currentFreeEnergy;
+		currentFreeEnergy = (*this).CalculateFreeEnergy();
+		*errorfile << (currentFreeEnergy - pastFreeEnergy) / cells.size() << endl;
+		*/
 	}
 
 	cout << "TISSUE EVOLVED TO TIME " << CURRENTTIME << " in " << count << " steps" << endl;
@@ -1242,10 +1358,13 @@ void AGTissue::ForceFunction(ofstream* errorfile){
 	}
 
 	//Calculate the force on each vertex from the pressure and tension
-	for (list<Vertex*>::iterator vit = vertices.begin(); vit != vertices.end(); vit++){
+	for (list<Vertex*>::iterator vit = vertices.begin(); vit != vertices.end(); vit++)
+	{
 		(*(*vit)).SavedInfoForEvolve_MechForce = zerovec; //first set the force to zero 
+		(*(*vit)).SavedInfoForEvolve_TotalForce = zerovec;
 		//For each edge
-		for (i = 0; i < (*(*vit)).edges.size(); i++){
+		for (i = 0; i < (*(*vit)).edges.size(); i++)
+		{
 			eptr = &(*(*(*vit)).edges[i]);
 			//Get the force from the tension on the edge
 			FT = (*eptr).GetTension_ForceOnVertex((*vit));
@@ -1272,12 +1391,16 @@ void AGTissue::ForceFunction(ofstream* errorfile){
 
 	//Calculate the tissue stress
 	// This needs to be updated. Maybe get rid of GammaX/Y and figure out how to replace them
-	 double GammaX = 0;
-	 double GammaY = 0;
-	 double cutlineX = 0;
-	 double cutlineY = 0;
-	 int sampleSize = 1;
-	// calculateexternalstress_linear(TAU_STRESS);
+	 //double GammaX = 0;
+	 //double GammaY = 0;
+	 //double cutlineX = 0;
+	 //double cutlineY = 0;
+	 //int sampleSize = 1;
+
+	 calculateexternalstress_linear(TAU_STRESS);
+	 // checking if taking more cuts is more accurate
+	 /**/
+	 /*
 	 for (int i = 0; i < sampleSize; i++)
 	 {
 		 cutlineX = distribution(generator) * LX; //Continue to generate random numbers until you cut no concave cells
@@ -1286,6 +1409,7 @@ void AGTissue::ForceFunction(ofstream* errorfile){
 		 cutlineY = distribution(generator) * LY; //Continue to generate random numbers until you cut no concave cells
 		 GammaY += ( TISSUE_EXT_STRESS_Y + (*this).CalculateTissueStressY(cutlineY, errorfile) ) / sampleSize ;
 	 }
+	 */
 	 
 	
 	// new code, 5/20/2020
@@ -1293,13 +1417,16 @@ void AGTissue::ForceFunction(ofstream* errorfile){
 	double p_ext = (TISSUE_EXT_STRESS_X + TISSUE_EXT_STRESS_Y) / 2;
 	double internalXstress = GetInternalTissueStressX(errorfile);
 	double internalYstress = GetInternalTissueStressY(errorfile);
-	//Update LY and LX
+	//Update LY and LX according to dynamical equations
 	ForceLX = -1 * (LY * LX0 * LX0) * (p_ext + internalXstress); 
 	ForceLY = -1 * (LY0 * LY0 * LX) * (p_ext + internalYstress);
-	// ***** EXTRA LENGTH FACTORS FROM LENGTH DEPENDENT VISCOSITY!
-	ForceLX = ForceLX * ( LX / ( LX0 * LX0 * LY ) )  ;
-	ForceLY = ForceLY * ( LY / ( LX * LY0 * LY0 ) )  ; 
 
+	// ***** ADD EXTRA LENGTH FACTORS FROM LENGTH DEPENDENT VISCOSITY!
+	ForceLX = ForceLX * ( LX / ( LX0 * LX0 * LY ) )  ;
+	ForceLY = ForceLY * ( LY / ( LX * LY0 * LY0 ) )  ;
+
+
+	
 	//Add the force from the tissue stress to every vertex
 	//Added the length squared scaling in this step
 	double tempForceX;
@@ -1316,18 +1443,24 @@ void AGTissue::ForceFunction(ofstream* errorfile){
 		tempForceY =  (*(*vit)).SavedInfoForEvolve_MechForce.y  + (alphaM / TISSUE_ALPHA) * ((*(*vit)).r.y / LY) * ForceLY;
 		// ***** EXTRA LENGTH FACTORS ADDED FOR DEBUGGING EASE!
 		(*(*vit)).SavedInfoForEvolve_TotalForce.x = tempForceX ;
-		(*(*vit)).SavedInfoForEvolve_TotalForce.y = tempForceY ; 
-		forceMag = sqrt(pow(tempForceX, 2.0) + pow(tempForceY, 2.0));
-		meanForce += 1.0 / vertices.size() * forceMag;
-		meanSqrForce += 1.0 / vertices.size() * pow(forceMag,2.0);
-		forceList.push_back(forceMag);
+		(*(*vit)).SavedInfoForEvolve_TotalForce.y = tempForceY ;
+
+		//if (CURRENTTIME < 0.6130 && CURRENTTIME > 0.609) { *errorfile << (*(*vit)).id << "\t Fx: " << tempForceX << "\t Fy:" << tempForceY << endl; }
+		//*errorfile << (*(*vit)).id << "\t Fx: " << tempForceX << "\t Fy:" << tempForceY << endl;
+
+		//forceMag = sqrt(pow(tempForceX, 2.0) + pow(tempForceY, 2.0));
+		//meanForce += 1.0 / vertices.size() * forceMag;
+		//meanSqrForce += 1.0 / vertices.size() * pow(forceMag,2.0);
+		//forceList.push_back(forceMag);
 	}
+	//*errorfile << "CURRENTTIME " << CURRENTTIME << "\n";
 	// debugging code to compare stress derived from sum over Force times position vs cutline
-	// *errorfile << " Int X Stress: " << internalXstress << " CutlineXStress: " << GammaX <<"\n";
+	/*
+	*errorfile << " Int X Stress: " << internalXstress << " CutlineXStress: " << GammaX << " X Rel Error: " << abs(GammaX / internalXstress) - 1  << "\n";
+	*errorfile << " Int Y Stress: " << internalYstress << " CutlineYStress: " << GammaY << " Y Rel Error:  "<< abs(GammaY / internalYstress) - 1 << "\n";
 	
 	varianceForce = meanSqrForce - pow(meanForce,2.0);
-	
-	equilibriumChecker = (varianceForce < 0.01) && (meanForce < 0.35);
+	*/
 	
 }
 
@@ -1529,9 +1662,145 @@ void AGTissue::WriteOutputDataAppend(ofstream* datafile)
 	(*this).HelperWriteOutputData_Write2File(datafile, VERBOSEON);
 }
 /*
-*bool IsEquilibrated()
+ * bool IsEquilibrated()
+ *
+ * checks if packing is equilibrated (this function needs to be formalized still - once we figure out an
+ * appropriate energy threshold)
 */
 bool AGTissue::IsEquilibrated()
 {
-	return equilibriumChecker;
+	bool energyratio = (abs((currentFreeEnergy - pastFreeEnergy)) < equilibriumtolerance);
+	return energyratio;
+}
+/*
+* void RK4Helper_EuilerStep(double dt, ofstream* errorfile)
+*
+* helper function for the Runga Kutta (Fourth Order) integrator
+*/
+void AGTissue::RK4Helper_EuilerStep(double dt, ofstream* errorfile){
+	//Calculate the force on every vertex 
+	(*this).ForceFunction(errorfile);
+
+	//loop through all the vertices and set rnew
+	for (list<Vertex*>::iterator vit = vertices.begin(); vit != vertices.end(); vit++){
+		(*(*vit)).rnew = (*(*vit)).SavedInfoForEvolve_MechForce * ( dt / alphaM);
+		// for old rk4 test
+		//(*(*vit)).rnew = (*(*vit)).SavedInfoForEvolve_MechForce * ( dt );
+	}
+
+	//Set LX and LY new
+	LXnew = ( dt / TISSUE_ALPHA) * ForceLX;
+	LYnew = (dt / TISSUE_ALPHA) * ForceLY;
+	//LXnew = ( dt) * ForceLX;
+	//LYnew = (dt) * ForceLY;
+
+}
+/*
+* double CalculateFreeEnergy()
+*
+* Calculates the energy of the packing using the Hamiltonian
+* in this model:
+* H = (sum over cells) K(A_cells - A_0) + Gamma (sum over edges) L_edge
+*/
+double AGTissue::CalculateFreeEnergy()
+{
+	double freeenergy = 0;
+	
+	double totaledgelength = 0;
+
+	double area_difference_sqr = 0;
+	// (A_c - A_0)^2
+	for (list<Edge*>::iterator eit = edges.begin(); eit != edges.end(); eit++)
+	{
+		totaledgelength += (*(*eit)).GetLength();
+	}
+	for (list<Cell*>::iterator cit = cells.begin(); cit != cells.end(); cit++)
+	{
+		area_difference_sqr += pow( ((*(*cit)).GetArea() - (*(*cit)).A0) , 2) / (*(*cit)).A0 ;
+	}
+	freeenergy = GAMMA*totaledgelength + (0.5 * K * area_difference_sqr) ;
+	return freeenergy;
+}
+
+// had to put in this class so that AGPerimTissue could use it - no difference between this and that in Tissue class
+//Called by HelperResolveVertices_ResolveFourfoldVertex to check the stability of one configuration. Splits vertices so edges (e1,e2) and (e3,e4) are paired and cells c2 and c4 are neighbors retruns false if the vertex is unstable in that topology
+double AGTissue::HelperResolveVertices_CheckStability(Vertex* vert, Edge* edge1, Edge* edge2, Edge* edge3, Edge* edge4, Cell* cell1, Cell* cell2, Cell* cell3, Cell* cell4, Vect* Force){
+	//First make new objects which are coppies of the objects in the linked lists we will minipulate these objecs and they will be destroyed when the function ends
+	Cell c1 = (*cell1);
+	Cell c2 = (*cell2);
+	Cell c3 = (*cell3);
+	Cell c4 = (*cell4);
+	Edge e1 = (*edge1);
+	Edge e2 = (*edge2);
+	Edge e3 = (*edge3);
+	Edge e4 = (*edge4);
+	double stability;
+	double a1, a2, a3, a4;
+
+	//Make the new edge and vertices resulting from the split into 2 3fold vertices
+	Edge enew;
+	Vertex v12; //the vertex on edges 1 and 2
+	Vertex v34; //the vertex on edges 3 and 4
+
+	//Now update the info on the coppies of the objects so they are 2 3fold vertices
+
+	//For the new vertices
+	v12.r = (*vert).r;							//put the two new verts where the olf 4ourfold was
+	v12.edges.push_back(&e1);
+	v12.edges.push_back(&e2);
+	v12.edges.push_back(&enew);
+	v34.r = (*vert).r;							//put the two new verts where the olf 4ourfold was
+	v34.edges.push_back(&e3);
+	v34.edges.push_back(&e4);
+	v34.edges.push_back(&enew);
+
+	//For the new edge
+	enew.yflag = 0;		//the new edge has no length and therefor cann not have a flag
+	enew.xflag = 0;
+	enew.vertex1 = &v12;
+	enew.vertex2 = &v34;
+	enew.cell1 = &c4;
+	enew.cell2 = &c2;
+
+	//For the old edges
+	e1.UpdateVertex(vert, &v12);
+	e2.UpdateVertex(vert, &v12);
+	e3.UpdateVertex(vert, &v34);
+	e4.UpdateVertex(vert, &v34);
+
+	//Now we have at the position of the fourfold vertex two threefold vertices in which everyone knows all of their neighbors correclty, we can now calculate the forces based on what the tensiions and pressures are in this configuration
+
+	//pressure differences across cells
+	a1 = c1.GetArea();
+	a2 = c2.GetArea();
+	a3 = c3.GetArea();
+	a4 = c4.GetArea();
+	double p2 = (c2.GetPressure(a2) - c1.GetPressure(a1)); //pressure difference acorss edge2 between cell 1 and cell 2 taken CCW
+	double p3 = (c3.GetPressure(a3) - c2.GetPressure(a2));
+	double p4 = (c4.GetPressure(a4) - c3.GetPressure(a3));
+	double p1 = (c1.GetPressure(a1) - c4.GetPressure(a4));
+
+	//getting z X edge (both the diredction and magnitude are correctHelperResolveVertices_ResolveFourfoldVertex
+	Vect zXe1 = (e1).GetVectorDifference(&v12, v12.GetOtherVertex(&e1)).Rotate(PI / 2.0);
+	Vect zXe2 = (e2).GetVectorDifference(&v12, v12.GetOtherVertex(&e2)).Rotate(PI / 2.0);
+	Vect zXe3 = (e3).GetVectorDifference(&v34, v34.GetOtherVertex(&e3)).Rotate(PI / 2.0);
+	Vect zXe4 = (e4).GetVectorDifference(&v34, v34.GetOtherVertex(&e4)).Rotate(PI / 2.0);
+
+	//Get the forces
+	Vect ForceT1 = (e1).GetTension_ForceOnVertex(&v12);
+	Vect ForceT2 = (e2).GetTension_ForceOnVertex(&v12);
+	Vect ForceT3 = (e3).GetTension_ForceOnVertex(&v34);
+	Vect ForceT4 = (e4).GetTension_ForceOnVertex(&v34);
+	Vect ForceP1 = zXe1 * (p1 * 0.5);
+	Vect ForceP2 = zXe2 * (p2 * 0.5);
+	Vect ForceP3 = zXe3 * (p3 * 0.5);
+	Vect ForceP4 = zXe4 * (p4 * 0.5);
+	*Force = ((ForceT1 + ForceT2 + ForceP1 + ForceP2) - (ForceT3 + ForceT4 + ForceP3 + ForceP4))* 0.5;
+
+	//Calculate the tension on the new edge
+	Vect ForceNewEdge = enew.GetTension_ForceOnVertex(&v12);
+
+	//Check the stability
+	stability = (*Force).Magnitude() - ForceNewEdge.Magnitude();
+	return stability;
 }

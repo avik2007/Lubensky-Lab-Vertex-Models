@@ -37,7 +37,7 @@ using namespace std;
 
 //Defult settings of the constants if the file does not specify. Constants given a null or zero value must be specified in the file If they are not declared with a default value their will be a unresolved external error
 string InputFileName = "NULL";
-string INTEGRATORNAME = "Euiler";
+string INTEGRATORNAME = "RK4_Adaptive";
 double LX = 0;
 double LY = 0;
 double MINAREA = 0;
@@ -77,7 +77,7 @@ bool T1ON = true;
 bool APOPTOSISON = false; 
 bool WRITEMITOSIS = false; 
 bool VERBOSEON = false;
-bool EQUILIBRIUMMITOSIS = true;
+bool EQUILIBRIUMMITOSIS = false;
 
 //This is the generator for random numbers to use call "distribution(generator)" 
 mt19937_64 generator;

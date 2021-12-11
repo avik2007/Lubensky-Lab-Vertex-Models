@@ -12,6 +12,9 @@ function CreateMovie(inputFileName)
 outputFileName=strcat(inputFileName, '_movie'); 
 mkdir(outputFileName)                   %make a folder to store tif images in 
 fid = fopen(inputFileName);
+if (fid == -1)
+    error("fid invalid");
+end 
 name=inputFileName;
 count = 0;
 figure()

@@ -34,7 +34,7 @@ Pre{1,1} = NaN(25000,1);        %vector for preallocations
 %clockwise-ordered list of vertices. If _CWVertices is not found in the
 %text file, includeCell will be 'false' and the rest of the code won't try
 %to draw the cells.
-includeCell = false;
+includeCell = true;
 
 
 %% Set starting position
@@ -155,7 +155,7 @@ nFields = length(EFields);
 
 %preallocate struct for outputting data
 EdgeData = struct('id',Pre,'vertex1',Pre,'vertex2',Pre,'xflag',Pre,'yflag',Pre, ...
-    'length', Pre, 'Tx', Pre, 'Ty', Pre, 'cell1', Pre, 'cell2', Pre);
+    'length', Pre, 'tension', Pre, 'cell1', Pre, 'cell2', Pre);
 
 %Extract edge id, vertex1, vertex2, xflag, and yflag.
 for i = 1:nFields
@@ -180,6 +180,8 @@ for i = 1:nFields
             EdgeData(1).cell1 = EData(:,i);
         case '_cell2'
             EdgeData(1).cell2 = EData(:,i);
+        case 'tension'
+            EdgeData(1).tension = EData(:,i);
         otherwise
             error(strcat('Invalid keyword in Edges: ', EFields{i}));
     end
@@ -212,9 +214,14 @@ nCell = size(CData,1);
 %preallocate struct for outputting data
 %NOTE: unlike other fields, EdgeList is a cell not vector (since the list has variable
 %length)
+% for agperim model
 CellData = struct('id', Pre,'EdgeNumb',Pre,'EdgeList',{}, 'Type', Pre, ...
-    'CWVertices', Pre, 'A0', Pre, 'Area', Pre, 'Pressure', Pre, 'xflag', Pre, 'yflag', Pre, ...
-    'Center_x', Pre, 'Center_y', Pre);
+    'CWVertices', Pre, 'A0', Pre,'P0', Pre, 'Area', Pre, 'Pressure', Pre, 'xflag', Pre, 'yflag', Pre, ...
+    'Center_x', Pre, 'Center_y', Pre, 'dEnergy', Pre);
+%for agcell model
+%CellData = struct('id', Pre,'EdgeNumb',Pre,'EdgeList',{}, 'Type', Pre, ...
+%    'CWVertices', Pre, 'A0', Pre, 'Area', Pre, 'Pressure', Pre, 'xflag', Pre, 'yflag', Pre, ...
+%    'Center_x', Pre, 'Center_y', Pre, 'dEnergy', Pre);
 
 %Extract edge id, EdgeNumb, and EdgeList.
 for i = 1:nFields
@@ -231,23 +238,27 @@ for i = 1:nFields
             end
         case 'Type'
             CellData(1).Type(:,1) = uint8( str2double(CData(:,i)) );
-        case '_CWVertices'
+        case 'CWVertices'
             includeCell = true;
             for j = 1:nCell
                 CellData(1).CWVertices(j,1) = textscan(CData{j,i},'%d','Delimiter',',');
             end
-        case '_Area'
+        case 'Area'
             CellData(1).Area(:,1) = str2double(CData(:,i));
-        case '_Pressure'
+        case 'Pressure'
             CellData(1).Pressure(:,1) = str2double(CData(:,i));
-        case '_xflag'
+        case 'xflag'
             CellData(1).xflag(:,1) = logical( str2double(CData(:,i)) );
-        case '_yflag'
+        case 'yflag'
             CellData(1).yflag(:,1) = logical( str2double(CData(:,i)) );
-        case '_Center_x'
+        case 'Centerx'
             CellData(1).Center_x(:,1) = str2double(CData(:,i));
-        case '_Center_y'
+        case 'Centery'
             CellData(1).Center_y(:,1) = str2double(CData(:,i));
+        case 'dEnergy'
+            CellData(1).dEnergy(:,1) = str2double(CData(:,i));
+        case 'P0'
+            CellData(1).P0(:,1) = str2double(CData(:,i));
         otherwise
             error( ['Invalid keyword in Cells: ', CFields{i}] )
     end

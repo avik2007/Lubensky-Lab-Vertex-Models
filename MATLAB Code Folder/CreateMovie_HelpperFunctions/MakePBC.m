@@ -276,7 +276,7 @@ if isCellIncluded
             yflag = E.yflag(eindex);
 
 
-            if (xflag==0 && yflag==0);
+            if (xflag==0 && yflag==0)
                 %if no boundary is crossed, put v2 in list and continue
                 NewCell{i,currentList} = [NewCell{i,currentList}, v2];
                 continue;
@@ -473,11 +473,13 @@ if isCellIncluded
             C_pbc.Type(Nold+count) = C.Type(cind(i));
             C_pbc.A0(Nold+count) = C.A0(cind(i));
             C_pbc.Area(Nold+count) = C.Area(cind(i));
+            C_pbc.P0(Nold+count) = C.P0(cind(i));
             C_pbc.Pressure(Nold+count) = C.Pressure(cind(i));
             C_pbc.Center_x(Nold+count) = C.Center_x(cind(i));
             C_pbc.Center_y(Nold+count) = C.Center_y(cind(i));
-
-
+            
+            C_pbc.dEnergy(Nold+count) = C.dEnergy(cind(i));
+            % add new cell characteristics!
             %new values for cell segment
             C_pbc.CWVertices(Nold+count) = NewCell(i,j);
             C_pbc.xflag(Nold+count) = 0;
@@ -500,6 +502,10 @@ if isCellIncluded
     C_pbc.yflag(cind) = [];
     C_pbc.Center_x(cind) = [];
     C_pbc.Center_y(cind) = [];
+    C_pbc.dEnergy(cind) = [];
+    C_pbc.P0(cind) = [];
+    
+    % add new cell characteristics here
 
 
 

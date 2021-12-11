@@ -100,7 +100,7 @@ public:
 	virtual bool Apoptosis(ofstream* errorfile);
 
 	//! Looks through all of the edges and find any that are to small and have them undergo T1 transitions, returns TRUE if successful.
-	bool T1(ofstream* errorfile);
+	virtual bool T1(ofstream* errorfile);
 
 	//! Looks through all the fourfold vertices and splits them along the lines of force if they are unstable (or keeps them if they are stable), returns TRUE if any changes happened.
 	bool ResolveVertices(ofstream* errorfile);

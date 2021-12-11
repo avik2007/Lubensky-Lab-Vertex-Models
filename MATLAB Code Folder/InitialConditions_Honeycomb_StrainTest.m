@@ -12,7 +12,8 @@
 clear
 
 %% Inputs needed
-nomfichier='mytissue.txt';  %the file name
+INITIALSTEPSIZE = 0.0001;    %Initial stepsize for the numberic integrator 
+nomfichier=strcat('mytissue_backtrack_fix','.txt');  %the file name
 n=10;                       %1/2 of the Cells per row
 m=10;                       %Cells per collumn 
 r=89542;                    %Seed for the random number generators
@@ -24,10 +25,10 @@ t0 = 1;                     %Standard unit of time
 RLXLY = 1;                  %Ratio of LX to LY (used to make rectangular boxes) 
 Ratio = 0.3;                %ratio of pressure to tension forces (standard value 0.3)
 Ralpha=100;                   %Ralpha=10 means the box evolves 10 times slower then the vertices
-TOTALTIME =	20;             %How long to run the simulation 
+TOTALTIME =	80;             %How long to run the simulation 
 CURRENTTIME = 0.0;          %The initial time
-TIMEINTERVAL =	2;        %How often to output the current configuration of the tissue
-INITIALSTEPSIZE = 0.1;    %Initial stepsize for the numberic integrator 
+TIMEINTERVAL =	0.1;        %How often to output the current configuration of the tissue
+%INITIALSTEPSIZE = 0.002;    %Initial stepsize for the numberic integrator 
 error_tolerance_absolute_mechanical = 0.01;  %Error tolerence for use with the adaptive stepsize integrators 
 LX=n*3*l+1;
 LY=m*sqrt(3)*l+1; 
@@ -42,10 +43,11 @@ NEWEDGELENGTH =	l/20;                %Length of a new edge created in the T1 pro
 % K = Ratio * GAMMA / l^3 ;           %for pressure=K(A-A0)
 K = Ratio * 10 * GAMMA / l;          %for pressure=K(1-A/A0)
 Alpha_M = GAMMA*t0/l;                % Drag coefficent
-TISSUE_ALPHA = Ralpha*Alpha_M;       % How fast the box size updates relative to the vertex motion
+TISSUE_ALPHA = 10000000000000000000000000 * Alpha_M;%10000000*Ralpha*Alpha_M;       % How fast the box size updates relative to the vertex motion
 TISSUE_EXT_STRESS_Y = 0;             % External Stress on the tissue (positive values expancile) 
 TISSUE_EXT_STRESS_X = 0;
-SIMTIMERES = 5;                     %  picks how often the simulation writes to the outputfile
+P0 = 3.722 * sqrt(A0);
+LAMBDA = K / 0.05; % mimics Manning Model 
 %% Create the Hexagonal tillining 
 SEED = r;
 rng(SEED); 
@@ -136,6 +138,8 @@ fprintf(fid, 'MINLENGTH\t%f\n', MINLENGTH);
 fprintf(fid, 'NEWEDGELENGTH\t%f\n', NEWEDGELENGTH);
 fprintf(fid, 'K\t%f\n', K);
 fprintf(fid, 'GAMMA\t%f\n', GAMMA);
+fprintf(fid, 'LAMBDA\t%f\n', LAMBDA);
+fprintf(fid, 'P0\t%f\n', P0);
 fprintf(fid, 'TOTALTIME\t%f\n', TOTALTIME);
 fprintf(fid, 'CURRENTTIME\t%f\n', CURRENTTIME);
 fprintf(fid, 'INITIALSTEPSIZE\t%f\n', INITIALSTEPSIZE);
@@ -144,7 +148,7 @@ fprintf(fid, 'TISSUE_ALPHA\t%f\n', TISSUE_ALPHA);
 fprintf(fid, 'ALPHAM\t%f\n', Alpha_M);
 fprintf(fid, 'TISSUE_EXT_STRESS_X\t%f\n', TISSUE_EXT_STRESS_X);
 fprintf(fid, 'TISSUE_EXT_STRESS_Y\t%f\n', TISSUE_EXT_STRESS_Y);
-fprintf(fid, 'SIMTIMERES\t%d\n', SIMTIMERES);
+
 fprintf(fid, 'endGlobal\n'); 
 fprintf(fid, 'Vertices\n');
 fprintf(fid, 'id\tx\ty\n');

@@ -49,7 +49,7 @@ open(vidObj);
 
 %% Plot and make video
 
-figure('Position', [100 50 800 800*MaxLY/MaxLX])
+figure('Position', [100 50 600 600*MaxLY/MaxLX])
 count = 0;
 frewind(fid);
 currentPos = ftell(fid);
@@ -70,6 +70,9 @@ while (true)
         
         %%Added by Meryl 2/17/2016
         framename=strcat(outputFileName,'/frame_',num2str(count,'%03d'));
+        hold on;
+        text
+        hold off;
         saveas(gcf,framename,'tif');
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         frame = getframe; 

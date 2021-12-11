@@ -9,18 +9,20 @@ hold on;
 
 
 
-%% Plot Cells (only if isCellIncluded = true)
+%% Plot Cells (only if isCellIncluded = true) - and color them too if you'd like
 
-if isCellIncluded
+
 %if isCellIncluded = false, we won't try to draw the cells and this entire
 %section WILL BE SKIPPED.
-
+%{
+if isCellIncluded
 
     %Find cells that do not cross any boundary
-    cind = find(C.xflag==0 & C.yflag==0);
+    cind = find(C.xflag==0 & C.yflag==0); %og code
 
     %for every cells, go through its vertices in CWVertices and find the vertex
     %index
+    totalEnergy = 0;
     for i = 1:length(cind)
         cwverts = C.CWVertices{cind(i)};
         indices = zeros(length(cwverts), 1);
@@ -30,8 +32,20 @@ if isCellIncluded
 
         %tag containing keyword 'Cell' followed by cell id
         TagStr = ['Cell ', num2str(C.id( cind(i)) )];
-
+        
+        cdE = C.dEnergy(cind(i));
+        if (cdE >= 1)
+            Color = 'b';
+        elseif ((cdE > 0) && (cdE < 1))
+            Color = 'g';
+        elseif ((cdE < 0) && (cdE >=-1))
+            Color = 'y';
+        else
+            Color = 'r';
+        end
+        totalEnergy = totalEnergy + cdE;
         %Determine color based on cell type
+        %{
         ctype = C.Type(cind(i));
         switch ctype
             case 0
@@ -53,17 +67,17 @@ if isCellIncluded
             otherwise
                 error(['Cell Type ', ctype, ' is not associated with any color. Add the color for that cell type in PlotSimulationOutput.m'])    
         end
-
+        %}
 
         fill(V.x(indices), V.y(indices), Color, 'Tag', TagStr)
     end
 
-
-
 end %if isCellIncluded
-    
 
-
+t = text(0,10, strcat("dE =", num2str(totalEnergy)));   
+t.FontSize = 14;
+t.Color = 'black';
+%}
 %% Plot Edges
 
 N = size(E.id,1);
@@ -71,7 +85,7 @@ for i = 1:N
     vind1 = find(V.id==E.vertex1(i));
     vind2 = find(V.id==E.vertex2(i));
     TagStr = ['Edge ', num2str(E.id(i))];
-    line([V.x(vind1),V.x(vind2)], [V.y(vind1),V.y(vind2)], 'Color', 'k', 'LineWidth', 2.0, 'Tag', TagStr);
+    line([V.x(vind1),V.x(vind2)], [V.y(vind1),V.y(vind2)], 'Color', 'k', 'LineWidth', 1.0, 'Tag', TagStr);
 end
 
 

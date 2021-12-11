@@ -36,6 +36,9 @@ public:
 	string DIVISIONPOTENTIAL;
 	bool xflag;
 	bool yflag;
+	double currentEnergy; // most recent energy measure
+	double pastEnergy; // energy of cell at previous measurement
+	string pressureType; // labels which pressure function to use
 //***************************************************************************************************************
 //*********** CONSTRUCTORS AND DESTRUCTORS **********************************************************************
 //***************************************************************************************************************
@@ -49,7 +52,7 @@ public:
 		A0 = A0input;
 	}
 	
-	AGCell(int idnumb, vector<Edge*> edglist, int typeinput, double A0input, double tcjstrength, double thetaan, double anstrength, string divp){
+	AGCell(int idnumb, vector<Edge*> edglist, int typeinput, double A0input, double tcjstrength, double thetaan, double anstrength, string divp,string cellpotentialtype){
 		id = idnumb;
 		edges = edglist;
 		type = typeinput;
@@ -58,12 +61,15 @@ public:
 		THETAAN = thetaan;
 		ANSTRENGTH = anstrength;
 		DIVISIONPOTENTIAL = divp;
+		pressureType = cellpotentialtype;
 	}
 	
 
 //***************************************************************************************************************
 //*********** FUNCTIONS FOR CALCULATING CELL PROPERTIES **********************************************************************
 //***************************************************************************************************************
+	//! Same as GetPressure() but with cell area as input. Attention This function contains the actual implementation of GetPressure. All other GetPressure functions should call this function to prevent multiple implementations. Furthermore any modification/extension to the algorithm should only be made here.
+	virtual double GetPressure(double Area);
 
 	double GetThetaTCJ(); // helps determine orientation of cell division using TCJ distribution
 
@@ -79,9 +85,21 @@ public:
 
 	bool IsCrossingY(); // checks whether a cell is crossing the Y-boundary
 
-	double GetdAdLx(); // gets the derivative of the cell's area w.r.t LX
+	virtual double GetdAdLx(); // gets the derivative of the cell's area w.r.t LX
 
-	double GetdAdLy(); // gets the derivative of the cell's area w.r.t. LY
+	virtual double GetdAdLy(); // gets the derivative of the cell's area w.r.t. LY
+
+	virtual double GetCellStressXX(); // gets the xx component of the cell's average cauchy stress tensor
+
+	virtual double GetCellStressYY(); // gets the yy component of the cell's average cauchy stress tensor
+
+	virtual double GetCellStressInterpolateXX(); // uses x forces interpolated across edges to calculate Cauchy
+	// stress tensor. Not clear if this is accurate, this is a function to test that (see Lee and Morishita 2017, stress tensor A)
+
+	virtual double GetCellStressInterpolateYY();// uses y forces interpolated across edges to calculate Cauchy
+	// stress tensor. Not clear if this is accurate, this is a function to test that
+
+	virtual double GetEnergy(); // calculates energy attributed to cell (takes half of the tension forces along each edge)
 
 //************************************************************************************************************************
 //********************** Division Angle for Mitosis Functions ***********************************************************

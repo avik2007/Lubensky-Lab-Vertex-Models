@@ -241,13 +241,13 @@ bool Tissue::Apoptosis(ofstream* errorfile) {
 	if (flag == 0)
 		return false;
 	else{
-		(*this).WriteOutputDataAppend(errorfile);
+		//(*this).WriteOutputDataAppend(errorfile);
 		bool isApoptosisSuccessful = false;
 		for (i = 0; i<apopcells.size(); i++){
 			bool status = HelperApoptosis_DeleteCell(apopcells[i]);
 			isApoptosisSuccessful = isApoptosisSuccessful || status;
 		}
-		(*this).WriteOutputDataAppend(errorfile);
+		//(*this).WriteOutputDataAppend(errorfile);
 		if (isApoptosisSuccessful){ return true; }
 		else { return false; }
 	}
@@ -304,7 +304,7 @@ bool Tissue::T1(ofstream* errorfile){
 			cout << "T1 of Edge " << (*t1edges[i]).id << "   at location   (" << (*t1edges[i]).GetCenter().x << " , " << (*t1edges[i]).GetCenter().y<< ")" << endl;
 			int nT1; 
 			Vertex* v = (*this).HelperT1_RemoveEdge(t1edges[i],errorfile, &nT1);
-			// (*this).WriteOutputDataAppend(errorfile);
+		   //(*this).WriteOutputDataAppend(errorfile);
 			HelperResolveVertices_ResolveFourfoldVertex(v); 
 		}
 		// (*this).WriteOutputDataAppend(errorfile);
@@ -437,7 +437,7 @@ void Tissue::ForceFunction(ofstream* errorfile){
 	double GammaY = 0; 
 	// calculateexternalstress_linear(TAU_STRESS); 
 
-	double cutlineX = distribution(generator) * LX; //Continue to generate random numbers until you cut no concave cells
+ 	double cutlineX = distribution(generator) * LX; //Continue to generate random numbers until you cut no concave cells
 	GammaX = TISSUE_EXT_STRESS_X + (*this).CalculateTissueStressX(cutlineX, errorfile);
 		
 	double cutlineY = distribution(generator) * LY; //Continue to generate random numbers until you cut no concave cells
@@ -490,7 +490,7 @@ void Tissue::Integrate_RK4(double dt, ofstream* errorfile){
 	(*this).RK4Helper_EuilerStep(dt, errorfile);
 	for (list<Vertex*>::iterator vit = vertices.begin(); vit != vertices.end(); vit++){
 		k1.push_back((*(*vit)).rnew);
-	}
+	} 
 	k1LX = LXnew;
 	k1LY = LYnew;
 
@@ -1993,7 +1993,7 @@ double Tissue::HelperResolveVertices_CheckStability(Vertex* vert, Edge* edge1, E
 
 	//Check the stability
 	stability = (*Force).Magnitude() - ForceNewEdge.Magnitude();
-	return stability;
+ 	return stability;
 }
 
 //Called by HelperResolveVertices_ResolveFourfoldVertex to update the pointers when the vertex needs to resolve, Splits vertices so edges (e1,e2) and (e3,e4) are paired and cells c2 and c4 are neighbors 

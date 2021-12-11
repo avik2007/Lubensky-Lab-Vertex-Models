@@ -33,12 +33,19 @@ class AGTissue : public Tissue{
 public:
 	//ADDITIONAL DATA									// deformation gradient tensor component (22)
 	double LX0;									// initial box length in x dimension
-	double LY0;									// initial box length in y dimension
+	double LY0;			
+	double equilibriumtolerance = .000000000000010; // initial box length in y dimension
 	bool equilibriumChecker;      		// determines whether packing is equilibrated or not
+	double currentFreeEnergy;			// used to determine equilibrium
+	double pastFreeEnergy;				// used to determine equilibrium
 	//NOTE: the list cells that is instantiated in the TissueClass will contain AGCells when AGVertex Model code
 	// is being used 
 	//CONSTRUCTOR
-	AGTissue(){};
+	AGTissue()
+	{
+		currentFreeEnergy = 0;
+		pastFreeEnergy = 0;
+	};
 
 	//DESTRUCTOR
 	virtual ~AGTissue(){};
@@ -75,6 +82,11 @@ public:
 	//! This is the helper function that actually do mitosis on cells.
 	virtual void HelperMitosis(Cell * parentcell, double divisionangle);
 
+	//! Called by HelperResolveVertices_ResolveFourfoldVertex to check the stability of one configuration
+	//! Splits vertices so edges (e1,e2) and (e3,e4) are paired and cells c2 and c4 are neighbors
+	//! returns the magnutude of Force-Forcenewedge and changes the value of Force
+	virtual double HelperResolveVertices_CheckStability(Vertex* v, Edge* e1, Edge* e2, Edge* e3, Edge* e4, Cell* c1, Cell* c2, Cell* c3, Cell* c4, Vect *Force);
+
 	//*********************************************************************************************************************
 	//***************** FUNCTIONS FOR PERFORMING NUMERICAL INTEGRATION TO EVOLVE THE TISSUE ******* ************************
 	//*********************************************************************************************************************
@@ -91,6 +103,9 @@ public:
 	//! Calculates the y component of the internal stress of the tissue (so sigma_yy)
 	virtual double GetInternalTissueStressY(ofstream* errorfile);
 
+	//Integrates the forcefunction by one euiler step 
+	virtual void RK4Helper_EuilerStep(double dt, ofstream* errorfile);
+
 	//*********************************************************************************************************************
 	//***************** Other Functions ******* ************************
 	//*********************************************************************************************************************
@@ -100,5 +115,11 @@ public:
 
 	// checks if packing is equilibrated
 	virtual bool IsEquilibrated();
+
+	//calculates the free energy of a packing 
+	virtual double CalculateFreeEnergy();
+
+	//deforms the tissue by defining a deformation gradient tensor
+	virtual void DeformTissue(double Fxx, double Fyy);
 };
 #endif
