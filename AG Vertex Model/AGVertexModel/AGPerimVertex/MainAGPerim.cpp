@@ -108,7 +108,8 @@ AGPerimTissue tissue;
 int main()
 {
 	//Path to the folder that your initial files are in 
-	string PathName = "C:\\Users\\abmondal\\Documents\\Vertex_Model_Repository\\MATLAB Data Folder\\"; // CHANGE THIS TO MATCH YOUR FOLDER
+	// CHANGE THIS TO MATCH YOUR FOLDER
+	string PathName = "C:\\Users\\abmondal\\Documents\\Lubensky-Lab-Vertex-Models\\MATLAB Data Folder\\";
 	//string PathName = "C:\\Users\\abmondal\\Desktop\\";
 
 	cout << "Enter name of imput file: ";
@@ -148,7 +149,7 @@ int main()
 		(*v).SavedInfoForEvolve_MechForce = o; //Set the initial forces on vertices to 0
 	}
 
-	double stepSize = INITIALSTEPSIZE;
+	double stepSize = INITIALSTEPSIZE; 
 	//***********************************************************************************************
 	//***************************EVOLVE**********************************************************
 	//*********************************************************************************************
@@ -162,6 +163,9 @@ int main()
 	double currentFreeEnergy = tissue.CalculateFreeEnergy();
 	errorfile << currentFreeEnergy << endl;
 	
+	double polydispersity = tissue.calculatePolydispersity();
+	errorfile << "Polydispersity = " << polydispersity << endl;
+	
 	// above time variables allow us to pick how often we write to the appendfile
 	while ((CURRENTTIME < TOTALTIME) && !(tissue.equilibrated))
 	{
@@ -169,7 +173,6 @@ int main()
 		tissue.Evolve(TIMEINTERVAL, &stepSize, &errorfile);
 		cout << "exited evolve" << endl;
 		tissue.WriteOutputDataAppend(&datafile);
-		
 		cout << "writing at CURRENTTIME: " << CURRENTTIME << endl;
 		// equilibrated gets updated in Evolve
 	}

@@ -1632,30 +1632,30 @@ double AGTissue::GetInternalTissueStressY(ofstream* errorfile)
 		}
 	}
 
-	// some debugging code
-	double Areadiff;
-	for (i = 0; i < crossingCells.size(); i++)
-	{
-		dAdLy = (*crossingCells[i]).GetdAdLy();
-		Areadiff = ((*crossingCells[i]).GetArea() - (*crossingCells[i]).A0);
-		areastress += -1 * (*crossingCells[i]).GetPressure((*crossingCells[i]).GetArea())  * dAdLy ;
-		// debugging code for the dAdLy code (sum over all dAdLy for a packing should equal Lx)
-		// *errorfile << "dAdLy " << dAdLy << " area diff " << Areadiff << " area diff ratio " << Areadiff / ((*crossingCells[i]).GetArea()) << "\n";
-	}
-	// debug code for the components of the stress
-	// *errorfile << "(Y) Vertex Stress at time " << CURRENTTIME << ": " << stressy / (LX * LY) << "\n";
-	// *errorfile << "(Y) Area Stress at time " << CURRENTTIME << ": " << areastress / LX << "\n";
-	// *errorfile << "(Y) Edge Stress at time " << CURRENTTIME << ": " << edgestress / LX << endl;
-    stressy += (edgestress + areastress) * LY;
+// some debugging code
+double Areadiff;
+for (i = 0; i < crossingCells.size(); i++)
+{
+	dAdLy = (*crossingCells[i]).GetdAdLy();
+	Areadiff = ((*crossingCells[i]).GetArea() - (*crossingCells[i]).A0);
+	areastress += -1 * (*crossingCells[i]).GetPressure((*crossingCells[i]).GetArea()) * dAdLy;
+	// debugging code for the dAdLy code (sum over all dAdLy for a packing should equal Lx)
+	// *errorfile << "dAdLy " << dAdLy << " area diff " << Areadiff << " area diff ratio " << Areadiff / ((*crossingCells[i]).GetArea()) << "\n";
+}
+// debug code for the components of the stress
+// *errorfile << "(Y) Vertex Stress at time " << CURRENTTIME << ": " << stressy / (LX * LY) << "\n";
+// *errorfile << "(Y) Area Stress at time " << CURRENTTIME << ": " << areastress / LX << "\n";
+// *errorfile << "(Y) Edge Stress at time " << CURRENTTIME << ": " << edgestress / LX << endl;
+stressy += (edgestress + areastress) * LY;
 
-	stressy = stressy / (LX * LY); // as a reminder that the stress needs an overall area factor out front
-	return stressy;
+stressy = stressy / (LX * LY); // as a reminder that the stress needs an overall area factor out front
+return stressy;
 }
 /*
 * void WriteOutputDatAppend(ofstream* datafile)
 *
 * overload of base tissue class. I want to add a verbosity option to control how much info the helper
-* class writes out. 
+* class writes out.
 */
 void AGTissue::WriteOutputDataAppend(ofstream* datafile)
 {
@@ -1677,19 +1677,19 @@ bool AGTissue::IsEquilibrated()
 *
 * helper function for the Runga Kutta (Fourth Order) integrator
 */
-void AGTissue::RK4Helper_EuilerStep(double dt, ofstream* errorfile){
+void AGTissue::RK4Helper_EuilerStep(double dt, ofstream* errorfile) {
 	//Calculate the force on every vertex 
 	(*this).ForceFunction(errorfile);
 
 	//loop through all the vertices and set rnew
-	for (list<Vertex*>::iterator vit = vertices.begin(); vit != vertices.end(); vit++){
-		(*(*vit)).rnew = (*(*vit)).SavedInfoForEvolve_MechForce * ( dt / alphaM);
+	for (list<Vertex*>::iterator vit = vertices.begin(); vit != vertices.end(); vit++) {
+		(*(*vit)).rnew = (*(*vit)).SavedInfoForEvolve_MechForce * (dt / alphaM);
 		// for old rk4 test
 		//(*(*vit)).rnew = (*(*vit)).SavedInfoForEvolve_MechForce * ( dt );
 	}
 
 	//Set LX and LY new
-	LXnew = ( dt / TISSUE_ALPHA) * ForceLX;
+	LXnew = (dt / TISSUE_ALPHA) * ForceLX;
 	LYnew = (dt / TISSUE_ALPHA) * ForceLY;
 	//LXnew = ( dt) * ForceLX;
 	//LYnew = (dt) * ForceLY;
@@ -1705,7 +1705,7 @@ void AGTissue::RK4Helper_EuilerStep(double dt, ofstream* errorfile){
 double AGTissue::CalculateFreeEnergy()
 {
 	double freeenergy = 0;
-	
+
 	double totaledgelength = 0;
 
 	double area_difference_sqr = 0;
@@ -1716,10 +1716,66 @@ double AGTissue::CalculateFreeEnergy()
 	}
 	for (list<Cell*>::iterator cit = cells.begin(); cit != cells.end(); cit++)
 	{
-		area_difference_sqr += pow( ((*(*cit)).GetArea() - (*(*cit)).A0) , 2) / (*(*cit)).A0 ;
+		area_difference_sqr += pow(((*(*cit)).GetArea() - (*(*cit)).A0), 2) / (*(*cit)).A0;
 	}
-	freeenergy = GAMMA*totaledgelength + (0.5 * K * area_difference_sqr) ;
+	freeenergy = GAMMA * totaledgelength + (0.5 * K * area_difference_sqr);
 	return freeenergy;
+}
+
+/*
+* double calculatePolyDispersity()
+*
+* Calculates the nondimensionalized  standard deviation of the area distribution of the cells. In calcu-
+* lations of the vertex model, this would probably get nondimensionalized by the preferred area, not
+* the average area. 
+*
+*/
+double AGTissue::calculatePolydispersity()
+{
+	double area_difference_sqr = 0;
+	double abar = LX * LY / cells.size();
+	for (list<Cell*>::iterator cit = cells.begin(); cit != cells.end(); cit++)
+	{
+		area_difference_sqr += pow(((*(*cit)).GetArea()  - abar), 2) / (cells.size() * pow(A0,2));
+	}
+	return sqrt(area_difference_sqr);
+}
+
+/*
+* double calculatePressureFunctionQuadraticError()
+*
+* Calculates the sum over i of (Ai - A0)^3 / sum over i of (Ai-A0)^2, where i indexes the cells. This is an approximation of the error of approximating
+* the taylor series of the pressure to quadratic order, assuming your function is not quadratic
+*
+*/
+double AGTissue::calculatePressureFunctionQuadraticError()
+{
+	double area_difference_sqr = 0;
+	double area_difference_cube = 0;
+	double abar = LX * LY / cells.size();
+	for (list<Cell*>::iterator cit = cells.begin(); cit != cells.end(); cit++)
+	{
+		area_difference_sqr += pow(((*(*cit)).GetArea() - abar), 2);
+		area_difference_cube += pow(((*(*cit)).GetArea() - abar), 3);
+	}
+	return area_difference_cube / area_difference_sqr;
+}
+
+/*
+* double calculateThirdAreaMoment
+*
+* Calculates <(A/A0)^3>. This is another measure of how different certain pressure functions behave from
+* the quadratic function. You may need 
+*
+*/
+double AGTissue::calculateThirdAreaMoment()
+{
+	double area_cube = 0;
+	for (list<Cell*>::iterator cit = cells.begin(); cit != cells.end(); cit++)
+	{
+		area_cube += pow(((*(*cit)).GetArea() / A0 ), 3);
+	}
+	return area_cube ;
 }
 
 // had to put in this class so that AGPerimTissue could use it - no difference between this and that in Tissue class

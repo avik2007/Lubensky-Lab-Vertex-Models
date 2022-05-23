@@ -40,17 +40,18 @@ double AGCell::GetPressure(double Area)
 	if ((*this).pressureType == "LOG")
 	{
 		return K * (1 / (1 + Area / (*this).A0));
-		// where the energy would look like Ep = - K A0 Log(1 + A/A0)
+		// where the energy would look like Ep = - K A0 Log(1 + A/A0) ([K] = pressure/L^2)
 	}
-	else if ((*this).pressureType == "GAUSSIAN")
+	else if ((*this).pressureType == "EXPONENTIAL")
 	{
-		return K * ( 1 - Area / (*this).A0) * exp( pow(( Area / (*this).A0  - 1 ),2.0) ) ;
-		// where the energy would look like Ep = K A0 exp((A/A0-1)^2)
+		return K * exp( 1 - Area / (*this).A0 ) / exp(1);
+		// where the energy would look like Ep = K A0 exp(-(A/A0-1)) ([K] = pressure/L^2)
+		// and the exp(1) in the denominator is put in so that the local concavity of the function
 	}
 	else
 	{
 		return K * (1 - Area / (*this).A0);
-		// where the energy would look like Ep = 1/2 K A0 (A/A0 - 1)^2
+		// where the energy would look like Ep = 1/2 K A0 (A/A0 - 1)^2 ([K] = pressure/L^2)
 	}
 }
 /*

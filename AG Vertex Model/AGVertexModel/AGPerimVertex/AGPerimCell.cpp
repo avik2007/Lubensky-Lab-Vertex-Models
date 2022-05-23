@@ -36,4 +36,5 @@ double AGPerimCell::GetEnergy()
 {
 	double energy = 0.5 * ( K * pow((*this).GetArea() - (*this).A0 ,2) / (*this).A0  + LAMBDA * pow( (*this).GetPerimeter() - P0,2) );
 	return energy;
+	// before using this again you have to update to account for possible log or Gaussian area potentials
 }

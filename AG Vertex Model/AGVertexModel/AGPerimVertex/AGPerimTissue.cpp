@@ -461,12 +461,29 @@ double AGPerimTissue::CalculateFreeEnergy()
 	for (list<Cell*>::iterator cit = cells.begin(); cit != cells.end(); cit++)
 	{
 		AGPerimCell* agit = dynamic_cast<AGPerimCell*>(*cit);
-		carea = (*(agit)).GetArea();
+		carea = ((*agit)).GetArea();
 		cperim = ((*agit)).GetPerimeter();
 		p0 = (*agit).P0;
 		a0 = ((*agit)).A0;
+		if ((*agit).pressureType == "LOG")
+		{
+			area_difference_sqr += -1 * a0 * log(1 + carea/a0);
+			// where the energy would look like Ep = - K A0 Log(1 + A/A0) ([K] = pressure)
+		}
+		else if ((*agit).pressureType == "GAUSSIAN")
+		{
+			area_difference_sqr += a0*exp(pow(carea/a0 - 1, 2));
+			// where the energy would look like Ep = K A0 exp((A/A0-1)^2) ([K] = pressure)
+		}
+		else
+		{
+			area_difference_sqr += a0*pow(carea/a0 - 1, 2);
+			// where the energy would look like Ep = 1/2 K A0 (A/A0 - 1)^2 ([K] = pressure)
+		}
+		 
+		
 		perim_difference_sqr += pow( cperim - p0, 2); 
-		area_difference_sqr += pow( carea - a0, 2) / a0;
+		
 		// extra factor of 1/A0 is because K is written in units of pressure instead of E/length^4
 	}
 	freeenergy =0.5*LAMBDA*perim_difference_sqr + 0.5*K*area_difference_sqr;
@@ -614,6 +631,7 @@ void AGPerimTissue::Evolve(double interval, double *stepsize, ofstream* errorfil
 				{
 					breakVar = true;
 					break;
+					// This is a step I take so that the adaptive time stepper doesn't keep pushing the stepsize all the way down the machine precision 
 				}
 				*errorfile << "Current FE \t Past FE \t Stepsize\t Energy Change \n";
 				*errorfile << std::setprecision(outputPrecision) << currentFreeEnergy << "\t" << pastFreeEnergy << "\t" << *stepsize << "\t" << currentFreeEnergy - pastFreeEnergy << endl;
@@ -654,14 +672,14 @@ void AGPerimTissue::Evolve(double interval, double *stepsize, ofstream* errorfil
 		} while (energyDidIncrease);
 
 		double energySlope = getLinearRegressionSlope(timeList, energyList);
-		//*errorfile << CURRENTTIME << "\t" << currentFreeEnergy << "\t" << (currentFreeEnergy - pastFreeEnergy) / (cells.size() * K * A0) << "\n";
+		*errorfile << CURRENTTIME << "\t" << currentFreeEnergy << "\t" << (currentFreeEnergy - pastFreeEnergy) / (cells.size() * K * A0) << "\n";
 		*errorfile << std::setprecision(outputPrecision) << CURRENTTIME << "\t" << *stepsize << "\t" << currentFreeEnergy << "\t" << energySlope << "\t" << (currentFreeEnergy - pastFreeEnergy) / (cells.size() * K * A0) << "\n";
 
 		//if ((abs((currentFreeEnergy - pastFreeEnergy) / ((CURRENTTIME - previoustime)*(cells.size() * K * A0))) < equilibriumtolerance) && currentFreeEnergy - pastFreeEnergy < 0)
 
 		//STEP 6: look for topological changes and set flags if any have occured 
 		flag1 = false;
-		flag2 = false;
+		flag2 = false;	
 		flag3 = false;
 		flag4 = false;
 		if (APOPTOSISON) flag1 = (*this).Apoptosis(errorfile);
@@ -730,13 +748,13 @@ void AGPerimTissue::Evolve(double interval, double *stepsize, ofstream* errorfil
 		// STEP 8: Check for whether we have hit equilibrium or too small a timestep
 		if (energyList.size() > energyListSize)
 		{
-			if ((*this).IsEquilibrated())
+			(*this).equilibrated = (*this).IsEquilibrated();
+			if ((*this).equilibrated)
 			{
-				(*this).equilibrated = true;
-				break;
+				(*this).equilibrated = (*this).IsEquilibrated();
 			}
 		}
-
+ 
 		if (breakVar)
 		{
 			(*this).equilibrated = true;
@@ -840,12 +858,28 @@ double AGPerimTissue::CalculatePressureEnergy()
 	
 	double area_difference_sqr = 0;
 	// (A_c - A_0)^2
-
+	double carea;
+	double a0;
 	for (list<Cell*>::iterator cit = cells.begin(); cit != cells.end(); cit++)
 	{
 		AGPerimCell* agit = dynamic_cast<AGPerimCell*>(*cit);
-		area_difference_sqr += pow((*(agit)).GetArea() - ((*agit)).A0, 2) / (*(agit)).A0;
-		// extra factor of 1/A0 is because K is written in units of pressure instead of E/length^4
+		carea = (*agit).GetArea();
+		a0 = (*agit).A0;
+		if ((*agit).pressureType == "LOG")
+		{
+			area_difference_sqr += -1 * a0 * log(1 + carea / a0); //this seems incredibly strange. . . . . (04/05/2022)
+			// where the energy would look like Ep = - K A0 Log(1 + A/A0) ([K] = pressure)
+		}
+		else if ((*agit).pressureType == "GAUSSIAN")
+		{
+			area_difference_sqr += a0 * exp(pow(carea / a0 - 1, 2));
+			// where the energy would look like Ep = K A0 exp((A/A0-1)^2) ([K] = pressure)
+		}
+		else
+		{
+			area_difference_sqr += a0 * pow(carea / a0 - 1, 2);
+			// where the energy would look like Ep = 1/2 K A0 (A/A0 - 1)^2 ([K] = pressure)
+		}
 	}
 	freeenergy = 0.5*K*area_difference_sqr;
 	return freeenergy;
@@ -870,7 +904,7 @@ double AGPerimTissue::CalculatePerimeterEnergy()
 	{
 		AGPerimCell* agit = dynamic_cast<AGPerimCell*>(*cit);
 		perim_difference_sqr += pow(((*agit)).GetPerimeter() - (*agit).P0, 2);
-		// extra factor of 1/A0 is because K is written in units of pressure instead of E/length^4
+		
 	}
 	freeenergy = 0.5*LAMBDA*perim_difference_sqr;
 	return freeenergy;
@@ -972,7 +1006,6 @@ double AGPerimTissue::HelperResolveVertices_CheckStability(Vertex* vert, Edge* e
 	//Calculate the tension on the new edge
 	Vect ForceNewEdge_zerolength = enew.GetTension_ForceOnVertex(&v12);
 	
-	// not sure how multiplying a vector by a double works in the vector class
 
 	//Check the stability
 	stability = (*Force).Magnitude() - ForceNewEdge_zerolength.Magnitude();
@@ -1069,7 +1102,7 @@ void AGPerimTissue::HelperWriteOutputData_Write2File(ofstream* datafile, bool in
 		for (list<Vertex*>::iterator vit = vertices.begin(); vit != vertices.end(); vit++)
 		{			
 			//loop through all of the vertices in the tissue
-			*datafile << std::setprecision(outputPrecision) << (*(*vit)).id << "\t" << (*(*vit)).r.x << "\t" << (*(*vit)).r.y << "\t" << (*(*vit)).edges.size() << endl;						//write it's info to the file
+			*datafile << std::setprecision(outputPrecision) << (*(*vit)).id << "\t" << (*(*vit)).r.x << "\t" << (*(*vit)).r.y << "\t" << (*(*vit)).edges.size() << "\t" << (*(*vit)).SavedInfoForEvolve_TotalForce.x << "\t" << (*(*vit)).SavedInfoForEvolve_TotalForce.y << endl;						//write it's info to the file
 		}
 
 		//print the edge info
@@ -1183,7 +1216,7 @@ double listAverage(list<double> inputList)
 /*
 * double getLinearRegressionSlope(inputList)
 *
-* function to find the average of a (c++ stl) list - used in Evolve to determine equilibrium
+* function to find the slope of a list of points, stored here in C++ stl lists - used in Evolve to determine equilibrium
 *
 */
 double getLinearRegressionSlope(list<double> x, list<double> y)

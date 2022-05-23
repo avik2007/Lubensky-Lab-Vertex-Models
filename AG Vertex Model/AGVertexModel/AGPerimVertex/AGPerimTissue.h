@@ -87,7 +87,6 @@ public:
 	virtual bool IsEquilibrated();
 
 
-
 	//! Looks through all of the edges and find any that are to small and have them undergo T1 transitions, returns TRUE if successful.
 	virtual bool T1(ofstream* errorfile);
 
