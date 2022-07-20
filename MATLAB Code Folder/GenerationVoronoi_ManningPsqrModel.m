@@ -4,7 +4,7 @@ function GenerationVoronoi_ManningPsqrModel(r,NbPoints,limit, pot, shape_index, 
 %NbPoints = 10000; %number of cells 
 %limit = 1000; %number of iterations 
 %prefix lets you choose the first four letters of the file name (you could
-%cpt is cell pressure type, pick from QUADRATIC, LOG, GAUSSIAN
+%cpt is cell pressure type, pick from QUADRATIC, LOG, EXPONENTIAL
 %make it more than 4 letters but 4 letters has been my convention and I
 %recommend sticking to that
 %% Store data in the right folder
@@ -40,7 +40,7 @@ NEWEDGELENGTH =	0.0011;%1;
 
 CURRENTTIME = 0.0;  
 INITIALSTEPSIZE = t0 / 1000;
-TOTALTIME = INITIALSTEPSIZE*500000; %INITIALSTEPSIZE * 500000; %500000 in nature paper
+TOTALTIME = INITIALSTEPSIZE*1000000; %INITIALSTEPSIZE * 500000; %500000 in nature paper
 error_tolerance_absolute_mechanical =	0.001;
 ALPHAM = GAMMA * ( t0 / sqrt(A0));
 %TISSUE_ALPHA = 100 * ALPHAM ;% 
@@ -50,7 +50,7 @@ TISSUE_EXT_STRESS_Y = 0;
 
 P0 = sqrt(A0)*shape_index;
 %shape_index = P0 / sqrt(A0);
-inverse_perimeter_modulus = 0.02; % (Lisa Manning calls this r)
+inverse_perimeter_modulus = 0.02; % (Lisa Manning calls this r) %THIS IS CORRECT  (3/7/2022, YOU'VE JUST DEFINED IT WITH Kprime)
 LAMBDA = K / inverse_perimeter_modulus ;  %in meryl's model, strength of (p - p0)^2 term
 
 %Ratio = 0.3;                %ratio of pressure to tension forces (standard value 0.3) 

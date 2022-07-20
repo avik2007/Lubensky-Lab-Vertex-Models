@@ -39,7 +39,7 @@ CURRENTTIME = 0.0;
 INITIALSTEPSIZE = t0 / 1000;
 error_tolerance_absolute_mechanical =	0.001;
 ALPHAM = GAMMA * ( t0 / sqrt(A0));
-TISSUE_ALPHA = 10000000000000000000000000000000000 * ALPHAM;
+TISSUE_ALPHA = 100000000 * ALPHAM;
 % this tunes the "stiffness" of the box - make very large if you don't want
 % box to move
 TISSUE_EXT_STRESS_X = 0;

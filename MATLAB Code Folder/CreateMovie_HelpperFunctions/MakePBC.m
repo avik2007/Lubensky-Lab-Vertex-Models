@@ -174,7 +174,7 @@ for i = 1:N     %go through all edges
         E_pbc.vertex2(end+1) = vnewid(j+1);
         E_pbc.xflag(end+1) = 0;
         E_pbc.yflag(end+1) = 0;
-        E_pbc.length(end+1) = E.length(i);
+        %E_pbc.length(end+1) = E.length(i);
         E_pbc.cell1(end+1) = E.cell1(i);
         E_pbc.cell2(end+1) = E.cell2(i);
     end
@@ -203,7 +203,7 @@ E_pbc.vertex1(edelete) = [];
 E_pbc.vertex2(edelete) = [];
 E_pbc.xflag(edelete) = [];
 E_pbc.yflag(edelete) = [];
-E_pbc.length(edelete) = [];
+%E_pbc.length(edelete) = [];
 E_pbc.cell1(edelete) = [];
 E_pbc.cell2(edelete) = [];
 
@@ -473,12 +473,12 @@ if isCellIncluded
             C_pbc.Type(Nold+count) = C.Type(cind(i));
             C_pbc.A0(Nold+count) = C.A0(cind(i));
             C_pbc.Area(Nold+count) = C.Area(cind(i));
-            C_pbc.P0(Nold+count) = C.P0(cind(i));
+            %C_pbc.P0(Nold+count) = C.P0(cind(i));
             C_pbc.Pressure(Nold+count) = C.Pressure(cind(i));
             C_pbc.Center_x(Nold+count) = C.Center_x(cind(i));
             C_pbc.Center_y(Nold+count) = C.Center_y(cind(i));
             
-            C_pbc.dEnergy(Nold+count) = C.dEnergy(cind(i));
+            %C_pbc.dEnergy(Nold+count) = C.dEnergy(cind(i));
             % add new cell characteristics!
             %new values for cell segment
             C_pbc.CWVertices(Nold+count) = NewCell(i,j);
@@ -502,8 +502,8 @@ if isCellIncluded
     C_pbc.yflag(cind) = [];
     C_pbc.Center_x(cind) = [];
     C_pbc.Center_y(cind) = [];
-    C_pbc.dEnergy(cind) = [];
-    C_pbc.P0(cind) = [];
+    %C_pbc.dEnergy(cind) = [];
+    %C_pbc.P0(cind) = [];
     
     % add new cell characteristics here
 

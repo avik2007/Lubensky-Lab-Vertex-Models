@@ -33,7 +33,7 @@ using namespace std;
 *
 *
 * Calculates pressure of the cell based on the cell potential type (here, we're adding an option for the pressure 
-* taking a log or a gaussian potential 
+* taking a log or a exponential potential 
 */
 double AGCell::GetPressure(double Area)
 {
@@ -44,7 +44,7 @@ double AGCell::GetPressure(double Area)
 	}
 	else if ((*this).pressureType == "EXPONENTIAL")
 	{
-		return K * exp( 1 - Area / (*this).A0 ) / exp(1);
+		return K * exp( - Area / (*this).A0 );
 		// where the energy would look like Ep = K A0 exp(-(A/A0-1)) ([K] = pressure/L^2)
 		// and the exp(1) in the denominator is put in so that the local concavity of the function
 	}

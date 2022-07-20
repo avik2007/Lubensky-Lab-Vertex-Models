@@ -171,7 +171,7 @@ int main()
 	while (CURRENTTIME < TOTALTIME)
 	{
 		cout << "CURRENTTIME " << CURRENTTIME << endl;
-		tissue.Evolve(TIMEINTERVAL, &stepSize, &errorfile);
+		tissue.Evolve(TIMEINTERVAL, &stepSize, &errorfile); 
 		cout << "exited evolve" << endl;
 		tissue.WriteOutputDataAppend(&datafile);
 		cout << "writing at CURRENTTIME: " << CURRENTTIME << endl;

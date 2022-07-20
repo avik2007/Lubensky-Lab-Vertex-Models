@@ -121,5 +121,20 @@ public:
 
 	//deforms the tissue by defining a deformation gradient tensor
 	virtual void DeformTissue(double Fxx, double Fyy);
+
+	// calculates the non dimensionalized polydispersity of the packing using sum over (Ai - <A>)^2 / (N A0^2) for cells i
+	virtual double calculatePolydispersity();
+
+	// calculates the third centered area moment divided by the second centered area moment (variance)
+	virtual double calculatePressureFunctionQuadraticError();
+
+	// calculates the nondimensionalized third area moment 
+	virtual double calculateThirdAreaMoment();
+
+	//calculate the energy of the box
+	virtual double CalculateBoxEnergy();
+
+	//calculates the area of the box
+	virtual double GetBoxArea();
 };
 #endif

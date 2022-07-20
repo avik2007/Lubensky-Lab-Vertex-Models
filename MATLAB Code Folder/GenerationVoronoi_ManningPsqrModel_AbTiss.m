@@ -3,7 +3,7 @@ function GenerationVoronoi_ManningPsqrModel_AbTiss(r,NbPoints,limit, pot, shape_
 %r = 31; %seed
 %NbPoints = 10000; %number of cells 
 %limit = 1000; %number of iterations 
-%cpt = cell pressure type ('QUADRATIC', 'LOG', 'GAUSSIAN')
+%cpt = cell pressure type ('QUADRATIC', 'LOG', 'EXPONENTIAL ')
 %prefix lets you choose the first four letters of the file name (you could
 %make it more than 4 letters but 4 letters has been my convention and I
 %recommend sticking to that
@@ -14,13 +14,23 @@ rng(r);
 %% Drosophila Wing Disk "Units"
 % units:
 %l0 = 25; %length units
-Ab = 1250;%1250;
+Ab = 1250 ;%1250;
+A0 = 1000; %sort of dummy constant that looks nice but doesn't determine much 
 GAMMA =	 10;%10;%strength of line tension coefficient
 t0 = 1; %time units
-K = 5 * GAMMA /( sqrt(Ab) );  %"young's modulus", strength of area term - using equation given in Meryl's thesis
+AbTs_K_scaling = A0/Ab; 
+%why do we have this scaling? For AbTs, the important parts of the energy
+%are the K and the sum over Acell squared. We feed two variables to the
+%model that show up in forces 1) A0 and 2) K' (the K with units of
+%pressure). K'/A0 has to equal the same K in the Tiss files. How? Throw in
+%this shitty scaling term 
+% as with many things, this is an inconvenient, unintuitive thing that
+% exists because the vertex model's pressure is written as K'(1-A/A0)
+
+K = 5 * GAMMA / ( sqrt(Ab) ) * AbTs_K_scaling;  %"young's modulus", strength of area term - using equation given in Meryl's thesis
 %this K is written in units of pressure (because Meryl wrote the pressure
 %weird in the simulation)
-    
+Knorm = 5 * GAMMA / (sqrt(Ab)); % we need this to define lambda    
 
 % THIS CODE IS TO GENERATE PACKINGS FOR A MANNING MODEL (SEE
 % https://doi.org/10.1038/nphys3471)
@@ -28,7 +38,7 @@ K = 5 * GAMMA /( sqrt(Ab) );  %"young's modulus", strength of area term - using 
 %% Simulation Detail Parameters
 % Variable preferred area
 %Mesh = l0 * sqrt(2) * sqrt(NbPoints);
-A0 = 1000 ;
+
 Mesh = sqrt(Ab * NbPoints);
 
 %Global parameters
@@ -40,18 +50,18 @@ NEWEDGELENGTH =	0.0011;%1;
 
 CURRENTTIME = 0.0;  
 INITIALSTEPSIZE = t0 / 1000;
-TOTALTIME = INITIALSTEPSIZE*500000; %INITIALSTEPSIZE * 500000; %500000 in nature paper
+TOTALTIME = INITIALSTEPSIZE*500000;  %500000 in nature paper
 error_tolerance_absolute_mechanical =	0.001;
 ALPHAM = GAMMA * ( t0 / sqrt(Ab));
 %TISSUE_ALPHA = 100 * ALPHAM ;% 
-TISSUE_ALPHA = 10000000000000000000 *ALPHAM; % trying to keep the box from moving
-TISSUE_EXT_STRESS_X = 0;
-TISSUE_EXT_STRESS_Y = 0;    
+TISSUE_ALPHA = 100*ALPHAM;%10000000000000000000 *ALPHAM; % trying to keep the box from moving
+TISSUE_EXT_STRESS_X = -2;%40-10;%10-30;
+TISSUE_EXT_STRESS_Y = 2;%40+10;%10+30;    
 
 P0 = sqrt(Ab)*shape_index;
 %shape_index = P0 / sqrt(A0);
-inverse_perimeter_modulus = 0.02; % (Lisa Manning calls this r)
-LAMBDA = K / inverse_perimeter_modulus ;  %in meryl's model, strength of (p - p0)^2 term
+inverse_perimeter_modulus = 0.02; % (Lisa Manning calls this r) %THIS IS CORRECT  (3/7/2022, YOU'VE JUST DEFINED IT WITH Kprime)
+LAMBDA = Knorm / inverse_perimeter_modulus ;  %in meryl's model, strength of (p - p0)^2 term
 
 %Ratio = 0.3;                %ratio of pressure to tension forces (standard value 0.3) 
 

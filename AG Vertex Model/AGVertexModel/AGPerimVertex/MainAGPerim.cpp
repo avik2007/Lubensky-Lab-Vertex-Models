@@ -108,7 +108,6 @@ AGPerimTissue tissue;
 int main()
 {
 	//Path to the folder that your initial files are in 
-	// CHANGE THIS TO MATCH YOUR FOLDER
 	string PathName = "C:\\Users\\abmondal\\Documents\\Lubensky-Lab-Vertex-Models\\MATLAB Data Folder\\";
 	//string PathName = "C:\\Users\\abmondal\\Desktop\\";
 
@@ -128,7 +127,7 @@ int main()
 	//Seed the random number generator
 	mt19937_64 generator(SEED);
 	uniform_real_distribution<double> distribution(0.0, 1.0);
-
+	
 
 	//Set up the output files 
 	string filename = InputFileName.substr(0, InputFileName.size() - 4);
@@ -160,6 +159,15 @@ int main()
 	tissue.WriteOutputDataAppend(&datafile);
 	CURRENTTIME = 0;
 	
+	double pre_strain = tissue.CalculateFreeEnergy();
+	//TISSUE_EXT_STRESS_X = (20)*(2*K);
+	//TISSUE_EXT_STRESS_Y = (20)*(2*K);
+	//TISSUE_ALPHA = alphaM * 100;
+	double COMPRESS_NUM = 0.03;//0.015;
+	double SQUEEZE_NUM = 0.1;
+	//tissue.DeformTissue(1 - COMPRESS_NUM - SQUEEZE_NUM , 1 - COMPRESS_NUM + SQUEEZE_NUM);
+	//tissue.DeformTissue(1 - COMPRESS_NUM, 1 - COMPRESS_NUM);
+	//tissue.DeformTissue(1 / (1 + SQUEEZE_NUM), 1 + SQUEEZE_NUM);
 	double currentFreeEnergy = tissue.CalculateFreeEnergy();
 	errorfile << currentFreeEnergy << endl;
 	
@@ -182,6 +190,7 @@ int main()
 	tissue.WriteOutputDataAppend(&eqfile);
 	//double currentFreeEnergy = tissue.CalculateFreeEnergy();
 	errorfile << tissue.currentFreeEnergy << endl;
+	errorfile << tissue.currentFreeEnergy - pre_strain << endl;
 	///////******************************End***********************************************************************
 	///////**********************************************************************************************************
 	endtime = std::chrono::system_clock::now();

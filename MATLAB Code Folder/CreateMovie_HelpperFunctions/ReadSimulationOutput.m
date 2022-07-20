@@ -106,7 +106,8 @@ end
 nFields = length(VFields);
 
 %preallocate struc for outputting data
-VertexData = struct('id', Pre, 'x',Pre, 'y', Pre, 'Tx', Pre, 'Ty', Pre, 'Px', Pre, 'Py', Pre, 'EdgesNumber', Pre);
+%VertexData = struct('id', Pre, 'x',Pre, 'y', Pre, 'Tx', Pre, 'Ty', Pre, 'Px', Pre, 'Py', Pre, 'EdgesNumber', Pre);
+VertexData = struct('id', Pre, 'x', Pre, 'y', Pre, 'EdgesNumber', Pre, 'ForceX', Pre, 'ForceY', Pre);
 
 %Extract vertex id, x, and y positions
 for i = 1:nFields
@@ -127,6 +128,10 @@ for i = 1:nFields
             VertexData(1).Py = VData(:,i);
         case '_EdgesNumber'
             VertexData(1).EdgesNumber = VData(:,i);
+        case 'ForceX'
+            VertexData(1).ForceX = VData(:,i);
+        case 'ForceY'
+            VertexData(1).ForceY = VData(:,i);
         otherwise
             error('Invalid keyword in Vertices');
     end
@@ -154,8 +159,10 @@ end
 nFields = length(EFields);
 
 %preallocate struct for outputting data
-EdgeData = struct('id',Pre,'vertex1',Pre,'vertex2',Pre,'xflag',Pre,'yflag',Pre, ...
-    'length', Pre, 'tension', Pre, 'cell1', Pre, 'cell2', Pre);
+%EdgeData = struct('id',Pre,'vertex1',Pre,'vertex2',Pre,'xflag',Pre,'yflag',Pre, ...
+%    'length', Pre, 'tension', Pre, 'cell1', Pre, 'cell2', Pre);
+EdgeData = struct('id', Pre, 'vertex1', Pre, 'vertex2', Pre, 'xflag', Pre, 'yflag', Pre, ...
+    'tension', Pre, 'cell1', Pre, 'cell2', Pre);
 
 %Extract edge id, vertex1, vertex2, xflag, and yflag.
 for i = 1:nFields
@@ -260,7 +267,7 @@ for i = 1:nFields
         case 'P0'
             CellData(1).P0(:,1) = str2double(CData(:,i));
         otherwise
-            error( ['Invalid keyword in Cells: ', CFields{i}] )
+            %error( ['Invalid keyword in Cells: ', CFields{i}] )
     end
 end
 

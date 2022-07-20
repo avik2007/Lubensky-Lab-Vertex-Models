@@ -1397,7 +1397,7 @@ void AGTissue::ForceFunction(ofstream* errorfile){
 	 //double cutlineY = 0;
 	 //int sampleSize = 1;
 
-	 calculateexternalstress_linear(TAU_STRESS);
+	 //calculateexternalstress_linear(TAU_STRESS);
 	 // checking if taking more cuts is more accurate
 	 /**/
 	 /*
@@ -1415,11 +1415,14 @@ void AGTissue::ForceFunction(ofstream* errorfile){
 	// new code, 5/20/2020
 	// p_ext is external pressure
 	double p_ext = (TISSUE_EXT_STRESS_X + TISSUE_EXT_STRESS_Y) / 2;
+	double sigma_traceless_xx = (TISSUE_EXT_STRESS_X - TISSUE_EXT_STRESS_Y) / 2;
+	double sigma_traceless_yy = -1 * sigma_traceless_xx;
+	// sigma_traceless_xx and sigma_traceless_yy are respectively the xx and yy components of the deviatoric stress tensor
 	double internalXstress = GetInternalTissueStressX(errorfile);
 	double internalYstress = GetInternalTissueStressY(errorfile);
 	//Update LY and LX according to dynamical equations
-	ForceLX = -1 * (LY * LX0 * LX0) * (p_ext + internalXstress); 
-	ForceLY = -1 * (LY0 * LY0 * LX) * (p_ext + internalYstress);
+	ForceLX = -1 * (LY * LX0 * LX0) * (p_ext + sigma_traceless_xx + internalXstress); 
+	ForceLY = -1 * (LY0 * LY0 * LX) * (p_ext + sigma_traceless_yy + internalYstress);
 
 	// ***** ADD EXTRA LENGTH FACTORS FROM LENGTH DEPENDENT VISCOSITY!
 	ForceLX = ForceLX * ( LX / ( LX0 * LX0 * LY ) )  ;
@@ -1534,7 +1537,7 @@ double AGTissue::GetInternalTissueStressX(ofstream* errorfile)
 			v1 = (*(*eit)).vertex1;
 			angle = (*(*eit)).GetAngle(v1);
 			directioncos = abs(cos(angle));
-			edgestress += GAMMA * directioncos ;
+			edgestress += (*(*eit)).GetTension_Magnitude() * directioncos ;
 		}
 	}
 	
@@ -1628,7 +1631,7 @@ double AGTissue::GetInternalTissueStressY(ofstream* errorfile)
 			v1 = (*(*eit)).vertex1;
 			angle = (*(*eit)).GetAngle(v1);
 			directionsin = abs(sin(angle));
-			edgestress += GAMMA * directionsin;
+			edgestress += (*(*eit)).GetTension_Magnitude() * directionsin;
 		}
 	}
 
@@ -1652,7 +1655,7 @@ stressy = stressy / (LX * LY); // as a reminder that the stress needs an overall
 return stressy;
 }
 /*
-* void WriteOutputDatAppend(ofstream* datafile)
+* void WriteOutputDataAppend(ofstream* datafile)
 *
 * overload of base tissue class. I want to add a verbosity option to control how much info the helper
 * class writes out.
@@ -1718,10 +1721,29 @@ double AGTissue::CalculateFreeEnergy()
 	{
 		area_difference_sqr += pow(((*(*cit)).GetArea() - (*(*cit)).A0), 2) / (*(*cit)).A0;
 	}
-	freeenergy = GAMMA * totaledgelength + (0.5 * K * area_difference_sqr);
+	freeenergy = GAMMA * totaledgelength + (0.5 * K * area_difference_sqr) - (*this).CalculateBoxEnergy();
 	return freeenergy;
 }
 
+/*
+* double CalculateBoxEnergy()
+*
+* Calculates the strain energy of the box due to external tissue stress
+*/
+double AGTissue::CalculateBoxEnergy()
+{
+	return LX * LY * (TISSUE_EXT_STRESS_X + TISSUE_EXT_STRESS_Y);
+}
+
+/*
+* double CalculateBoxArea()
+* 
+*Returns the area of the box
+*/
+double AGTissue::GetBoxArea()
+{
+	return LX * LY;
+}
 /*
 * double calculatePolyDispersity()
 *
@@ -1736,7 +1758,7 @@ double AGTissue::calculatePolydispersity()
 	double abar = LX * LY / cells.size();
 	for (list<Cell*>::iterator cit = cells.begin(); cit != cells.end(); cit++)
 	{
-		area_difference_sqr += pow(((*(*cit)).GetArea()  - abar), 2) / (cells.size() * pow(A0,2));
+		area_difference_sqr += pow(((*(*cit)).GetArea()  - abar), 2) / (cells.size() * pow(abar,2));
 	}
 	return sqrt(area_difference_sqr);
 }
@@ -1755,8 +1777,8 @@ double AGTissue::calculatePressureFunctionQuadraticError()
 	double abar = LX * LY / cells.size();
 	for (list<Cell*>::iterator cit = cells.begin(); cit != cells.end(); cit++)
 	{
-		area_difference_sqr += pow(((*(*cit)).GetArea() - abar), 2);
-		area_difference_cube += pow(((*(*cit)).GetArea() - abar), 3);
+		area_difference_sqr += pow(((*(*cit)).GetArea() - (*(*cit)).A0), 2);
+		area_difference_cube += pow(((*(*cit)).GetArea() - (*(*cit)).A0), 3);
 	}
 	return area_difference_cube / area_difference_sqr;
 }
@@ -1773,7 +1795,7 @@ double AGTissue::calculateThirdAreaMoment()
 	double area_cube = 0;
 	for (list<Cell*>::iterator cit = cells.begin(); cit != cells.end(); cit++)
 	{
-		area_cube += pow(((*(*cit)).GetArea() / A0 ), 3);
+		area_cube += pow(((*(*cit)).GetArea() / (*(*cit)).A0 ), 3);
 	}
 	return area_cube ;
 }

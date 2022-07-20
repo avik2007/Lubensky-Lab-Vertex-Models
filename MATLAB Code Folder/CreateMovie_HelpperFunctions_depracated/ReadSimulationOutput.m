@@ -106,7 +106,7 @@ nFields = length(VFields);
 
 %preallocate struc for outputting data
 VertexData = struct('id', Pre, 'x',Pre, 'y',Pre, ...
-    'Tx', Pre, 'Ty', Pre, 'Px', Pre, 'Py', Pre, 'EdgesNumber', Pre);
+    'Tx', Pre, 'Ty', Pre, 'Px', Pre, 'Py', Pre, 'EdgesNumber', Pre, 'ForceX', Pre, 'ForceY', Pre);
 
 %Extract vertex id, x, and y positions
 for i = 1:nFields
@@ -127,6 +127,10 @@ for i = 1:nFields
             VertexData(1).Py = VData(:,i);
         case '_EdgesNumber'
             VertexData(1).EdgesNumber = VData(:,i);
+        case 'ForceX'
+            VertexData(1).ForceX = VData(:,i);
+        case 'ForceY'
+            VertexData(1).ForceY = VData(:,i);
         otherwise
             error('Invalid keyword in Vertices');
     end

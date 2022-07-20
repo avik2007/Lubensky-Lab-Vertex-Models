@@ -43,7 +43,7 @@ NEWEDGELENGTH =	l/20;                %Length of a new edge created in the T1 pro
 % K = Ratio * GAMMA / l^3 ;           %for pressure=K(A-A0)
 K = Ratio * 10 * GAMMA / l;          %for pressure=K(1-A/A0)
 Alpha_M = GAMMA*t0/l;                % Drag coefficent
-TISSUE_ALPHA = 10000000000000000000000000 * Alpha_M;%10000000*Ralpha*Alpha_M;       % How fast the box size updates relative to the vertex motion
+TISSUE_ALPHA = 1000 * Alpha_M;%10000000*Ralpha*Alpha_M;       % How fast the box size updates relative to the vertex motion
 TISSUE_EXT_STRESS_Y = 0;             % External Stress on the tissue (positive values expancile) 
 TISSUE_EXT_STRESS_X = 0;
 P0 = 3.722 * sqrt(A0);

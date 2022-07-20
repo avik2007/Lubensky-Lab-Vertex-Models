@@ -1,49 +1,140 @@
-﻿Build started 6/25/2021 11:01:17 AM.
-     1>Project "C:\Users\abmondal\Documents\Vertex_Model_Repository\AG Vertex Model\AGVertexModel\AGVertexModel\AGVertexModel.vcxproj" on node 2 (Build target(s)).
-     1>ClCompile:
-         C:\Program Files (x86)\Microsoft Visual Studio 13.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt AGTissue.cpp
-         AGTissue.cpp
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(93): warning C4244: '=' : conversion from 'double' to 'int', possible loss of data
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(149): warning C4800: 'double' : forcing value to bool 'true' or 'false' (performance warning)
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(262): warning C4800: 'int' : forcing value to bool 'true' or 'false' (performance warning)
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(263): warning C4800: 'int' : forcing value to bool 'true' or 'false' (performance warning)
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(183): warning C4101: 'j' : unreferenced local variable
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(453): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(537): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(545): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(401): warning C4101: 'rawtime' : unreferenced local variable
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(402): warning C4101: 'timeinfo' : unreferenced local variable
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(656): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(824): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1070): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1084): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1145): warning C4101: 'flag0' : unreferenced local variable
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1357): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1334): warning C4101: 'cellnumber' : unreferenced local variable
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1514): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1535): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1490): warning C4101: 'length' : unreferenced local variable
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1484): warning C4101: 'v3' : unreferenced local variable
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1490): warning C4101: 'tempCenterHolder' : unreferenced local variable
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1484): warning C4101: 'v2' : unreferenced local variable
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1608): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1628): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1587): warning C4101: 'length' : unreferenced local variable
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1581): warning C4101: 'v3' : unreferenced local variable
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(1581): warning C4101: 'v2' : unreferenced local variable
-     1>c:\users\abmondal\documents\vertex_model_repository\ag vertex model\agvertexmodel\agvertexmodel\agtissue.cpp(773): warning C4715: 'AGTissue::CreateCell' : not all control paths return a value
-       Link:
-         C:\Program Files (x86)\Microsoft Visual Studio 13.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\abmondal\Documents\Vertex_Model_Repository\AG Vertex Model\AGVertexModel\Debug\AGVertexModel.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\abmondal\Documents\Vertex_Model_Repository\AG Vertex Model\AGVertexModel\Debug\AGVertexModel.pdb" /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\abmondal\Documents\Vertex_Model_Repository\AG Vertex Model\AGVertexModel\Debug\AGVertexModel.lib" /MACHINE:X86 Debug\AGCell.obj
-         Debug\AGTissue.obj
-         Debug\CellClass.obj
-         Debug\EdgeClass.obj
-         Debug\MainTest.obj
-         Debug\TissueClass.obj
-         Debug\VectClass.obj
-         Debug\VertexClass.obj
-         AGVertexModel.vcxproj -> C:\Users\abmondal\Documents\Vertex_Model_Repository\AG Vertex Model\AGVertexModel\Debug\AGVertexModel.exe
-     1>Done Building Project "C:\Users\abmondal\Documents\Vertex_Model_Repository\AG Vertex Model\AGVertexModel\AGVertexModel\AGVertexModel.vcxproj" (Build target(s)).
-
-Build succeeded.
-
-Time Elapsed 00:00:04.10
+﻿  AGCell.cpp
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\AGCell.cpp(582,15): warning C4101: 'v2': unreferenced local variable
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\AGCell.cpp(583,13): warning C4101: 'F2': unreferenced local variable
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\AGCell.cpp(584,13): warning C4101: 'x2': unreferenced local variable
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\AGCell.cpp(609,13): warning C4101: 'y2': unreferenced local variable
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\AGCell.cpp(607,15): warning C4101: 'v2': unreferenced local variable
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\AGCell.cpp(608,13): warning C4101: 'F2': unreferenced local variable
+  AGTissue.cpp
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\AGTissue.cpp(93,46): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\AGTissue.cpp(183,8): warning C4101: 'j': unreferenced local variable
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\AGTissue.cpp(462,18): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\AGTissue.cpp(546,18): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\AGTissue.cpp(554,18): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\AGTissue.cpp(411,14): warning C4101: 'timeinfo': unreferenced local variable
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\AGTissue.cpp(410,9): warning C4101: 'rawtime': unreferenced local variable
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\AGTissue.cpp(665,16): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\AGTissue.cpp(833,17): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\AGTissue.cpp(1079,17): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\AGTissue.cpp(1093,17): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\AGTissue.cpp(1154,7): warning C4101: 'flag0': unreferenced local variable
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\AGTissue.cpp(1366,17): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\AGTissue.cpp(1343,9): warning C4101: 'cellnumber': unreferenced local variable
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\AGTissue.cpp(1526,18): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\AGTissue.cpp(1547,16): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\AGTissue.cpp(1496,20): warning C4101: 'v3': unreferenced local variable
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\AGTissue.cpp(1502,17): warning C4101: 'tempCenterHolder': unreferenced local variable
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\AGTissue.cpp(1496,15): warning C4101: 'v2': unreferenced local variable
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\AGTissue.cpp(1502,9): warning C4101: 'length': unreferenced local variable
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\AGTissue.cpp(1620,18): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\AGTissue.cpp(1640,15): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\AGTissue.cpp(1593,20): warning C4101: 'v3': unreferenced local variable
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\AGTissue.cpp(1593,15): warning C4101: 'v2': unreferenced local variable
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\AGTissue.cpp(1599,9): warning C4101: 'length': unreferenced local variable
+  CellClass.cpp
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\CellClass.cpp(41,12): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\CellClass.cpp(48,12): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\CellClass.cpp(64,16): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\CellClass.cpp(77,16): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\CellClass.cpp(96,16): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\CellClass.cpp(155,13): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\CellClass.cpp(199,8): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\CellClass.cpp(205,12): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\CellClass.cpp(246,8): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\CellClass.cpp(252,13): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\CellClass.cpp(287,8): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\CellClass.cpp(291,12): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\CellClass.cpp(323,8): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\CellClass.cpp(327,12): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\CellClass.cpp(339,13): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\CellClass.cpp(343,14): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\CellClass.cpp(344,14): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\CellClass.cpp(347,14): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\CellClass.cpp(348,14): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\CellClass.cpp(353,13): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\CellClass.cpp(357,14): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\CellClass.cpp(358,14): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\CellClass.cpp(361,14): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\CellClass.cpp(362,14): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\CellClass.cpp(374,16): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\CellClass.cpp(403,13): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\CellClass.cpp(418,31): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\CellClass.cpp(450,16): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\CellClass.cpp(459,9): warning C4101: 'j': unreferenced local variable
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\CellClass.cpp(459,6): warning C4101: 'i': unreferenced local variable
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\CellClass.cpp(491,9): warning C4101: 'j': unreferenced local variable
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\CellClass.cpp(491,6): warning C4101: 'i': unreferenced local variable
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\CellClass.cpp(566,16): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\CellClass.cpp(582,16): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\CellClass.cpp(749,12): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\CellClass.cpp(777,16): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\CellClass.cpp(1157,17): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\CellClass.cpp(1100,27): warning C4101: 'maxx': unreferenced local variable
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\CellClass.cpp(1100,15): warning C4101: 'minx': unreferenced local variable
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\CellClass.cpp(1218,17): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\CellClass.cpp(1166,21): warning C4101: 'maxy': unreferenced local variable
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\CellClass.cpp(1166,9): warning C4101: 'miny': unreferenced local variable
+  EdgeClass.cpp
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\EdgeClass.cpp(448,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\EdgeClass.cpp(454,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\EdgeClass.cpp(481,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\EdgeClass.cpp(489,20): warning C4018: '<': signed/unsigned mismatch
+  MainTest.cpp
+  TissueClass.cpp
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\TissueClass.cpp(190,16): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\TissueClass.cpp(155,9): warning C4101: 'carea': unreferenced local variable
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\TissueClass.cpp(246,16): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\TissueClass.cpp(303,16): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\TissueClass.cpp(334,16): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\TissueClass.cpp(410,17): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\TissueClass.cpp(388,9): warning C4101: 'cellnumber': unreferenced local variable
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\TissueClass.cpp(661,7): warning C4101: 'flag0': unreferenced local variable
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\TissueClass.cpp(754,18): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\TissueClass.cpp(766,16): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\TissueClass.cpp(780,16): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\TissueClass.cpp(733,8): warning C4101: 'cptr': unreferenced local variable
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\TissueClass.cpp(818,18): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\TissueClass.cpp(829,16): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\TissueClass.cpp(843,16): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\TissueClass.cpp(798,8): warning C4101: 'cptr': unreferenced local variable
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\TissueClass.cpp(904,15): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\TissueClass.cpp(909,15): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\TissueClass.cpp(925,15): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\TissueClass.cpp(946,15): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\TissueClass.cpp(952,15): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\TissueClass.cpp(989,15): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\TissueClass.cpp(991,17): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\TissueClass.cpp(995,15): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\TissueClass.cpp(997,17): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\TissueClass.cpp(1016,15): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\TissueClass.cpp(1025,15): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\TissueClass.cpp(1038,15): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\TissueClass.cpp(1047,15): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\TissueClass.cpp(975,27): warning C4101: 'u': unreferenced local variable
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\TissueClass.cpp(1137,46): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\TissueClass.cpp(1442,18): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\TissueClass.cpp(1476,18): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\TissueClass.cpp(1483,18): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\TissueClass.cpp(1392,14): warning C4101: 'timeinfo': unreferenced local variable
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\TissueClass.cpp(1391,9): warning C4101: 'rawtime': unreferenced local variable
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\TissueClass.cpp(1541,17): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\TissueClass.cpp(1786,17): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\TissueClass.cpp(1800,17): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\TissueClass.cpp(2044,9): warning C4101: 'newx': unreferenced local variable
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\TissueClass.cpp(2044,15): warning C4101: 'newy': unreferenced local variable
+  VectClass.cpp
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\VectClass.cpp(97,12): warning C4018: '<': signed/unsigned mismatch
+  VertexClass.cpp
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\VertexClass.cpp(64,16): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\VertexClass.cpp(173,12): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\VertexClass.cpp(179,13): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\VertexClass.cpp(217,12): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\VertexClass.cpp(228,12): warning C4018: '<': signed/unsigned mismatch
+  Generating Code...
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\VertexClass.cpp(140): warning C4715: 'Vertex::GetEdgeBetween': not all control paths return a value
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\TissueClass.cpp(135): warning C4715: 'Tissue::CreateCell': not all control paths return a value
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\TissueClass.cpp(99): warning C4715: 'Tissue::CreateEdge': not all control paths return a value
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\EdgeClass.cpp(429): warning C4715: 'Edge::GetThisCellNumber': not all control paths return a value
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\EdgeClass.cpp(132): warning C4715: 'GetLength_NewStatic': not all control paths return a value
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel\AGTissue.cpp(782): warning C4715: 'AGTissue::CreateCell': not all control paths return a value
+  AGVertexModel.vcxproj -> C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\Debug\AGVertexModel.exe

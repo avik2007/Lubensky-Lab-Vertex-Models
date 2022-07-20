@@ -18,13 +18,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
@@ -39,7 +39,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>C:\Users\abmondal\Documents\Vertex_Model_Repository\AG Vertex Model\AGVertexModel\AGVertexModel;C:\Users\abmondal\Documents\Vertex_Model_Repository\AG Vertex Model\AGVertexModel\AGPerimVertex;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGPerimVertex;C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGVertexModel;C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGPerimModuli;C:\Users\abmondal\Documents\Vertex_Model_Repository\AG Vertex Model\AGVertexModel\AGVertexModel;C:\Users\abmondal\Documents\Vertex_Model_Repository\AG Vertex Model\AGVertexModel\AGPerimVertex;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

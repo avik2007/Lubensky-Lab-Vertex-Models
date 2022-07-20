@@ -23,7 +23,7 @@ l= sqrt(2) * 25;            %Average edge length
 t0 = 1;                     %Standard unit of time 
 RLXLY = 1;                  %Ratio of LX to LY (used to make rectangular boxes) 
 Ratio = 0.3;                %ratio of pressure to tension forces (standard value 0.3)
-Ralpha=100;                   %Ralpha=10 means the box evolves 10 times slower then the vertices
+Ralpha=100000000000000000000;                   %Ralpha=10 means the box evolves 10 times slower then the vertices
 TOTALTIME = 400;             %How long to run the simulation 
 CURRENTTIME = 0.0;          %The initial time
 TIMEINTERVAL =	1;        %How often to output the current configuration of the tissue
