@@ -163,25 +163,42 @@ int main()
 	//TISSUE_EXT_STRESS_X = (20)*(2*K);
 	//TISSUE_EXT_STRESS_Y = (20)*(2*K);
 	//TISSUE_ALPHA = alphaM * 100;
-	double COMPRESS_NUM = 0.05;//0.015;
-	double SQUEEZE_NUM = 0.01;
+	double COMPRESS_NUM = 0.08;//0.015;
+	double SQUEEZE_NUM = 0.001;
 	//tissue.DeformTissue(1 - COMPRESS_NUM - SQUEEZE_NUM , 1 - COMPRESS_NUM + SQUEEZE_NUM);
-	//tissue.DeformTissue(1 - COMPRESS_NUM, 1 - COMPRESS_NUM);
+	
 	//tissue.DeformTissue(1 / (1 + SQUEEZE_NUM), 1 + SQUEEZE_NUM);
 	double currentFreeEnergy = tissue.CalculateFreeEnergy();
-	errorfile << currentFreeEnergy << endl;
+
+	//TISSUE_ALPHA = 100 * alphaM;
+	//double hydrostatic_press = 0;//1000;
+	//double traceless_press = 20;
+	//TISSUE_EXT_STRESS_X = hydrostatic_press;// +traceless_press;
+	//TISSUE_EXT_STRESS_Y = hydrostatic_press;// -traceless_press;
 
 	double polydispersity = tissue.calculatePolydispersity();
-	errorfile << "Polydispersity = " << polydispersity << endl;
-
+	//errorfile << "Polydispersity = " << polydispersity << endl;
+	int Nsqueeze = 0;
 	// above time variables allow us to pick how often we write to the appendfile
-	while ((CURRENTTIME < TOTALTIME) && !(tissue.equilibrated))
+	while ( ( CURRENTTIME < TOTALTIME ) && ( Nsqueeze < 100 ) ) 
 	{
-		cout << "CURRENTTIME " << CURRENTTIME << endl;
-		tissue.Evolve(TIMEINTERVAL, &stepSize, &errorfile);
-		cout << "exited evolve" << endl;
-		tissue.WriteOutputDataAppend(&datafile);
-		cout << "writing at CURRENTTIME: " << CURRENTTIME << endl;
+		tissue.equilibrated = false; 
+		while (!(tissue.equilibrated))
+		{
+			cout << "CURRENTTIME " << CURRENTTIME << endl;
+			tissue.Evolve(TIMEINTERVAL, &stepSize, &errorfile);
+			cout << "exited evolve" << endl;
+			tissue.WriteOutputDataAppend(&datafile);
+			cout << "writing at CURRENTTIME: " << CURRENTTIME << endl;
+		}
+		if (Nsqueeze < 1)
+			tissue.DeformTissue(1 - COMPRESS_NUM, 1 - COMPRESS_NUM);
+		else
+			tissue.DeformTissue(1 / (1 + SQUEEZE_NUM), 1 + SQUEEZE_NUM);
+		//TISSUE_EXT_STRESS_X += traceless_press;
+		//TISSUE_EXT_STRESS_Y -= traceless_press;
+		Nsqueeze++;
+		//errorfile << "----------------------------------------------------------------------------------------------------------------\n";
 		// equilibrated gets updated in Evolve
 	}
 	tissue.WriteOutputDataAppend(&datafile);
@@ -189,8 +206,8 @@ int main()
 	eqfile.open(OutputFileName3);
 	tissue.WriteOutputDataAppend(&eqfile);
 	//double currentFreeEnergy = tissue.CalculateFreeEnergy();
-	errorfile << tissue.currentFreeEnergy << endl;
-	errorfile << tissue.currentFreeEnergy - pre_strain << endl;
+	//errorfile << tissue.currentFreeEnergy << endl;
+	//errorfile << tissue.currentFreeEnergy - pre_strain << endl;
 	///////******************************End***********************************************************************
 	///////**********************************************************************************************************
 	endtime = std::chrono::system_clock::now();

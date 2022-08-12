@@ -467,18 +467,18 @@ double AGPerimTissue::CalculateFreeEnergy()
 		a0 = ((*agit)).A0;
 		if ((*agit).pressureType == "LOG")
 		{
-			area_difference_sqr += -1 * a0 * log(1 + carea/a0);
-			// where the energy would look like Ep = - K A0 Log(1 + A/A0) ([K] = pressure)
+			area_difference_sqr += -2 * a0 * log(1 + carea/a0);
+			// where the energy would look like Ep = - K A0^2 Log(1 + A/A0) ([K] = pressure)
 		}
-		else if ((*agit).pressureType == "GAUSSIAN")
+		else if ((*agit).pressureType == "EXPONENTIAL")
 		{
-			area_difference_sqr += a0*exp(pow(carea/a0 - 1, 2));
-			// where the energy would look like Ep = K A0 exp((A/A0-1)^2) ([K] = pressure)
+			area_difference_sqr += 2 * a0*exp(-carea / a0); 
+			// where the energy would look like Ep = K A0^2 exp((A/A0-1)) ([K] = pressure)
 		}
 		else
 		{
-			area_difference_sqr += a0*pow(carea/a0 - 1, 2);
-			// where the energy would look like Ep = 1/2 K A0 (A/A0 - 1)^2 ([K] = pressure)
+			area_difference_sqr += pow(a0,2)*pow(carea/a0 - 1, 2);
+			// where the energy would look like Ep = 1/2 K A0^2 (A/A0 - 1)^2 ([K] = pressure)
 		}
 		 
 		
@@ -486,7 +486,9 @@ double AGPerimTissue::CalculateFreeEnergy()
 		
 		// extra factor of 1/A0 is because K is written in units of pressure instead of E/length^4
 	}
-	freeenergy =0.5*LAMBDA*perim_difference_sqr + 0.5*K*area_difference_sqr;
+	freeenergy =0.5*LAMBDA*perim_difference_sqr + 0.5*K*area_difference_sqr - (*this).CalculateBoxEnergy();
+
+
 	return freeenergy;
 }
 
@@ -627,16 +629,18 @@ void AGPerimTissue::Evolve(double interval, double *stepsize, ofstream* errorfil
 			
 			if (energyDidIncrease)
 			{
-				if (*stepsize < 0.0000001)
+				if (*stepsize < 0.0000001) // this could be turned into a parameter, the minumum stepsize
+				//if (*stepsize <   0.000000000001)
 				{
 					breakVar = true;
+					//*errorfile << "Stepsize got too small. Break" << endl;
 					break;
 					// This is a step I take so that the adaptive time stepper doesn't keep pushing the stepsize all the way down the machine precision 
 				}
-				*errorfile << "Current FE \t Past FE \t Stepsize\t Energy Change \n";
-				*errorfile << std::setprecision(outputPrecision) << currentFreeEnergy << "\t" << pastFreeEnergy << "\t" << *stepsize << "\t" << currentFreeEnergy - pastFreeEnergy << endl;
-				*errorfile << "Energy Increase - change timestep and redo step\n";
-				*errorfile << "\n";
+				//*errorfile << "Current FE \t Past FE \t Stepsize\t Energy Change \n";
+				//*errorfile << std::setprecision(outputPrecision) << currentFreeEnergy << "\t" << pastFreeEnergy << "\t" << *stepsize << "\t" << currentFreeEnergy - pastFreeEnergy << endl;
+				//*errorfile << "Energy Increase - change timestep and redo step\n";
+				//*errorfile << "\n";
 				//*errorfile << "--------------------------------------------------------------------------\n";
 				
 				//*errorfile << "--------------------------------------------------------------------------\n";
@@ -663,17 +667,19 @@ void AGPerimTissue::Evolve(double interval, double *stepsize, ofstream* errorfil
 				*stepsize = *stepsize * 0.75;
 				INTEGRATORNAME = "RK4";
 
-				*errorfile << "--------------------------------------------------------------------------\n";
+				//*errorfile << "--------------------------------------------------------------------------\n";
 				//(*this).WriteOutputDataAppend(errorfile);
-				*errorfile << " Stepsize is now:" << *stepsize << endl;
-				*errorfile << "--------------------------------------------------------------------------\n";
+				//*errorfile << " Stepsize is now:" << *stepsize << endl;
+				//*errorfile << "--------------------------------------------------------------------------\n";
 			}
 
 		} while (energyDidIncrease);
 
 		double energySlope = getLinearRegressionSlope(timeList, energyList);
-		*errorfile << CURRENTTIME << "\t" << currentFreeEnergy << "\t" << (currentFreeEnergy - pastFreeEnergy) / (cells.size() * K * A0) << "\n";
-		*errorfile << std::setprecision(outputPrecision) << CURRENTTIME << "\t" << *stepsize << "\t" << currentFreeEnergy << "\t" << energySlope << "\t" << (currentFreeEnergy - pastFreeEnergy) / (cells.size() * K * A0) << "\n";
+	
+		//*errorfile << std::setprecision(outputPrecision) << CURRENTTIME << "\t" << *stepsize << "\t" << currentFreeEnergy << "\t" << energySlope << "\t" << (currentFreeEnergy - pastFreeEnergy) / (cells.size() * K * A0) << "\n";
+
+		*errorfile << std::setprecision(outputPrecision) << CURRENTTIME << "\t" << currentFreeEnergy << "\t" << LX << "\t" << LY << endl;
 
 		//if ((abs((currentFreeEnergy - pastFreeEnergy) / ((CURRENTTIME - previoustime)*(cells.size() * K * A0))) < equilibriumtolerance) && currentFreeEnergy - pastFreeEnergy < 0)
 
@@ -752,6 +758,7 @@ void AGPerimTissue::Evolve(double interval, double *stepsize, ofstream* errorfil
 			if ((*this).equilibrated)
 			{
 				(*this).equilibrated = (*this).IsEquilibrated();
+				*errorfile << "Equilibrium condition was met." << endl;
 			}
 		}
  
@@ -867,18 +874,18 @@ double AGPerimTissue::CalculatePressureEnergy()
 		a0 = (*agit).A0;
 		if ((*agit).pressureType == "LOG")
 		{
-			area_difference_sqr += -1 * a0 * log(1 + carea / a0); //this seems incredibly strange. . . . . (04/05/2022)
-			// where the energy would look like Ep = - K A0 Log(1 + A/A0) ([K] = pressure)
+			area_difference_sqr += -2 * a0 * log(1 + carea / a0);
+			// where the energy would look like Ep = - 1 / 2 K A0^2 Log(1 + A/A0) ([K] = pressure)
 		}
-		else if ((*agit).pressureType == "GAUSSIAN")
+		else if ((*agit).pressureType == "EXPONENTIAL")
 		{
-			area_difference_sqr += a0 * exp(pow(carea / a0 - 1, 2));
-			// where the energy would look like Ep = K A0 exp((A/A0-1)^2) ([K] = pressure)
+			area_difference_sqr += 2 * pow(a0,2) * exp(- carea / a0 );
+			// where the energy would look like Ep = 1/2 K A0^2 exp(-A/A0) ([K] = pressure)
 		}
 		else
 		{
-			area_difference_sqr += a0 * pow(carea / a0 - 1, 2);
-			// where the energy would look like Ep = 1/2 K A0 (A/A0 - 1)^2 ([K] = pressure)
+			area_difference_sqr += pow(a0,2) * pow(carea / a0 - 1, 2);
+			// where the energy would look like Ep = 1/2 K A0^2 (A/A0 - 1)^2 ([K] = pressure)
 		}
 	}
 	freeenergy = 0.5*K*area_difference_sqr;
@@ -1034,6 +1041,7 @@ void AGPerimTissue::HelperWriteOutputData_Write2File(ofstream* datafile, bool in
 	*datafile << std::setprecision(outputPrecision) << "TIMEINTERVAL\t" << TIMEINTERVAL << endl;
 	*datafile << std::setprecision(outputPrecision) << "LX\t" << LX << endl;
 	*datafile << std::setprecision(outputPrecision) << "LY\t" << LY << endl;
+	*datafile << std::setprecision(outputPrecision) << "Abox\t" << LX*LY << endl;
 	*datafile << "MINAREA\t" << MINAREA << endl;
 	*datafile << "MINLENGTH\t" << MINLENGTH << endl;
 	*datafile << "NEWEDGELENGTH\t" << NEWEDGELENGTH << endl;
@@ -1195,6 +1203,7 @@ void AGPerimTissue::HelperWriteOutputData_Write2File(ofstream* datafile, bool in
 
 	*datafile << "End" << endl << endl;
 }
+
 
 /*
 * double listAverage(inputList)

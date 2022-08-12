@@ -3,8 +3,7 @@
 *	Contains function definitions associated with AGPerimCell objects.
 */
 
-#include <iostream>
-#include <cassert>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            #include <cassert>
 #include <string>
 #include <cmath>
 #include <cstdlib>
@@ -50,3 +49,4 @@ double AGPerimEdge::GetTension_Magnitude(){
 	tension = LAMBDA*perimdiff1 + LAMBDA*perimdiff2;
 	return tension;
 }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
