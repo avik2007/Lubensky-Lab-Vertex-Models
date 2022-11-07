@@ -21,6 +21,7 @@
 #include "Constants.h"
 #include "AGConstants.h"
 #include "AGCell.h"
+#include "AGTissue.h"
 
 
 using namespace std;
@@ -47,6 +48,10 @@ double AGCell::GetPressure(double Area)
 		return K * exp( - Area / (*this).A0 );
 		// where the energy would look like Ep = K A0 exp(-(A/A0-1)) ([K] = pressure/L^2)
 		// and the exp(1) in the denominator is put in so that the local concavity of the function
+	}
+	else if ((*this).pressureType == "QUARTIC")
+	{
+		return K*( (1 - Area / (*this).A0 ) + 2*C4*pow(1 - Area / (*this).A0, 3) );
 	}
 	else
 	{

@@ -167,7 +167,6 @@ int main()
 	cout << "*******************************************************************************" << endl;
 
 	tissue.WriteOutputDataAppend(&datafile);
-	double lastwritetime = 0;
 	// above time variables allow us to pick how often we write to the appendfile
 	while (CURRENTTIME < TOTALTIME)
 	{

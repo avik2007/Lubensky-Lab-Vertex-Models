@@ -30,7 +30,7 @@
 * Reads the data and sets all of the global variables.
 * Starts at current position of *datafile and look for keyword 'Global', reads until keyword 'endGlobal'.
 */
-void AGTissue::HelperReadInputData_SetGlobalValues(ifstream* datafile){
+void AGTissue::HelperReadInputData_SetGlobalValues(ifstream* datafile) {
 
 	string line, word, key, value;		//temporary variables to store lines and words 
 	string type;						//what type of file is it (in case latter versions need to do slightly different things based on type)
@@ -42,19 +42,19 @@ void AGTissue::HelperReadInputData_SetGlobalValues(ifstream* datafile){
 	//******ADD MORE GLOBAL VARIABLES HERE ALSO ADD THEM TO THE CONSTANTS.H FILE AND GIVE THEM A DEFAULT VALUE IN MAIN*********************//
 
 	//Read until you get to the word Global signifying the begining of the global variables
-	while (line.compare("Global:") != 0){
+	while (line.compare("Global:") != 0) {
 		getline(*datafile, line);
 		cout << line << endl;
 	}
 
 	//Now read the global variables and make a map with the keywords
-	while (line.compare("endGlobal") != 0){
+	while (line.compare("endGlobal") != 0) {
 		getline(*datafile, line);							//get the next line
 		ssline.clear();
 		ssline << line;										//put it into a stream
 		ssline >> key;										//the first word is the key
 		ssline >> value;									//the second is the value of the key
-		if (value != ""){									//if the item actually has a value
+		if (value != "") {									//if the item actually has a value
 			globals[key] = value;								//stick the item and it's value in the globals map
 		}
 	}
@@ -62,101 +62,105 @@ void AGTissue::HelperReadInputData_SetGlobalValues(ifstream* datafile){
 	//Now assign the constants their values
 	//makes sure the key is actually part of the map before giving the constant a value if the key is not defined it will have the value given at the begining of main
 	// the atof is there to convert the string to a double
-	if (globals.count("LX") == 1){ LX = atof(globals["LX"].c_str()); }
-	else if (globals.count("LX") == 0){ cout << "WARNING: LX is not given in input file, used default value " << LX << endl; }
+	if (globals.count("LX") == 1) { LX = atof(globals["LX"].c_str()); }
+	else if (globals.count("LX") == 0) { cout << "WARNING: LX is not given in input file, used default value " << LX << endl; }
 	else { cout << "ERROR: Global variable LX has multiple definition in input file, used default value LX = " << LX << endl; }
 
-	if (globals.count("LY") == 1){ LY = atof(globals["LY"].c_str()); }
-	else if (globals.count("LY") == 0){ cout << "WARNING: LY is not given in input file, used default value " << LY << endl; }
+	if (globals.count("LY") == 1) { LY = atof(globals["LY"].c_str()); }
+	else if (globals.count("LY") == 0) { cout << "WARNING: LY is not given in input file, used default value " << LY << endl; }
 	else { cout << "ERROR: Global variable LX has multiple definition in input file, used default value LY = " << LY << endl; }
 
-	if (globals.count("MINAREA") == 1){ MINAREA = atof(globals["MINAREA"].c_str()); }
-	else if (globals.count("MINAREA") == 0){ cout << "WARNING: MINAREA is not given in input file, used default value " << MINAREA << endl; }
+	if (globals.count("MINAREA") == 1) { MINAREA = atof(globals["MINAREA"].c_str()); }
+	else if (globals.count("MINAREA") == 0) { cout << "WARNING: MINAREA is not given in input file, used default value " << MINAREA << endl; }
 	else { cout << "ERROR: Global variable MINAREA has multiple definition in input file, used default value MINAREA = " << MINAREA << endl; }
 
-	if (globals.count("MINLENGTH") == 1){ MINLENGTH = atof(globals["MINLENGTH"].c_str()); }
-	else if (globals.count("MINLENGTH") == 0){ cout << "WARNING: LX is not given in input file, used default value " << MINLENGTH << endl; }
+	if (globals.count("MINLENGTH") == 1) { MINLENGTH = atof(globals["MINLENGTH"].c_str()); }
+	else if (globals.count("MINLENGTH") == 0) { cout << "WARNING: LX is not given in input file, used default value " << MINLENGTH << endl; }
 	else { cout << "ERROR: Global variable MINLENGTH has multiple definition in input file, used default value MINLENGTH = " << MINLENGTH << endl; }
 
-	if (globals.count("NEWEDGELENGTH") == 1){ NEWEDGELENGTH = atof(globals["NEWEDGELENGTH"].c_str()); }
-	else if (globals.count("NEWEDGELENGTH") == 0){ cout << "WARNING: NEWEDGELENGTH is not given in input file, used default value " << NEWEDGELENGTH << endl; }
+	if (globals.count("NEWEDGELENGTH") == 1) { NEWEDGELENGTH = atof(globals["NEWEDGELENGTH"].c_str()); }
+	else if (globals.count("NEWEDGELENGTH") == 0) { cout << "WARNING: NEWEDGELENGTH is not given in input file, used default value " << NEWEDGELENGTH << endl; }
 	else { cout << "ERROR: Global variable NEWEDGELENGTH has multiple definition in input file, used default value NEWEDGELENGTH = " << NEWEDGELENGTH << endl; }
 
-	if (globals.count("GAMMA") == 1){ GAMMA = atof(globals["GAMMA"].c_str()); }
-	else if (globals.count("GAMMA") == 0){ cout << "WARNING: GAMMA is not given in input file, used default value " << GAMMA << endl; }
+	if (globals.count("GAMMA") == 1) { GAMMA = atof(globals["GAMMA"].c_str()); }
+	else if (globals.count("GAMMA") == 0) { cout << "WARNING: GAMMA is not given in input file, used default value " << GAMMA << endl; }
 	else { cout << "ERROR: Global variable GAMMA has multiple definition in input file, used default value GAMMA = " << GAMMA << endl; }
 
-	if (globals.count("K") == 1){ K = atof(globals["K"].c_str()); }
-	else if (globals.count("K") == 0){ cout << "WARNING: K is not given in input file, used default value " << K << endl; }
+	if (globals.count("K") == 1) { K = atof(globals["K"].c_str()); }
+	else if (globals.count("K") == 0) { cout << "WARNING: K is not given in input file, used default value " << K << endl; }
 	else { cout << "ERROR: Global variable K has multiple definition in input file, used default value K = " << K << endl; }
 
-	if (globals.count("SEED") == 1){ SEED = atof(globals["SEED"].c_str()); }
-	else if (globals.count("SEED") == 0){ cout << "WARNING: SEED is not given in input file, used default value " << SEED << endl; }
+	if (globals.count("SEED") == 1) { SEED = atof(globals["SEED"].c_str()); }
+	else if (globals.count("SEED") == 0) { cout << "WARNING: SEED is not given in input file, used default value " << SEED << endl; }
 	else { cout << "ERROR: Global variable SEED has multiple definition in input file, used default value SEED = " << SEED << endl; }
 
-	if (globals.count("INITIALSTEPSIZE") == 1){ INITIALSTEPSIZE = atof(globals["INITIALSTEPSIZE"].c_str()); }
-	else if (globals.count("INITIALSTEPSIZE") == 0){ cout << "WARNING: INITIALSTEPSIZE is not given in input file, used default value " << INITIALSTEPSIZE << endl; }
+	if (globals.count("INITIALSTEPSIZE") == 1) { INITIALSTEPSIZE = atof(globals["INITIALSTEPSIZE"].c_str()); }
+	else if (globals.count("INITIALSTEPSIZE") == 0) { cout << "WARNING: INITIALSTEPSIZE is not given in input file, used default value " << INITIALSTEPSIZE << endl; }
 	else { cout << "ERROR: Global variable INITIALSTEPSIZE has multiple definition in input file, used default value INITIALSTEPSIZE = " << INITIALSTEPSIZE << endl; }
 
-	if (globals.count("TIMEINTERVAL") == 1){ TIMEINTERVAL = atof(globals["TIMEINTERVAL"].c_str()); }
-	else if (globals.count("TIMEINTERVAL") == 0){ cout << "WARNING: TIMEINTERVAL is not given in input file, used default value " << TIMEINTERVAL << endl; }
+	if (globals.count("TIMEINTERVAL") == 1) { TIMEINTERVAL = atof(globals["TIMEINTERVAL"].c_str()); }
+	else if (globals.count("TIMEINTERVAL") == 0) { cout << "WARNING: TIMEINTERVAL is not given in input file, used default value " << TIMEINTERVAL << endl; }
 	else { cout << "ERROR: Global variable TIMEINTERVAL has multiple definition in input file, used default value TIMEINTERVAL = " << TIMEINTERVAL << endl; }
 
-	if (globals.count("TOTALTIME") == 1){ TOTALTIME = atof(globals["TOTALTIME"].c_str()); }
-	else if (globals.count("TOTALTIME") == 0){ cout << "WARNING: TOTALTIME is not given in input file, used default value " << TOTALTIME << endl; }
+	if (globals.count("TOTALTIME") == 1) { TOTALTIME = atof(globals["TOTALTIME"].c_str()); }
+	else if (globals.count("TOTALTIME") == 0) { cout << "WARNING: TOTALTIME is not given in input file, used default value " << TOTALTIME << endl; }
 	else { cout << "ERROR: Global variable TOTALTIME has multiple definition in input file, used default value TOTALTIME = " << TOTALTIME << endl; }
 
-	if (globals.count("CURRENTTIME") == 1){ CURRENTTIME = atof(globals["CURRENTTIME"].c_str()); }
-	else if (globals.count("CURRENTTIME") == 0){ cout << "WARNING: CURRENTTIME is not given in input file, used default value " << CURRENTTIME << endl; }
+	if (globals.count("CURRENTTIME") == 1) { CURRENTTIME = atof(globals["CURRENTTIME"].c_str()); }
+	else if (globals.count("CURRENTTIME") == 0) { cout << "WARNING: CURRENTTIME is not given in input file, used default value " << CURRENTTIME << endl; }
 	else { cout << "ERROR: Global variable CURRENTTIME has multiple definition in input file, used default value CURRENTTIME = " << CURRENTTIME << endl; }
 
-	if (globals.count("error_tolerance_absolute_mechanical") == 1){ error_tolerance_absolute_mechanical = atof(globals["error_tolerance_absolute_mechanical"].c_str()); }
-	else if (globals.count("error_tolerance_absolute_mechanical") == 0){ cout << "WARNING: error_tolerance_absolute_mechanical is not given in input file, used default value " << error_tolerance_absolute_mechanical << endl; }
+	if (globals.count("error_tolerance_absolute_mechanical") == 1) { error_tolerance_absolute_mechanical = atof(globals["error_tolerance_absolute_mechanical"].c_str()); }
+	else if (globals.count("error_tolerance_absolute_mechanical") == 0) { cout << "WARNING: error_tolerance_absolute_mechanical is not given in input file, used default value " << error_tolerance_absolute_mechanical << endl; }
 	else { cout << "ERROR: Global variable error_tolerance_absolute_mechanical has multiple definition in input file, used default value error_tolerance_absolute_mechanical = " << error_tolerance_absolute_mechanical << endl; }
 
-	if (globals.count("ALPHAM") == 1){ alphaM = atof(globals["ALPHAM"].c_str()); }
-	else if (globals.count("ALPHAM") == 0){ cout << "WARNING: ALPHAM is not given in input file, used default value " << alphaM << endl; }
+	if (globals.count("ALPHAM") == 1) { alphaM = atof(globals["ALPHAM"].c_str()); }
+	else if (globals.count("ALPHAM") == 0) { cout << "WARNING: ALPHAM is not given in input file, used default value " << alphaM << endl; }
 	else { cout << "ERROR: Global variable ALPHAM has multiple definition in input file, used default value ALPHAM = " << alphaM << endl; }
 
-	if (globals.count("TISSUE_ALPHA") == 1){ TISSUE_ALPHA = atof(globals["TISSUE_ALPHA"].c_str()); }
-	else if (globals.count("TISSUE_ALPHA") == 0){ cout << "WARNING: TISSUE_ALPHA is not given in input file, used default value " << TISSUE_ALPHA << endl; }
+	if (globals.count("TISSUE_ALPHA") == 1) { TISSUE_ALPHA = atof(globals["TISSUE_ALPHA"].c_str()); }
+	else if (globals.count("TISSUE_ALPHA") == 0) { cout << "WARNING: TISSUE_ALPHA is not given in input file, used default value " << TISSUE_ALPHA << endl; }
 	else { cout << "ERROR: Global variable TISSUE_ALPHA has multiple definition in input file, used default value TISSUE_ALPHA = " << TISSUE_ALPHA << endl; }
 
-	if (globals.count("TISSUE_EXT_STRESS") == 1){ TISSUE_EXT_STRESS = atof(globals["TISSUE_EXT_STRESS"].c_str()); }
-	else if (globals.count("TISSUE_EXT_STRESS") == 0){ cout << "WARNING: TISSUE_EXT_STRESS is not given in input file, used default value " << TISSUE_EXT_STRESS << endl; }
+	if (globals.count("TISSUE_EXT_STRESS") == 1) { TISSUE_EXT_STRESS = atof(globals["TISSUE_EXT_STRESS"].c_str()); }
+	else if (globals.count("TISSUE_EXT_STRESS") == 0) { cout << "WARNING: TISSUE_EXT_STRESS is not given in input file, used default value " << TISSUE_EXT_STRESS << endl; }
 	else { cout << "ERROR: Global variable TISSUE_EXT_STRESS has multiple definition in input file, used default value TISSUE_EXT_STRESS = " << TISSUE_EXT_STRESS << endl; }
 
-	if (globals.count("TISSUE_EXT_STRESS_X") == 1){ TISSUE_EXT_STRESS_X = atof(globals["TISSUE_EXT_STRESS_X"].c_str()); }
-	else if (globals.count("TISSUE_EXT_STRESS_X") == 0){ cout << "WARNING: TISSUE_EXT_STRESS_X is not given in input file, used default value " << TISSUE_EXT_STRESS_X << endl; }
+	if (globals.count("TISSUE_EXT_STRESS_X") == 1) { TISSUE_EXT_STRESS_X = atof(globals["TISSUE_EXT_STRESS_X"].c_str()); }
+	else if (globals.count("TISSUE_EXT_STRESS_X") == 0) { cout << "WARNING: TISSUE_EXT_STRESS_X is not given in input file, used default value " << TISSUE_EXT_STRESS_X << endl; }
 	else { cout << "ERROR: Global variable TISSUE_EXT_STRESS_X has multiple definition in input file, used default value TISSUE_EXT_STRESS_X = " << TISSUE_EXT_STRESS_X << endl; }
 
-	if (globals.count("TISSUE_EXT_STRESS_Y") == 1){ TISSUE_EXT_STRESS_Y = atof(globals["TISSUE_EXT_STRESS_Y"].c_str()); }
-	else if (globals.count("TISSUE_EXT_STRESS_Y") == 0){ cout << "WARNING: TISSUE_EXT_STRESS_Y is not given in input file, used default value " << TISSUE_EXT_STRESS_Y << endl; }
+	if (globals.count("TISSUE_EXT_STRESS_Y") == 1) { TISSUE_EXT_STRESS_Y = atof(globals["TISSUE_EXT_STRESS_Y"].c_str()); }
+	else if (globals.count("TISSUE_EXT_STRESS_Y") == 0) { cout << "WARNING: TISSUE_EXT_STRESS_Y is not given in input file, used default value " << TISSUE_EXT_STRESS_Y << endl; }
 	else { cout << "ERROR: Global variable TISSUE_EXT_STRESS_Y has multiple definition in input file, used default value TISSUE_EXT_STRESS_Y = " << TISSUE_EXT_STRESS_Y << endl; }
 
-	if (globals.count("MITOSISON") == 1){ MITOSISON = (atof(globals["MITOSISON"].c_str()) > 0); }
-	else if (globals.count("MITOSISON") == 0){ cout << "WARNING: MITOSISON is not given in input file, used default value " << MITOSISON << endl; }
+	if (globals.count("MITOSISON") == 1) { MITOSISON = (atof(globals["MITOSISON"].c_str()) > 0); }
+	else if (globals.count("MITOSISON") == 0) { cout << "WARNING: MITOSISON is not given in input file, used default value " << MITOSISON << endl; }
 	else { cout << "ERROR: Global variable MITOSISON has multiple definition in input file, used default value MITOSISON = " << MITOSISON << endl; }
 
-	if (globals.count("T1ON") == 1){ T1ON = (atof(globals["T1ON"].c_str()) > 0); }
-	else if (globals.count("T1ON") == 0){ cout << "WARNING: T1ON is not given in input file, used default value " << T1ON << endl; }
+	if (globals.count("T1ON") == 1) { T1ON = (atof(globals["T1ON"].c_str()) > 0); }
+	else if (globals.count("T1ON") == 0) { cout << "WARNING: T1ON is not given in input file, used default value " << T1ON << endl; }
 	else { cout << "ERROR: Global variable T1ON has multiple definition in input file, used default value T1ON = " << T1ON << endl; }
 
-	if (globals.count("APOPTOSISON") == 1){ APOPTOSISON = (atof(globals["APOPTOSISON"].c_str()) > 0); }
-	else if (globals.count("APOPTOSISON") == 0){ cout << "WARNING: APOPTOSISON is not given in input file, used default value " << APOPTOSISON << endl; }
+	if (globals.count("APOPTOSISON") == 1) { APOPTOSISON = (atof(globals["APOPTOSISON"].c_str()) > 0); }
+	else if (globals.count("APOPTOSISON") == 0) { cout << "WARNING: APOPTOSISON is not given in input file, used default value " << APOPTOSISON << endl; }
 	else { cout << "ERROR: Global variable APOPTOSISON has multiple definition in input file, used default value APOPTOSISON = " << APOPTOSISON << endl; }
 
-	if (globals.count("WRITEMITOSIS") == 1){ WRITEMITOSIS = atof(globals["WRITEMITOSIS"].c_str()); }
-	else if (globals.count("WRITEMITOSIS") == 0){ cout << "WARNING: WRITEMITOSIS is not given in input file, used default value " << WRITEMITOSIS << endl; }
+	if (globals.count("WRITEMITOSIS") == 1) { WRITEMITOSIS = atof(globals["WRITEMITOSIS"].c_str()); }
+	else if (globals.count("WRITEMITOSIS") == 0) { cout << "WARNING: WRITEMITOSIS is not given in input file, used default value " << WRITEMITOSIS << endl; }
 	else { cout << "ERROR: Global variable WRITEMITOSIS has multiple definition in input file, used default value WRITEMITSOSIS = " << WRITEMITOSIS << endl; }
 
-	if (globals.count("VERBOSEON") == 1){ VERBOSEON = (atof(globals["VERBOSEON"].c_str()) > 0); }
-	else if (globals.count("VERBOSEON") == 0){ cout << "WARNING: VERBOSEON is not given in input file, used default value " << VERBOSEON << endl; }
+	if (globals.count("VERBOSEON") == 1) { VERBOSEON = (atof(globals["VERBOSEON"].c_str()) > 0); }
+	else if (globals.count("VERBOSEON") == 0) { cout << "WARNING: VERBOSEON is not given in input file, used default value " << VERBOSEON << endl; }
 	else { cout << "ERROR: Global variable VERBOSEON has multiple definition in input file, used default value APOPTOSISON = " << VERBOSEON << endl; }
 
-	if (globals.count("EQUILIBRIUMMITOSIS") == 1){ EQUILIBRIUMMITOSIS = (atof(globals["EQUILIBRIUMMITOSIS"].c_str()) > 0); }
-	else if (globals.count("EQUILIBRIUMMITOSIS") == 0){ cout << "WARNING: EQUILIBRIUMMITOSIS is not given in input file, used default value " << EQUILIBRIUMMITOSIS << endl; }
+	if (globals.count("EQUILIBRIUMMITOSIS") == 1) { EQUILIBRIUMMITOSIS = (atof(globals["EQUILIBRIUMMITOSIS"].c_str()) > 0); }
+	else if (globals.count("EQUILIBRIUMMITOSIS") == 0) { cout << "WARNING: EQUILIBRIUMMITOSIS is not given in input file, used default value " << EQUILIBRIUMMITOSIS << endl; }
 	else { cout << "ERROR: Global variable EQUILIBRIUMMITOSIS has multiple definition in input file, used default value EQUILIBRIUMMITOSIS = " << EQUILIBRIUMMITOSIS << endl; }
+
+	if (globals.count("C4") == 1) { C4 = atof(globals["C4"].c_str()); }
+	else if (globals.count("C4") == 0) { cout << "WARNING: C4 is not given in input file, used default value " << C4 << endl; }
+	else { cout << "ERROR: Global variable C4 has multiple definition in input file, used default value C4 = " << C4 << endl; }
 	//******ADD MORE GLOBAL VARIABLES HERE ALSO ADD THEM TO THE CONSTANTS.H FILE AND GIVE THEM A DEFAULT VALUE IN MAIN*********************//
 
 	// setting set the initial box dimensions here
@@ -430,6 +434,7 @@ void AGTissue::HelperWriteOutputData_Write2File(ofstream* datafile, bool include
 	*datafile << "TISSUE_ALPHA\t" << TISSUE_ALPHA << endl;
 	*datafile << "TISSUE_EXT_STRESS_X\t" << TISSUE_EXT_STRESS_X << endl;
 	*datafile << "TISSUE_EXT_STRESS_Y\t" << TISSUE_EXT_STRESS_Y << endl;
+	*datafile << "C4\t" << C4 << endl;
 	*datafile << "NUMBER OF CELLS\t" << cells.size() << endl;
 	//******ADD NEW OUTPUT HERE******//
 	*datafile << "endGlobal" << endl;
@@ -756,6 +761,7 @@ Cell* AGTissue::CreateCell(int typ, vector<Edge*> edgs, string potential, double
 {
 	int largestID, newid;
 	list<Cell*>::iterator cit;
+	Cell* newcell{};
 	//Get the id
 	largestID = (*max_element(cellIDs.begin(), cellIDs.end()));			//first look through all of the current vertex ids and get the highest
 	newid = largestID + 1;								//Now make a new ID that is unique
@@ -775,10 +781,12 @@ Cell* AGTissue::CreateCell(int typ, vector<Edge*> edgs, string potential, double
 
 	for (cit = cells.begin(); cit != cells.end(); cit++){
 		if ((*(*cit)).id == newid){
-			return &(*(*cit));
+			// return &(*(*cit)); - this was the way the old code worked. Linux didn't like this though, so I added newcell.
+			newcell =  &(*(*cit));
 			break;
 		}
 	}
+	return newcell;
 }
 
 /*

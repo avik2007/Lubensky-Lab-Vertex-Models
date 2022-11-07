@@ -121,22 +121,25 @@ vector<Cell*> Vertex::GetCWCells(){
 Edge* Vertex::GetEdgeBetween(Vertex* vrt){
 	vector<Edge*> vrtedges;
 	unsigned int i,j;
-
+	Edge* returnedge{};
 	vrtedges=(*vrt).edges;
 	//look through all of the edges for both vertices
 	for(i=0; i<edges.size(); i++){
 		for(j=0; j<vrtedges.size(); j++){
 			//when you find a match return it
 			if( (*edges[i]).id == (*vrtedges[j]).id ){
-				return edges[i]; 
+				returnedge = edges[i]; 
+				i = edges.size();
+				j = vrtedges.size();
 			}
 			//if you get to the end and never find a match give an error
 			else if( ((*edges[i]).id != (*vrtedges[j]).id) && (i==(edges.size()-1)) && (j==(vrtedges.size()-1)) ){
 				cout << "ERROR: GetEdgeBetween given an unacceptable vertex for edge" << id << endl;
-				return NULL; 
+				returnedge = NULL; 
 			}
 		}
 	}
+	return returnedge; 
 }
 
 // Returns a vector of pointers to neighboring cells.

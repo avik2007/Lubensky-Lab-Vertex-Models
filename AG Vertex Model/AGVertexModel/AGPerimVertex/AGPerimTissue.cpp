@@ -183,7 +183,9 @@ void AGPerimTissue::HelperReadInputData_SetGlobalValues(ifstream* datafile){
 	else if (globals.count("equilibriumtolerance") == 0){ cout << "WARNING: equilibriumtolerance is not given in input file, used default value " << equilibriumtolerance << endl; }
 	else { cout << "ERROR: Global variable equilibriumtolerance has multiple definition in input file, used default value equilibriumtolerance = " << equilibriumtolerance << endl; }
 
-
+	if (globals.count("C4") == 1) { C4 = atof(globals["C4"].c_str()); }
+	else if (globals.count("C4") == 0) { cout << "WARNING: C4 is not given in input file, used default value " << C4 << endl; }
+	else { cout << "ERROR: Global variable C4 has multiple definition in input file, used default value C4 = " << C4 << endl; }
 	//******ADD MORE GLOBAL VARIABLES HERE ALSO ADD THEM TO THE CONSTANTS.H FILE AND GIVE THEM A DEFAULT VALUE IN MAIN*********************//
 	int i = 1;
 	if (energyListSize < 3) { energyListSize = 3; } // minimal size for this has to be 2, I'm setting it to 3 here since if it is equal to 2 there would be no coarse grained slope analysis
@@ -423,8 +425,7 @@ void AGPerimTissue::HelperReadInputData_CreateObjects(ifstream* datafile){
 
 
 		
-		(*this).currentFreeEnergy = (K*A0 + LAMBDA*P0*P0)*cells.size(); 
-		(*this).pastFreeEnergy = (*this).currentFreeEnergy;
+		
 
 		// instantiate the free energy to be larger than the actual energy of the packing
 		// just so that this doesn't mess with an adaptive stepsize changer (for finding
@@ -437,6 +438,8 @@ void AGPerimTissue::HelperReadInputData_CreateObjects(ifstream* datafile){
 		//*************************************************************************//
  
 	}
+	(*this).currentFreeEnergy = A0*A0*(K * A0 + LAMBDA * P0 * P0) * cells.size(); // this just needs to start out as a bigger number than the actual tissue energy
+	(*this).pastFreeEnergy = (*this).currentFreeEnergy;
 }
 
 
@@ -448,7 +451,7 @@ void AGPerimTissue::HelperReadInputData_CreateObjects(ifstream* datafile){
 * H = (sum over cells) [ 0.5 K(A_cells - A_0) + 0.5 LAMBDA (P_cell - P_0)^2]
 */
 double AGPerimTissue::CalculateFreeEnergy()
-{
+ {
 	double carea, cperim;
 	double a0, p0;
 	double freeenergy = 0;
@@ -475,9 +478,13 @@ double AGPerimTissue::CalculateFreeEnergy()
 			area_difference_sqr += 2 * a0*exp(-carea / a0); 
 			// where the energy would look like Ep = K A0^2 exp((A/A0-1)) ([K] = pressure)
 		}
+		else if ((*agit).pressureType == "QUARTIC")
+		{
+			area_difference_sqr += a0 * (pow(carea / a0 - 1, 2) + C4*pow(carea / a0 - 1, 4));
+		}
 		else
 		{
-			area_difference_sqr += pow(a0,2)*pow(carea/a0 - 1, 2);
+			area_difference_sqr += a0*pow(carea/a0 - 1, 2);
 			// where the energy would look like Ep = 1/2 K A0^2 (A/A0 - 1)^2 ([K] = pressure)
 		}
 		 
@@ -499,7 +506,7 @@ double AGPerimTissue::CalculateFreeEnergy()
 */
 Edge* AGPerimTissue::CreateEdge(Edge* subclass, bool xflg, bool yflg, Vertex* v1, Vertex* v2, Cell* c1, Cell* c2){
 	int largestID, newid;
-	Edge newedge;
+	Edge* newedge{};
 	//Get the id
 	largestID = (*max_element(edgeIDs.begin(), edgeIDs.end()));			//first look through all of the current vertex ids and get the highest
 	newid = largestID + 1;								//Now make a new ID that is unique
@@ -522,10 +529,11 @@ Edge* AGPerimTissue::CreateEdge(Edge* subclass, bool xflg, bool yflg, Vertex* v1
 
 	for (list<Edge*>::iterator eit = edges.begin(); eit != edges.end(); eit++){
 		if ((*(*eit)).id == newid){
-			return &(*(*eit));
+			newedge = &(*(*eit));
 			break;
 		}
 	}
+	return newedge;
 }
 /*
 * void Evolve( double interval, double *stepsize, ofstream* errorfile)
@@ -546,6 +554,11 @@ void AGPerimTissue::Evolve(double interval, double *stepsize, ofstream* errorfil
 	vector<Vect> initial_positions;
 	int dimension_mechanical = 0; 
 	bool breakVar = false;
+	double quadraticPressureEnergy = 0;
+	double expPressureEnergy = 0;
+	double logPressureEnergy = 0;
+	double perimEnergy = 0;
+	double energy_wo_quartic = 0;
 	//double holding = 0;
 	
 
@@ -679,7 +692,11 @@ void AGPerimTissue::Evolve(double interval, double *stepsize, ofstream* errorfil
 	
 		//*errorfile << std::setprecision(outputPrecision) << CURRENTTIME << "\t" << *stepsize << "\t" << currentFreeEnergy << "\t" << energySlope << "\t" << (currentFreeEnergy - pastFreeEnergy) / (cells.size() * K * A0) << "\n";
 
-		*errorfile << std::setprecision(outputPrecision) << CURRENTTIME << "\t" << currentFreeEnergy << "\t" << LX << "\t" << LY << endl;
+		quadraticPressureEnergy = (*this).CalculateQuadraticPressureEnergy();
+		perimEnergy = (*this).CalculatePerimeterEnergy();
+		energy_wo_quartic = perimEnergy + quadraticPressureEnergy;
+		//*errorfile << quadraticPressureEnergy << "\t" << expPressureEnergy << "\t" << logPressureEnergy << "\t" << perimEnergy << endl;
+		*errorfile << std::setprecision(outputPrecision) << CURRENTTIME << "\t" << currentFreeEnergy << "\t" << energy_wo_quartic << endl;
 
 		//if ((abs((currentFreeEnergy - pastFreeEnergy) / ((CURRENTTIME - previoustime)*(cells.size() * K * A0))) < equilibriumtolerance) && currentFreeEnergy - pastFreeEnergy < 0)
 
@@ -879,12 +896,16 @@ double AGPerimTissue::CalculatePressureEnergy()
 		}
 		else if ((*agit).pressureType == "EXPONENTIAL")
 		{
-			area_difference_sqr += 2 * pow(a0,2) * exp(- carea / a0 );
+			area_difference_sqr += 2 * a0 * exp(- carea / a0 );
 			// where the energy would look like Ep = 1/2 K A0^2 exp(-A/A0) ([K] = pressure)
+		}
+		else if ((*agit).pressureType == "QUARTIC")
+		{
+			area_difference_sqr += a0 * (pow(carea / a0 - 1, 2) + C4*pow(carea/a0 - 1, 4) );
 		}
 		else
 		{
-			area_difference_sqr += pow(a0,2) * pow(carea / a0 - 1, 2);
+			area_difference_sqr += a0 * pow(carea / a0 - 1, 2);
 			// where the energy would look like Ep = 1/2 K A0^2 (A/A0 - 1)^2 ([K] = pressure)
 		}
 	}
@@ -914,6 +935,82 @@ double AGPerimTissue::CalculatePerimeterEnergy()
 		
 	}
 	freeenergy = 0.5*LAMBDA*perim_difference_sqr;
+	return freeenergy;
+}
+
+/*
+* double CalculateQuadraticPressureEnergy
+* 
+* Calculates the pressure energy of the packing as if it were quadratic
+*/
+double AGPerimTissue::CalculateQuadraticPressureEnergy()
+{
+	double freeenergy = 0;
+
+	double area_difference_sqr = 0;
+	// (A_c - A_0)^2
+	double carea;
+	double a0;
+	for (list<Cell*>::iterator cit = cells.begin(); cit != cells.end(); cit++)
+	{
+		AGPerimCell* agit = dynamic_cast<AGPerimCell*>(*cit);
+		carea = (*agit).GetArea();
+		a0 = (*agit).A0;
+		area_difference_sqr += a0 * pow(carea / a0 - 1, 2);
+		// where the energy would look like Ep = 1/2 K A0^2 (A/A0 - 1)^2 ([K] = pressure)
+	}
+	freeenergy = 0.5 * K * area_difference_sqr;
+	return freeenergy;
+}
+
+/*
+* double CalculateLogPressureEnergy
+* 
+* Calculates the pressure energy of the packing as if it were logarithmic
+*/
+double AGPerimTissue::CalculateLogPressureEnergy()
+{
+	double freeenergy = 0;
+
+	double area_difference_sqr = 0;
+	// (A_c - A_0)^2
+	double carea;
+	double a0;
+	for (list<Cell*>::iterator cit = cells.begin(); cit != cells.end(); cit++)
+	{
+		AGPerimCell* agit = dynamic_cast<AGPerimCell*>(*cit);
+		carea = (*agit).GetArea();
+		a0 = (*agit).A0;
+		area_difference_sqr += -2 * a0 * log(1 + carea / a0);
+		// where the energy would look like Ep = 1/2 K A0^2 (A/A0 - 1)^2 ([K] = pressure)
+	}
+	freeenergy = 0.5 * K * area_difference_sqr;
+	return freeenergy;
+}
+
+/*
+* double CalculateExpPressureEnergy
+* 
+* Calculates the pressure energy of the packing as if it were exponential
+* 
+*/
+double AGPerimTissue::CalculateExpPressureEnergy()
+{
+	double freeenergy = 0;
+
+	double area_difference_sqr = 0;
+	// (A_c - A_0)^2
+	double carea;
+	double a0;
+	for (list<Cell*>::iterator cit = cells.begin(); cit != cells.end(); cit++)
+	{
+		AGPerimCell* agit = dynamic_cast<AGPerimCell*>(*cit);
+		carea = (*agit).GetArea();
+		a0 = (*agit).A0;
+		area_difference_sqr += 2 * a0 * exp(-carea / a0);
+		// where the energy would look like Ep = 1/2 K A0^2 (A/A0 - 1)^2 ([K] = pressure)
+	}
+	freeenergy = 0.5 * K * area_difference_sqr;
 	return freeenergy;
 }
 
@@ -1064,6 +1161,7 @@ void AGPerimTissue::HelperWriteOutputData_Write2File(ofstream* datafile, bool in
 	*datafile << "EQUILIBRIUMMITOSIS\t" << EQUILIBRIUMMITOSIS << endl;
 	*datafile << std::setprecision(outputPrecision) << "LAMBDA\t" << LAMBDA << endl;
 	*datafile << "energyListSize\t" << energyListSize << endl;
+	*datafile << "C4\t" << C4 << endl;
 	*datafile << std::setprecision(outputPrecision) << "equilibriumtolerance\t" << equilibriumtolerance << endl;
 	*datafile << std::setprecision(outputPrecision) << "P0\t" << P0 << endl;
 		//******ADD NEW OUTPUT HERE******//
@@ -1084,7 +1182,8 @@ void AGPerimTissue::HelperWriteOutputData_Write2File(ofstream* datafile, bool in
 		for (list<Edge*>::iterator eit = edges.begin(); eit != edges.end(); eit++){			//loop through all of the edges in the tissue
 			Vertex* v1 = (*(*eit)).vertex1;
 			Vertex* v2 = (*(*eit)).vertex2;
-			*datafile << std::setprecision(outputPrecision) << (*(*eit)).id << "\t" << (*v1).id << "\t" << (*v2).id << "\t" << (*(*eit)).xflag << "\t" << (*(*eit)).yflag << endl;			//write its info to the file
+			*datafile 
+				<< (*(*eit)).id << "\t" << (*v1).id << "\t" << (*v2).id << "\t" << (*(*eit)).xflag << "\t" << (*(*eit)).yflag << endl;			//write its info to the file
 		}
 
 		//print the cell info

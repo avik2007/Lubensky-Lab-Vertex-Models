@@ -82,6 +82,7 @@ bool EQUILIBRIUMMITOSIS = false;
 double P0 = 0;
 double LAMBDA = 0.1;
 double DEFORM_NUM = 0.001;
+double C4 = 1;
 int energyListSize = 50;
 double equilibriumtolerance = 0.0000000000001;
 

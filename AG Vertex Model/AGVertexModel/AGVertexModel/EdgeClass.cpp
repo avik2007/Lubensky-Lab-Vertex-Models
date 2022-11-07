@@ -115,7 +115,7 @@ double GetLength_NewStatic(double x1, double y1, double x2, double y2, bool xfla
 	//Then calculate the length noting that the edge may go across the boundary
 	if (!xflag && !yflag){										//if the edge does not cross the boundary
 		length = sqrt((x1 - x2)*(x1 - x2) + (y1 - y2)*(y1 - y2));
-		return length;
+		
 	}
 	else if (xflag && !yflag){									//if the edge only crosses the x boundary
 		length = sqrt((LXnew - abs(x1 - x2))*(LXnew - abs(x1 - x2)) + (y1 - y2)*(y1 - y2));
@@ -123,12 +123,12 @@ double GetLength_NewStatic(double x1, double y1, double x2, double y2, bool xfla
 	}
 	else if (!xflag && yflag){									//if the edge only crosses the y boundary
 		length = sqrt((x1 - x2)*(x1 - x2) + (LYnew - abs(y1 - y2))*(LYnew - abs(y1 - y2)));
-		return length;
+		
 	}
 	else if (xflag && yflag){									//if the edge crosses both boundaries
 		length = sqrt((LXnew - abs(x1 - x2))*(LXnew - abs(x1 - x2)) + (LYnew - abs(y1 - y2))*(LYnew - abs(y1 - y2)));
-		return length;
 	}
+	return length;
 }
 
 // Calculates the center of the edge, respecting PBC.

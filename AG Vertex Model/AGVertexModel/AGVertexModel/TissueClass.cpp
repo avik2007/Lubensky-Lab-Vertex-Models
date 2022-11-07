@@ -69,7 +69,7 @@ void Tissue::DestroyVertex(Vertex* vptr){
 // Creates a new edge and addes it to the list of edges, returns a pointer to that edge.
 Edge* Tissue::CreateEdge(Edge* subclass, bool xflg, bool yflg, Vertex* v1, Vertex* v2, Cell* c1, Cell* c2){
 	int largestID, newid;
-	Edge newedge;
+	Edge* newedge{};
 	//Get the id
 	largestID = (*max_element(edgeIDs.begin(), edgeIDs.end()));			//first look through all of the current vertex ids and get the highest
 	newid = largestID + 1;								//Now make a new ID that is unique
@@ -92,10 +92,12 @@ Edge* Tissue::CreateEdge(Edge* subclass, bool xflg, bool yflg, Vertex* v1, Verte
 
 	for (list<Edge*>::iterator eit = edges.begin(); eit != edges.end(); eit++){
 		if ((*(*eit)).id == newid){
-			return &(*(*eit));
+			//return &(*(*eit));
+			newedge = &(*(*eit));
 			break;
 		}
 	}
+	return newedge; 
 }
 
 // Removes the vertex from the master list.
@@ -113,6 +115,7 @@ void Tissue::DestroyEdge(Edge* eptr){
 Cell* Tissue::CreateCell(int typ, vector<Edge*> edgs){
 	int largestID, newid;
 	list<Cell*>::iterator cit;
+	Cell* newcell{};
 	//Get the id
 	largestID = (*max_element(cellIDs.begin(), cellIDs.end()));			//first look through all of the current vertex ids and get the highest
 	newid = largestID + 1;								//Now make a new ID that is unique
@@ -128,10 +131,11 @@ Cell* Tissue::CreateCell(int typ, vector<Edge*> edgs){
 
 	for (cit = cells.begin(); cit != cells.end(); cit++){
 		if ((*(*cit)).id == newid){
-			return &(*(*cit));
+			newcell = &(*(*cit));
 			break;
 		}
 	}
+	return newcell; 
 }
 
 // Removes the cell from the master list.

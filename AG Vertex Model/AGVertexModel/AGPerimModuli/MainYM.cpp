@@ -19,6 +19,7 @@
 #include <typeinfo>
 #include <cassert> 
 #include <stddef.h>
+#include <iomanip>
 
 #include "CellClass.h"
 #include "EdgeClass.h"
@@ -106,7 +107,7 @@ AGPerimTissue tissue;
 
 int main()
 {
-	
+	/*
 	//Path to the folder that your initial files are in 
 	string PathName = "C:\\Users\\abmondal\\Documents\\Vertex_Model_Repository\\MATLAB Data Folder\\"; // Shear Modulus Raw Input Files\\; // CHANGE THIS TO MATCH YOUR FOLDER
 	//string PathName = "C:\\Users\\abmondal\\Desktop\\";
@@ -115,9 +116,11 @@ int main()
 	cin >> InputFileName;
 	InputFileName = PathName + InputFileName;
 	starttime = std::chrono::system_clock::now();
-
+	*/
 	//Read the input file
 	bool readfile;
+	
+	InputFileName = "C:\\Users\\abmondal\\Documents\\Lubensky-Lab-Vertex-Models\\MATLAB Data Folder\\M2Ts_LP_rng_150_p0_3.84_ELS_3_EQ_0.002.txt";
 	readfile = tissue.ReadInputData(InputFileName);
 	if (!readfile){
 		cout << "Ending because file was not readable" << endl;
@@ -164,7 +167,7 @@ int main()
 	cout << "*******************************************************************************" << endl;
 
 	tissue.WriteOutputDataAppend(&datafile);
-	errorfile << tissue.CalculateFreeEnergy() << endl;
+	errorfile << std::setprecision(32) << tissue.CalculateFreeEnergy() << endl;
 	tissue.DeformTissue(DEFORM_NUM + 1, 1 / (1 + DEFORM_NUM));
 
 	// above time variables allow us to pick how often we write to the appendfile
@@ -178,7 +181,7 @@ int main()
 	}
 	tissue.WriteOutputDataAppend(&datafile);
 	double finalEnergy = tissue.CalculateFreeEnergy();
-	dEfile << DEFORM_NUM << "\t" << finalEnergy << endl;
+	dEfile << std::setprecision(32) << DEFORM_NUM << "\t" << finalEnergy << endl;
 	//string OutputFileName3 = filename + "_EQ.txt";
 	//eqfile.open(OutputFileName3);
 	//tissue.WriteOutputDataAppend(&eqfile);
