@@ -83,7 +83,7 @@ bool EQUILIBRIUMMITOSIS = false;
 double P0 = 0;
 double LAMBDA = 0.1;
 double DEFORM_NUM = 0.001;
-
+double C4 = 0;
 //This is the generator for random numbers to use call "distribution(generator)" 
 mt19937_64 generator;
 uniform_real_distribution<double> distribution(0.0, 1.0);

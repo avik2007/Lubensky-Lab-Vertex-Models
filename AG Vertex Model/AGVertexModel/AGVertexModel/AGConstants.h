@@ -21,5 +21,6 @@ extern bool T1ON;
 extern bool WRITEMITOSIS;
 extern bool VERBOSEON;
 extern bool EQUILIBRIUMMITOSIS;
+extern double C4;
 #endif
 

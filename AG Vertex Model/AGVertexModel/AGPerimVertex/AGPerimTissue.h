@@ -77,6 +77,15 @@ public:
 	//calculates the perimeter energy of a packing
 	virtual double CalculatePerimeterEnergy();
 
+	//calculates the pressure energy of a packing, assuming quadratic pressure potential
+	virtual double CalculateQuadraticPressureEnergy();
+	
+	//calculates the pressure energy of a packing, assuming a logarithmic pressure potential
+	virtual double CalculateLogPressureEnergy();
+	
+	//calculates the pressure energy of a packing, assuming an exponential pressure potential
+	virtual double CalculateExpPressureEnergy();
+
 	// does the numerical integration for the simulation
 	virtual void Evolve(double interval, double *stepsize, ofstream* errorfile);
 

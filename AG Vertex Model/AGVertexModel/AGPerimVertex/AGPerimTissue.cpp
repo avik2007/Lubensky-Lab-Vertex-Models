@@ -438,7 +438,7 @@ void AGPerimTissue::HelperReadInputData_CreateObjects(ifstream* datafile){
 		//*************************************************************************//
  
 	}
-	(*this).currentFreeEnergy = A0*A0*(K * A0 + LAMBDA * P0 * P0) * cells.size(); // this just needs to start out as a bigger number than the actual tissue energy
+	(*this).currentFreeEnergy = A0*A0*A0*(K * A0 + LAMBDA * P0 * P0) * cells.size(); // this just needs to start out as a bigger number than the actual tissue energy
 	(*this).pastFreeEnergy = (*this).currentFreeEnergy;
 }
 
@@ -470,17 +470,21 @@ double AGPerimTissue::CalculateFreeEnergy()
 		a0 = ((*agit)).A0;
 		if ((*agit).pressureType == "LOG")
 		{
-			area_difference_sqr += -2 * a0 * log(1 + carea/a0);
+			area_difference_sqr += -2 * log(1 + carea/a0);
 			// where the energy would look like Ep = - K A0^2 Log(1 + A/A0) ([K] = pressure)
 		}
 		else if ((*agit).pressureType == "EXPONENTIAL")
 		{
-			area_difference_sqr += 2 * a0*exp(-carea / a0); 
+			area_difference_sqr += 2 *exp(-carea / a0); 
 			// where the energy would look like Ep = K A0^2 exp((A/A0-1)) ([K] = pressure)
 		}
 		else if ((*agit).pressureType == "QUARTIC")
 		{
-			area_difference_sqr += a0 * (pow(carea / a0 - 1, 2) + C4*pow(carea / a0 - 1, 4));
+			area_difference_sqr += (pow(carea / a0 - 1, 2) + C4*pow(carea / a0 - 1, 4));
+		}
+		else if ((*agit).pressureType == "QUARTIC2.0")
+		{
+			area_difference_sqr +=  (pow(carea / a0 - 1, 2)*(1 - 6 * C4 ) + C4 * pow(carea / a0 - 1, 4));
 		}
 		else
 		{
@@ -493,7 +497,7 @@ double AGPerimTissue::CalculateFreeEnergy()
 		
 		// extra factor of 1/A0 is because K is written in units of pressure instead of E/length^4
 	}
-	freeenergy =0.5*LAMBDA*perim_difference_sqr + 0.5*K*area_difference_sqr - (*this).CalculateBoxEnergy();
+	freeenergy =0.5*LAMBDA*perim_difference_sqr + 0.5*K*a0*area_difference_sqr - (*this).CalculateBoxEnergy();
 
 
 	return freeenergy;
@@ -642,18 +646,18 @@ void AGPerimTissue::Evolve(double interval, double *stepsize, ofstream* errorfil
 			
 			if (energyDidIncrease)
 			{
-				if (*stepsize < 0.0000001) // this could be turned into a parameter, the minumum stepsize
-				//if (*stepsize <   0.000000000001)
+				//if (*stepsize < 0.0000001) // this could be turned into a parameter, the minumum stepsize
+				if (*stepsize <   0.000000000001)
 				{
 					breakVar = true;
 					//*errorfile << "Stepsize got too small. Break" << endl;
 					break;
 					// This is a step I take so that the adaptive time stepper doesn't keep pushing the stepsize all the way down the machine precision 
 				}
-				//*errorfile << "Current FE \t Past FE \t Stepsize\t Energy Change \n";
-				//*errorfile << std::setprecision(outputPrecision) << currentFreeEnergy << "\t" << pastFreeEnergy << "\t" << *stepsize << "\t" << currentFreeEnergy - pastFreeEnergy << endl;
-				//*errorfile << "Energy Increase - change timestep and redo step\n";
-				//*errorfile << "\n";
+				*errorfile << "Current FE \t Past FE \t Stepsize\t Energy Change \n";
+				*errorfile << std::setprecision(outputPrecision) << currentFreeEnergy << "\t" << pastFreeEnergy << "\t" << *stepsize << "\t" << currentFreeEnergy - pastFreeEnergy << endl;
+				*errorfile << "Energy Increase - change timestep and redo step\n";
+				*errorfile << "\n";
 				//*errorfile << "--------------------------------------------------------------------------\n";
 				
 				//*errorfile << "--------------------------------------------------------------------------\n";
@@ -692,11 +696,11 @@ void AGPerimTissue::Evolve(double interval, double *stepsize, ofstream* errorfil
 	
 		//*errorfile << std::setprecision(outputPrecision) << CURRENTTIME << "\t" << *stepsize << "\t" << currentFreeEnergy << "\t" << energySlope << "\t" << (currentFreeEnergy - pastFreeEnergy) / (cells.size() * K * A0) << "\n";
 
-		quadraticPressureEnergy = (*this).CalculateQuadraticPressureEnergy();
+		//quadraticPressureEnergy = (*this).CalculateQuadraticPressureEnergy();
 		perimEnergy = (*this).CalculatePerimeterEnergy();
-		energy_wo_quartic = perimEnergy + quadraticPressureEnergy;
-		//*errorfile << quadraticPressureEnergy << "\t" << expPressureEnergy << "\t" << logPressureEnergy << "\t" << perimEnergy << endl;
-		*errorfile << std::setprecision(outputPrecision) << CURRENTTIME << "\t" << currentFreeEnergy << "\t" << energy_wo_quartic << endl;
+		//energy_wo_quartic = perimEnergy + quadraticPressureEnergy;
+		
+		*errorfile << std::setprecision(outputPrecision) << CURRENTTIME << "\t" << currentFreeEnergy << "\t" << perimEnergy << "\t" << energySlope << endl;
 
 		//if ((abs((currentFreeEnergy - pastFreeEnergy) / ((CURRENTTIME - previoustime)*(cells.size() * K * A0))) < equilibriumtolerance) && currentFreeEnergy - pastFreeEnergy < 0)
 
@@ -870,7 +874,7 @@ bool AGPerimTissue::T1(ofstream* errorfile){
 }
 
 /*
-* bool CalculatePressureEnergy()
+* double CalculatePressureEnergy()
 *
 * Calculates the area energy of the packing using the Hamiltonian
 * in this model:
@@ -891,17 +895,21 @@ double AGPerimTissue::CalculatePressureEnergy()
 		a0 = (*agit).A0;
 		if ((*agit).pressureType == "LOG")
 		{
-			area_difference_sqr += -2 * a0 * log(1 + carea / a0);
+			area_difference_sqr += -2 * log(1 + carea / a0);
 			// where the energy would look like Ep = - 1 / 2 K A0^2 Log(1 + A/A0) ([K] = pressure)
 		}
 		else if ((*agit).pressureType == "EXPONENTIAL")
 		{
-			area_difference_sqr += 2 * a0 * exp(- carea / a0 );
+			area_difference_sqr += 2  * exp(- carea / a0 );
 			// where the energy would look like Ep = 1/2 K A0^2 exp(-A/A0) ([K] = pressure)
 		}
 		else if ((*agit).pressureType == "QUARTIC")
 		{
-			area_difference_sqr += a0 * (pow(carea / a0 - 1, 2) + C4*pow(carea/a0 - 1, 4) );
+			area_difference_sqr += (pow(carea / a0 - 1, 2) + C4*pow(carea/a0 - 1, 4) );
+		}
+		else if ((*agit).pressureType == "QUARTIC2.0")
+		{
+			area_difference_sqr += (pow(carea / a0 - 1, 2) * ( 1 - 6 * C4 ) + C4 * pow(carea / a0 - 1, 4));
 		}
 		else
 		{
@@ -909,7 +917,7 @@ double AGPerimTissue::CalculatePressureEnergy()
 			// where the energy would look like Ep = 1/2 K A0^2 (A/A0 - 1)^2 ([K] = pressure)
 		}
 	}
-	freeenergy = 0.5*K*area_difference_sqr;
+	freeenergy = 0.5*K*a0*area_difference_sqr;
 	return freeenergy;
 }
 

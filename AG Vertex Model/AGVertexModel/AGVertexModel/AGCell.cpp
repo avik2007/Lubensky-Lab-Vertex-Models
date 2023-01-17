@@ -53,6 +53,10 @@ double AGCell::GetPressure(double Area)
 	{
 		return K*( (1 - Area / (*this).A0 ) + 2*C4*pow(1 - Area / (*this).A0, 3) );
 	}
+	else if ((*this).pressureType == "QUARTIC2.0")
+		return K * ((1 - Area / (*this).A0) * ( 1 - 6 * C4 ) + 2 * C4 * pow(1 - Area / (*this).A0, 3));
+		// this is an attempt to get QUARTIC behaving properly. I'm guessing the concavity of the pressure energy 1/2 gets the 
+		// vertex model behaving as expected. Which we did not find in the first quartic potential.
 	else
 	{
 		return K * (1 - Area / (*this).A0);

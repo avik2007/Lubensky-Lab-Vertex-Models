@@ -38,6 +38,7 @@ public:
 	bool equilibriumChecker;      		// determines whether packing is equilibrated or not
 	double currentFreeEnergy;			// used to determine equilibrium
 	double pastFreeEnergy;				// used to determine equilibrium
+	double C4; // for the quartic potential
 	//NOTE: the list cells that is instantiated in the TissueClass will contain AGCells when AGVertex Model code
 	// is being used 
 	//CONSTRUCTOR
