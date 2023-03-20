@@ -177,6 +177,8 @@ int main()
 		cout << "writing at CURRENTTIME: " << CURRENTTIME << endl;
 		// equilibrated gets updated in Evolve
 	}
+	polydispersity = tissue.calculatePolydispersity();
+	errorfile << "Polydispersity = " << polydispersity << endl;
 	tissue.WriteOutputDataAppend(&datafile);
 	string OutputFileName3 = filename + "_EQ.txt";
 	eqfile.open(OutputFileName3);

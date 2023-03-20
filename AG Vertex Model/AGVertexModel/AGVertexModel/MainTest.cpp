@@ -119,7 +119,8 @@ int main()
 	*/
 	
 	//Path to the folder that your initial files are in 
-	string PathName = "C:\\Users\\abmondal\\Documents\\Vertex_Model_Repository\\MATLAB Data Folder\\"; // CHANGE THIS TO MATCH YOUR FOLDER
+	string PathName = "C:\\Users\\abmondal\\Documents\\Lubensky-Lab-Vertex-Models\\MATLAB Data Folder\\"; // CHANGE THIS TO MATCH YOUR FOLDER
+	//string PathName = "C:\\Users\\abmondal\\Documents\\Vertex_Model_Repository\\MATLAB Code Folder\\";
 	//string PathName = "C:\\Users\\abmondal\\Desktop\\";
 
 	cout << "Enter name of imput file: ";

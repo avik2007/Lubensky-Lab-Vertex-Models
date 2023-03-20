@@ -34,7 +34,7 @@ public:
 	//ADDITIONAL DATA									// deformation gradient tensor component (22)
 	double LX0;									// initial box length in x dimension
 	double LY0;			
-	double equilibriumtolerance = .000000000000010; // initial box length in y dimension
+	double equilibriumtolerance = .000000000000010; // change in dimensionless energy at every timestep has to be less than this to define equilibrium
 	bool equilibriumChecker;      		// determines whether packing is equilibrated or not
 	double currentFreeEnergy;			// used to determine equilibrium
 	double pastFreeEnergy;				// used to determine equilibrium
