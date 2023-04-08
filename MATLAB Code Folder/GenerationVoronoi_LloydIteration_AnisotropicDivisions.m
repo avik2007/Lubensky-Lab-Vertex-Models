@@ -34,12 +34,12 @@ MINAREA = 0.1;
 MINLENGTH =	1.0;
 NEWEDGELENGTH =	2.0;
 
-TOTALTIME = 20.0;
+TOTALTIME = 20000.0;
 CURRENTTIME = 0.0;  
 INITIALSTEPSIZE = t0 / 1000;
 error_tolerance_absolute_mechanical =	0.001;
 ALPHAM = GAMMA * ( t0 / sqrt(A0));
-TISSUE_ALPHA = 100000000 * ALPHAM;
+TISSUE_ALPHA = 100 * ALPHAM;
 % this tunes the "stiffness" of the box - make very large if you don't want
 % box to move
 TISSUE_EXT_STRESS_X = 0;
@@ -75,13 +75,13 @@ ANSTRENGTH = 25; %strength of anisotropy
 
 T1ON = 1; %boolean, tells code if T1's are turned on
 APOPTOSISON = 1;%boolean, tells code if Apoptosis is turned on
-MITOSISON = 0;% boolean, tells code if mitosis is turned on
+MITOSISON = 1;% boolean, tells code if mitosis is turned on
 % SET TAU_STRESS!!
-WRITEMITOSIS = 0; % boolean, tells code to report mitosis every time it happens if true
+WRITEMITOSIS = 1; % boolean, tells code to report mitosis every time it happens if true
 % TEST THE ABOVE FOUR MECHANISMS!
-VERBOSEON = 0; %boolean, tells code to output extra data for cells and edges when true
+VERBOSEON = 1; %boolean, tells code to output extra data for cells and edges when true
 EQUILIBRIUMMITOSIS = 1; %boolean, tells code if mitosis should happen at equilibrium
-nomfichier= strcat('prefix','_NbPts_', num2str(NbPoints,'%4d'), '_rng_', num2str(r,'%4d'),'_pot_', potential, '_lim_', num2str(limit, '%2d'), '.txt');
+nomfichier= strcat(prefix,'_NbPts_', num2str(NbPoints,'%4d'), '_rng_', num2str(r,'%4d'),'_pot_', potential, '_lim_', num2str(limit, '%2d'), '.txt');
 %%
 f1=figure();
 f2=figure();

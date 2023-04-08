@@ -17,7 +17,8 @@ rng(r);
 A0 = 1250;%1250;
 GAMMA =	 10;%10;%strength of line tension coefficient
 t0 = 1; %time units
-K = 5 * GAMMA /( sqrt(A0) );  %"young's modulus", strength of area term - using equation given in Meryl's thesis
+%K = 5 * GAMMA /( sqrt(A0) );  %"young's modulus", strength of area term - using equation given in Meryl's thesis
+K = 6 * GAMMA /( sqrt(A0) );  %THIS IS FOR DIVIDING CELLS DON'T USE OTHERWISE
 %this K is written in units of pressure (because Meryl wrote the pressure
 %weird in the simulation)
     
@@ -33,7 +34,7 @@ Mesh = sqrt(A0 * NbPoints);
 
 %Global parameters
 SEED = 48269; %originally 48263
-TIMEINTERVAL =	t0 / 1000;%0.01;
+TIMEINTERVAL =	t0 / 10;%0.01;
 MINAREA = 0.1;
 MINLENGTH =	0.0010; %set from Manning's T1 cutoff length in her nature physics paper
 NEWEDGELENGTH =	0.0011;%1;
@@ -44,7 +45,7 @@ TOTALTIME = INITIALSTEPSIZE*1000000; %INITIALSTEPSIZE * 500000; %500000 in natur
 error_tolerance_absolute_mechanical =	0.001;
 ALPHAM = GAMMA * ( t0 / sqrt(A0));
 %TISSUE_ALPHA = 100 * ALPHAM ;% 
-TISSUE_ALPHA = 10000000000000000000 *ALPHAM; % trying to keep the box from moving
+TISSUE_ALPHA = 100 *ALPHAM;
 TISSUE_EXT_STRESS_X = 0;
 TISSUE_EXT_STRESS_Y = 0;    
 
@@ -63,7 +64,7 @@ potential = pot; % DESCRIBED FOR INDIVIDUAL CELLS - - IF YOU WANT DIFFERENT CELL
 
 
 TCJSTRENGTH = 50;
-
+C4 = 0.01; %(1 - 6*C4 > 0) to keep the vertex model pressure energy convex
 THETAAN =3.14 / 2.0 ;    %direction of anisotropy
 
 ANSTRENGTH = 25; %strength of anisotropy
@@ -75,14 +76,14 @@ CELLPRESSURETYPE=cpt;
 %ONE OF THE CELL CHARACTERISTICS
 T1ON = 1; %boolean, tells code if T1's are turned on
 APOPTOSISON = 1;%boolean, tells code if Apoptosis is turned on
-MITOSISON = 0;% boolean, tells code if mitosis is turned on
+MITOSISON = 1;% boolean, tells code if mitosis is turned on
 % SET TAU_STRESS!!
-WRITEMITOSIS = 1; % boolean, tells code  to report mitosis every time it happens if true
+WRITEMITOSIS = 0; % boolean, tells code  to report mitosis every time it happens if true
 % TEST THE ABOVE FOUR MECHANISMS!
 VERBOSEON = 1; %boolean, tells code to output extra data for cells and edges when true
-EQUILIBRIUMMITOSIS = 0; %boolean, tells code if mitosis should happen at equilibrium
+EQUILIBRIUMMITOSIS = 1; %boolean, tells code if mitosis should happen at equilibrium
 energyListSize = 3;
-equilibriumtolerance = 0.000000000000001; %10^-9 is reasonable for most purposes
+equilibriumtolerance = 0.0000000000001; %THIS IS FOR MAKING A MOVIE OF GROWTH %0.000000000000001; % 10^-9 is reasonable for most purposes
 nomfichier= strcat(prefix,'_rng_', num2str(r,'%4d'), '_p0_', num2str(shape_index,'%.3g'), '_ELS_', num2str(energyListSize, '%3d'), '.txt');
 
 %%
@@ -242,6 +243,7 @@ fprintf(fid, 'VERBOSEON\t%d\n', VERBOSEON);
 fprintf(fid, 'EQUILIBRIUMMITOSIS\t%d\n', EQUILIBRIUMMITOSIS);
 fprintf(fid, 'energyListSize\t%d\n', energyListSize);
 fprintf(fid, 'equilibriumtolerance\t%d\n', equilibriumtolerance);
+fprintf(fid, 'C4\t%d\n', C4);
 fprintf(fid, 'endGlobal\n');
 fprintf(fid, 'Vertices\n');
 fprintf(fid, 'id\tx\ty\n');

@@ -15,7 +15,7 @@ rng(r);
 % units:
 %l0 = 25; %length units
 Ab = 1250 ;%1250;
-A0 = 1000; %sort of dummy constant that looks nice but doesn't determine much 
+A0 = 625; %sort of dummy constant that looks nice but doesn't determine much 
 GAMMA =	 10;%10;%strength of line tension coefficient
 t0 = 1; %time units
 AbTs_K_scaling = A0/Ab; 
@@ -54,9 +54,9 @@ TOTALTIME = INITIALSTEPSIZE*500000;  %500000 in nature paper
 error_tolerance_absolute_mechanical =	0.001;
 ALPHAM = GAMMA * ( t0 / sqrt(Ab));
 %TISSUE_ALPHA = 100 * ALPHAM ;% 
-TISSUE_ALPHA = 100*ALPHAM;%10000000000000000000 *ALPHAM; % trying to keep the box from moving
-TISSUE_EXT_STRESS_X = -2;%40-10;%10-30;
-TISSUE_EXT_STRESS_Y = 2;%40+10;%10+30;    
+TISSUE_ALPHA = 10000000000000000000 *ALPHAM; % trying to keep the box from moving
+TISSUE_EXT_STRESS_X = 0;%40-10;%10-30;
+TISSUE_EXT_STRESS_Y = 0;   
 
 P0 = sqrt(Ab)*shape_index;
 %shape_index = P0 / sqrt(A0);
@@ -92,6 +92,7 @@ WRITEMITOSIS = 1; % boolean, tells code  to report mitosis every time it happens
 VERBOSEON = 1; %boolean, tells code to output extra data for cells and edges when true
 EQUILIBRIUMMITOSIS = 0; %boolean, tells code if mitosis should happen at equilibrium
 energyListSize = 3;
+C4 = 0.01; %(1 - 6*C4 > 0) to keep the vertex model pressure energy convex
 equilibriumtolerance = 0.000000000000001; %10^-9 is reasonable for most purposes
 nomfichier= strcat(prefix,'_rng_', num2str(r,'%4d'), '_p0_', num2str(shape_index,'%.3g'), '_ELS_', num2str(energyListSize, '%3d'), '.txt');
 %"Abar Tissue" - this will allow me to differentiate between the packings
@@ -253,6 +254,7 @@ fprintf(fid, 'VERBOSEON\t%d\n', VERBOSEON);
 fprintf(fid, 'EQUILIBRIUMMITOSIS\t%d\n', EQUILIBRIUMMITOSIS);
 fprintf(fid, 'energyListSize\t%d\n', energyListSize);
 fprintf(fid, 'equilibriumtolerance\t%d\n', equilibriumtolerance);
+fprintf(fid, 'C4\t%d\n', C4);
 fprintf(fid, 'endGlobal\n');
 fprintf(fid, 'Vertices\n');
 fprintf(fid, 'id\tx\ty\n');
