@@ -622,13 +622,15 @@ bool AGTissue::Mitosis(){
 	AGCell* ag1;
 	int flag = 0;
 	int i;
-	double pressure;
-	double area;
-	double p0 = .03;
-	
+	double effpressure = 0;
+	double avgcellsize = 0;
+	double area = 0;
+	double cell2area = 0;
+	double p0 = .05;
+	int N;
 	double f = 0; //feedback strength - between 0 and 1
 	// double alpha = p0 / (K*(A0 - f*A0)); //this defines feedback so that if a cell is smaller than f times the preferred area of cells, it can't divide
-	double alpha = 0;
+	double alpha = .01;
 
 	double p;
 	double angle;  
@@ -645,8 +647,16 @@ bool AGTissue::Mitosis(){
 	for (list<Cell*>::iterator cit = cells.begin(); cit != cells.end(); cit++) {
 		//division with feedback like normal
 		area = (*(*cit)).GetArea();
-		pressure = (*(*cit)).GetPressure(area);
-		p = (p0 - alpha*pressure);
+		avgcellsize = 0;
+		N = 0;
+		for (list<Cell*>::iterator cit2 = cells.begin(); cit2 != cells.end(); cit2++)
+		{
+			avgcellsize += (*(*cit2)).GetArea();
+			N += 1;
+		}
+		avgcellsize = avgcellsize / N;
+		effpressure += K*(1 - area / avgcellsize);
+		p = (p0 - alpha*effpressure );
 		if (p < 0)
 		{ //if negative probability, then transfers over to similar procedure for apoptosis and p is set to 0 so mitosis will not occur
 			//ApoptosisSelection(p, *cit); //comment this out to stop apoptosis from happening like this

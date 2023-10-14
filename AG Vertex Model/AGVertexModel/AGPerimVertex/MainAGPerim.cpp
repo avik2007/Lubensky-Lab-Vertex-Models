@@ -168,7 +168,7 @@ int main()
 	errorfile << "Polydispersity = " << polydispersity << endl;
 	
 	// above time variables allow us to pick how often we write to the appendfile
-	while ((CURRENTTIME < TOTALTIME) && !(tissue.equilibrated))
+	while ((CURRENTTIME < TOTALTIME))
 	{
 		cout << "CURRENTTIME " << CURRENTTIME << endl;
 		tissue.Evolve(TIMEINTERVAL, &stepSize, &errorfile);

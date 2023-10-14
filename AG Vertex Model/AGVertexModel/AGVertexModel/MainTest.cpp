@@ -119,8 +119,8 @@ int main()
 	*/
 	
 	//Path to the folder that your initial files are in 
-	string PathName = "C:\\Users\\abmondal\\Documents\\Lubensky-Lab-Vertex-Models\\MATLAB Data Folder\\"; // CHANGE THIS TO MATCH YOUR FOLDER
-	//string PathName = "C:\\Users\\abmondal\\Documents\\Vertex_Model_Repository\\MATLAB Code Folder\\";
+	//string PathName = "C:\\Users\\abmondal\\Documents\\Lubensky-Lab-Vertex-Models\\MATLAB Data Folder\\"; // CHANGE THIS TO MATCH YOUR FOLDER
+	string PathName =  "C:\\Users\\abmondal\\Documents\\Lubensky-Lab-Vertex-Models\\MATLAB Code Folder\\";
 	//string PathName = "C:\\Users\\abmondal\\Desktop\\";
 
 	cout << "Enter name of imput file: ";
@@ -130,6 +130,7 @@ int main()
 
 	//Read the input file
 	bool readfile;
+	cout << InputFileName << "\n";
 	readfile = tissue.ReadInputData(InputFileName);
 	if (!readfile){
 		cout << "Ending because file was not readable" << endl;
@@ -173,9 +174,11 @@ int main()
 	{
 		cout << "CURRENTTIME " << CURRENTTIME << endl;
 		tissue.Evolve(TIMEINTERVAL, &stepSize, &errorfile);
-		cout << "exited evolve" << endl;
+		cout << "exited evolve" << "\n";
 		tissue.WriteOutputDataAppend(&datafile);
-		cout << "writing at CURRENTTIME: " << CURRENTTIME << endl;
+		cout << "writing at CURRENTTIME: " << CURRENTTIME << "\n";
+		cout << "Number of cells: " << tissue.cells.size() << endl;
+		cout << "Equilibrated: " << tissue.IsEquilibrated() << endl;
 
 	}
 	tissue.WriteOutputDataAppend(&datafile);

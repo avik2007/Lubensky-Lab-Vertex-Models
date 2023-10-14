@@ -78,8 +78,10 @@ public:
 	list<Vect> GetBarycentricUnitVectors(); //calculates unit vectors between TCJ's and cell center
 	// this is a helper for getThetaTC() and GetBiopolarityTensor()
 
+
 	vector<vector<double>> GetBipolarityTensor(); // uses barycentric unit vectors to calculate bipolarity tensor
 	// this is a helper for GetThetaTCJ()
+	// Is this different from Meryl's moment of inertia tensor? might be worth checking between cellclass and agcell (10/11/2023)
 
 	bool IsCrossingX(); // checks whether a cell is crossing the X-boundary
 

@@ -113,6 +113,8 @@ public:
 	//! This is the helper function that actually do mitosis on cells.
 	virtual void HelperMitosis(Cell* parentcell, double divisionangle);
 
+	//Calculates the Hessian of the tissue
+	virtual double** getHessian();
 };
 
 double listAverage(list<double> inputList);
