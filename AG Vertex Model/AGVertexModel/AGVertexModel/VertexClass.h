@@ -1,5 +1,4 @@
-
-.0// include guard
+// include guard
 #ifndef __VERTEXCLASS_H_INCLUDED__
 #define __VERTEXCLASS_H_INCLUDED__
 

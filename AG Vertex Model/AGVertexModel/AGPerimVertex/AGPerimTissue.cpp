@@ -14,7 +14,8 @@
 #include <stddef.h>
 #include <iomanip>
 #include <cmath>
-
+#include <Eigen/Dense>
+#include <unordered_map>
 
 #include "Constants.h"
 #include "AGConstants.h"
@@ -28,7 +29,7 @@
 #include "AGPerimCell.h"
 #include "AGPerimEdge.h"
 
-
+using namespace Eigen;
 
 /*
 * void HelperReadInputData_SetGlobalValues(ifstream* datafile)
@@ -1850,20 +1851,38 @@ void AGPerimTissue::HelperMitosis(Cell* parentcell, double divisionangle) {
 }
 
 /*
-* double ** getHessian()
+* MatrixXf getHessian()
 *
 * calculates the Hessian of the AGPerimTissue
 * 
 * NEEDS UPDATING IF WE ALLOW FOR MITOSIS OR APOPTOSIS
 * 
 * CHECK HOW TO WORK OUT SYMMETRY TO MAKE THIS FASTER
+* 
+* MOST LIKELY NEEDS TO BE DEBUGGED BY INDIVIDUALLY CALCULATING THE DERIVATIVE TERMS IN THEIR OWN FUNCTION
 */
-double** AGPerimTissue::getHessian()
+MatrixXf AGPerimTissue::getHessian(ofstream* errorfile)
 {
 	// REWRITE THINGS IN TERMS OF EIGEN LIBRARY - IT SEEMS LIKE IT WILL BE EASIER
-	int numberofcells = cells.size();
+	//int numberofcells = cells.size();
+	int numofvertices = vertices.size();
 	int vnum;
-	double** Hessian[2*numberofcells][2*numberofcells] = {{0}};
+	MatrixXf Hessian(2* numofvertices, 2 * numofvertices);
+	Hessian.setZero(2 * numofvertices, 2 * numofvertices);
+	MatrixXf dAdridAdrj(2 * numofvertices, 2 * numofvertices);
+	dAdridAdrj.setZero(2 * numofvertices, 2 * numofvertices);
+	MatrixXf dPdridPdrj(2 * numofvertices, 2 * numofvertices);
+	dPdridPdrj.setZero(2 * numofvertices, 2 * numofvertices);
+	MatrixXf d2Adridrj(2 * numofvertices, 2 * numofvertices);
+	d2Adridrj.setZero(2 * numofvertices, 2 * numofvertices);
+	MatrixXf d2Pdridrj_percell(2 * numofvertices, 2 * numofvertices);
+	d2Pdridrj_percell.setZero(2 * numofvertices, 2 * numofvertices);
+	MatrixXf d2Pdridrj(2 * numofvertices, 2 * numofvertices);
+	d2Pdridrj.setZero(2 * numofvertices, 2 * numofvertices);
+	MatrixXf incidenceMatrix(2 * numofvertices, 2 * numofvertices);
+	incidenceMatrix.setZero(2 * numofvertices, 2 * numofvertices);
+	MatrixXf cellincidence(2 * numofvertices, 2 * numofvertices);
+	cellincidence.setZero(2 * numofvertices, 2 * numofvertices);
 	vector<Vertex*> cwverts;
 	// vector<Edge*> cwedge;
 	vector<Vect> dAdr, dPdr, ep1vec, em1vec;
@@ -1874,6 +1893,17 @@ double** AGPerimTissue::getHessian()
 	double a0, p0;
 	Vect CWvec_pos, vec_pos, CCWvec_pos, CWedgevec, CCWedgevec, CWedgevec_UV, CCWedgevec_UV, dAdrvec, dPdrvec;
 	double CWmag, CCWmag;
+
+	// I need to reindex the vertex indices. apparently they're not just 1-N in ascending order for some reason. 
+	unordered_map<int, int> vertex_index_map;
+	int index = 0;
+	for (list<Vertex*>::iterator vit = vertices.begin(); vit != vertices.end(); vit++)
+	{
+		// The fastest way to do this is with an unordered map (the C++ equivalent to Python dictionaries)
+		vertex_index_map[(*(*vit)).id] = index;
+		index++;
+
+	}
 	// and now we calculate the different components, cell-wise
 
 	for (list<Cell*>::iterator cit = cells.begin(); cit != cells.end(); cit++)
@@ -1885,7 +1915,7 @@ double** AGPerimTissue::getHessian()
 		a0 = ((*agit)).A0;
 		cwverts = (*(*cit)).SavedInfoForEvolve_CWVerts;	//Get the cw vertices in the cell from the preassigned list 
 		vnum = cwverts.size();
-		cwverts.push_back(cwverts[0]); // we'll make the vertex list extra long so that it loops around.
+		//cwverts.push_back(cwverts[0]); // we'll make the vertex list extra long so that it loops around.
 		// We effectively have 4 terms we need in the Hessian.
 
 		// the pressure
@@ -1894,21 +1924,30 @@ double** AGPerimTissue::getHessian()
 		// tension magnitude should be simple enough
 		tension_magnitude = GAMMA * (perimeter - p0);
 
-		// Edge* GetEdgeBetween(Vertex* vrt); - we can get neighboring edges 
-		//for (int vindex = 0; vindex < vnum; vindex++)
-		//{
-		//	cwedges.push_back( ( *cwverts[vindex] ).GetEdgeBetween( (*cwverts[vindex + 1]) ) );
-		//}
+		// I want to clear the old vectors each iteration of the loop. 
+		if (dAdr.size() > 0) { dAdr.clear(); }
+		if (dPdr.size() > 0) { dPdr.clear(); }
+		if (em1vec.size() > 0){ em1vec.clear(); }
+		if (ep1vec.size() > 0) { ep1vec.clear(); }
 
-		// first loop will calculate first derivative things
-
-		for (int vindex = 0; vindex < vnum; vindex++)
+		for (int vindex = 0; vindex <= vnum-1; vindex++)
 		{
 			// calculate first derivative of cell's area 
 			//pressure_vector = 
 			//dAdr.push_back()
-			CWvec_pos = (*cwverts[vindex + 1]).r;
+
+			if (vindex == vnum-1)
+			{
+				CWvec_pos = (*cwverts[0]).r; 
+			}
+			else
+			{
+				CWvec_pos = (*cwverts[vindex + 1]).r;
+			}
+
 			vec_pos = (*cwverts[vindex]).r;
+
+		
 			if (vindex == 0)
 			{
 				CCWvec_pos = (*cwverts[vnum-1]).r;
@@ -1941,62 +1980,395 @@ double** AGPerimTissue::getHessian()
 		//vector<vector<double>> dPdidj{ { 0, 0 }, { 0, 0 } };
 		//vector<vector<double>> dHdidj_c{ { 0, 0 }, { 0, 0 } };
 		// In the second loop, we'll do a nested calculation and get the 2nd order derivatives as well
+
+
+		// DEBUGGING LINE TO SEE IF THE TRAVERSAL IS MAKING SENSE
+		cellincidence.setZero(2 * numofvertices, 2 * numofvertices);
+		d2Pdridrj_percell.setZero(2 * numofvertices, 2 * numofvertices);
+
+		double diff_checker;
 		for (int j = 0; j < vnum; j++)
 		{
-			j_id = (*cwverts[j]).id;
+			j_id = vertex_index_map[(*cwverts[j]).id];
 			for (int i = 0; i < vnum; i++)
 			{
-				i_id = (*cwverts[i]).id;
+				diff_checker = 0;
+				//*errorfile << "incidence = \n" << incidenceMatrix << "\n" << "\n" << endl;
+				i_id = vertex_index_map[(*cwverts[i]).id];
 
-				
+				cellincidence(2 * j_id, 2 * i_id) += 1;
+				cellincidence(2 * j_id, 2 * i_id + 1) += 1;
+				cellincidence(2 * j_id + 1, 2 * i_id + 1) += 1;
+				cellincidence(2 * j_id + 1, 2 * i_id) += 1;
+				//*errorfile << "jindex= " << j_id << "iindex= " << i_id << endl;
 				// The Hessian calculation - there's 4 main terms, I'm trying to space them out so that they're easy to read
 				//
-				//
+				//                                       dA/(dr dr)             dA/dr*dAdr								dp/dr*dp/dr								 dp/drdr
+				//Hessian(2 * j_id, 2 * i_id) +=               0           +       K * dAdr[j].x * dAdr[i].x     + GAMMA * dPdr[j].x * dPdr[i].x ;
+				//Hessian(2 * j_id, 2 * i_id + 1) +=           0           +       K * dAdr[j].x * dAdr[i].y     + GAMMA * dPdr[j].x * dPdr[i].y ;
+				//Hessian(2 * j_id + 1, 2 * i_id + 1) +=       0           +       K * dAdr[j].y * dAdr[i].y     + GAMMA * dPdr[j].y * dPdr[i].y;
+				//Hessian(2 * j_id + 1, 2 * i_id) +=           0           +       K * dAdr[j].y * dAdr[i].x     + GAMMA * dPdr[j].y * dPdr[i].x;
+				// the dAdri * dAdrj portion
+				dAdridAdrj(2 * j_id, 2 * i_id) += K * dAdr[j].x * dAdr[i].x;
+				dAdridAdrj(2 * j_id, 2 * i_id + 1) += K * dAdr[j].x * dAdr[i].y;
+				dAdridAdrj(2 * j_id + 1, 2 * i_id + 1) += K * dAdr[j].y * dAdr[i].y;
+				dAdridAdrj(2 * j_id + 1, 2 * i_id) += K * dAdr[j].y * dAdr[i].x;
+
+				// the dPdri * dPdrj portion
+				dPdridPdrj(2 * j_id, 2 * i_id) += GAMMA * dPdr[j].x * dPdr[i].x;
+				dPdridPdrj(2 * j_id, 2 * i_id + 1) += GAMMA * dPdr[j].x * dPdr[i].y;
+				dPdridPdrj(2 * j_id + 1, 2 * i_id + 1) += GAMMA * dPdr[j].y * dPdr[i].y;
+				dPdridPdrj(2 * j_id + 1, 2 * i_id) += GAMMA * dPdr[j].y * dPdr[i].x;
+				// The Hessian calculation - there's 4 main terms, I'm trying to space them out so that they're easy to read
 				//
 				//                                       dA/(dr dr)             dA/dr*dAdr								dp/dr*dp/dr								 dp/drdr
+
+				// the following if statements are necessary for the second order area and perimeter terms, which depend on the specific combinations of i and j values
 				if ( i == j )
 				{
-					Hessian[2 * j_id][2 * i_id] +=		    0				+	K * dAdr[j].x * dAdr[i].x     +		GAMMA * dPdr[j].x * dPdr[i].x			+ tension_magnitude * ( 1 / em1vec[i].Magnitude() + 1 / ep1vec[i].Magnitude() - pow(em1vec[i].x, 2) / pow(em1vec[i].Magnitude(), 3) - pow(ep1vec[i].x, 2) / pow(ep1vec[i].Magnitude(), 3) );
-					Hessian[2 * j_id][2 * i_id + 1] +=		0				+	K * dAdr[j].x * dAdr[i].y	  +		GAMMA * dPdr[j].x * dPdr[i].y			+ tension_magnitude * ( ( em1vec[i].x * em1vec[i].y ) / pow(em1vec[i].Magnitude(), 3) + (ep1vec[i].x * ep1vec[i].y) / pow(ep1vec[i].Magnitude(), 3) );
-					Hessian[2 * j_id + 1][2 * i_id + 1] +=  0				+	K * dAdr[j].y * dAdr[i].y	  +		GAMMA * dPdr[j].y * dPdr[i].y			+ tension_magnitude * ( 1 / em1vec[i].Magnitude() + 1 / ep1vec[i].Magnitude() - pow(em1vec[i].y, 2) / pow(em1vec[i].Magnitude(), 3) - pow(ep1vec[i].y, 2) / pow(ep1vec[i].Magnitude(), 3) );
-					Hessian[2 * j_id + 1][2 * i_id] +=      0				+	K * dAdr[j].y * dAdr[i].x	  +		GAMMA * dPdr[j].y * dPdr[i].x           + tension_magnitude * ( ( em1vec[i].x * em1vec[i].y ) / pow(em1vec[i].Magnitude(), 3) + (ep1vec[i].x * ep1vec[i].y) / pow(ep1vec[i].Magnitude(), 3) );
+					diff_checker = 0;
+					//Hessian(2 * j_id, 2 * i_id) +=		    0				+	0				+							0					+ tension_magnitude * ( 1 / em1vec[i].Magnitude() + 1 / ep1vec[i].Magnitude() - pow(em1vec[i].x, 2) / pow(em1vec[i].Magnitude(), 3) - pow(ep1vec[i].x, 2) / pow(ep1vec[i].Magnitude(), 3) );
+					//Hessian(2 * j_id, 2 * i_id + 1) +=		0				+	0				+							0					+ tension_magnitude * ( ( em1vec[i].x * em1vec[i].y ) / pow(em1vec[i].Magnitude(), 3) + (ep1vec[i].x * ep1vec[i].y) / pow(ep1vec[i].Magnitude(), 3) );
+					//Hessian(2 * j_id + 1, 2 * i_id + 1) +=  0				+	0			    +							0					+ tension_magnitude * ( 1 / em1vec[i].Magnitude() + 1 / ep1vec[i].Magnitude() - pow(em1vec[i].y, 2) / pow(em1vec[i].Magnitude(), 3) - pow(ep1vec[i].y, 2) / pow(ep1vec[i].Magnitude(), 3) );
+					//Hessian(2 * j_id + 1, 2 * i_id) +=      0				+	0				+							0					+ tension_magnitude * ( ( em1vec[i].x * em1vec[i].y ) / pow(em1vec[i].Magnitude(), 3) + (ep1vec[i].x * ep1vec[i].y) / pow(ep1vec[i].Magnitude(), 3) );
+					d2Pdridrj_percell(2 * j_id, 2 * i_id) += tension_magnitude * (1 / em1vec[i].Magnitude() + 1 / ep1vec[i].Magnitude() - pow(em1vec[i].x, 2) / pow(em1vec[i].Magnitude(), 3) - pow(ep1vec[i].x, 2) / pow(ep1vec[i].Magnitude(), 3));
+					d2Pdridrj_percell(2 * j_id, 2 * i_id + 1) += tension_magnitude * ((em1vec[i].x * em1vec[i].y) / pow(em1vec[i].Magnitude(), 3) + (ep1vec[i].x * ep1vec[i].y) / pow(ep1vec[i].Magnitude(), 3));
+					d2Pdridrj_percell(2 * j_id + 1, 2 * i_id + 1) += tension_magnitude * (1 / em1vec[i].Magnitude() + 1 / ep1vec[i].Magnitude() - pow(em1vec[i].y, 2) / pow(em1vec[i].Magnitude(), 3) - pow(ep1vec[i].y, 2) / pow(ep1vec[i].Magnitude(), 3));
+					d2Pdridrj_percell(2 * j_id + 1, 2 * i_id) += tension_magnitude * ((em1vec[i].x * em1vec[i].y) / pow(em1vec[i].Magnitude(), 3) + (ep1vec[i].x * ep1vec[i].y) / pow(ep1vec[i].Magnitude(), 3));
 				} 
-				else if ( i - 1 == j )
+				else if ( i - 1 == j || i + vnum - 1 ==j )
 				{
+					diff_checker = -1;
 					// for the second derivative of area term
 					// mu indexes columns
 					// num indexes rows
 					//
 					// 0 -1
 					// 1  0
-					Hessian[2 * j_id][2 * i_id] +=			0                           + 0                   +                 0                            + tension_magnitude * ( 1 / em1vec[i].Magnitude() - pow(em1vec[i].x, 2) / pow(em1vec[i].Magnitude(), 3) );
-					Hessian[2 * j_id][2 * i_id + 1] +=		-0.5 * cell_pressure        + 0                   +                 0                            + tension_magnitude * (-1 * (em1vec[i].x * em1vec[i].y) / pow(em1vec[i].Magnitude(), 3) );
-					Hessian[2 * j_id + 1][2 * i_id + 1] +=  0                           + 0                   +                 0                            + tension_magnitude * ( 1 / em1vec[i].Magnitude() - pow(em1vec[i].y, 2) / pow(em1vec[i].Magnitude(), 3) );
-					Hessian[2 * j_id + 1][2 * i_id] +=		0.5 * cell_pressure         + 0                   +                 0                            + tension_magnitude * (-1 * (em1vec[i].x * em1vec[i].y) / pow(em1vec[i].Magnitude(), 3));
-				}
-				else if ( i + 1 == j )
+					//Hessian(2 * j_id, 2 * i_id) +=			0                           + 0                   +                 0                            - tension_magnitude * ( 1 / em1vec[i].Magnitude() - pow(em1vec[i].x, 2) / pow(em1vec[i].Magnitude(), 3) );
+					//Hessian(2 * j_id, 2 * i_id + 1) +=		-0.5 * cell_pressure        + 0                   +                 0                            + tension_magnitude * ( (em1vec[i].x * em1vec[i].y) / pow(em1vec[i].Magnitude(), 3) );
+					//Hessian(2 * j_id + 1, 2 * i_id + 1) +=  0                           + 0                   +                 0                            - tension_magnitude * ( 1 / em1vec[i].Magnitude() - pow(em1vec[i].y, 2) / pow(em1vec[i].Magnitude(), 3) );
+					//Hessian(2 * j_id + 1, 2 * i_id) +=		0.5 * cell_pressure         + 0                   +                 0                            + tension_magnitude * ( (em1vec[i].x * em1vec[i].y) / pow(em1vec[i].Magnitude(), 3) );
+					d2Pdridrj_percell(2 * j_id, 2 * i_id) -= tension_magnitude * (1 / em1vec[i].Magnitude() - pow(em1vec[i].x, 2) / pow(em1vec[i].Magnitude(), 3));
+					d2Pdridrj_percell(2 * j_id, 2 * i_id + 1) += tension_magnitude * ((em1vec[i].x * em1vec[i].y) / pow(em1vec[i].Magnitude(), 3));
+					d2Pdridrj_percell(2 * j_id + 1, 2 * i_id + 1) -=  tension_magnitude * (1 / em1vec[i].Magnitude() - pow(em1vec[i].y, 2) / pow(em1vec[i].Magnitude(), 3));
+					d2Pdridrj_percell(2 * j_id + 1, 2 * i_id) += tension_magnitude * ((em1vec[i].x * em1vec[i].y) / pow(em1vec[i].Magnitude(), 3));
+
+					d2Adridrj(2 * j_id, 2 * i_id + 1) -= 0.5 * cell_pressure;
+					d2Adridrj(2 * j_id + 1, 2 * i_id) += 0.5 * cell_pressure; 
+				}	
+				else if ( i + 1 == j || i - vnum + 1 == j )
 				{
+					diff_checker = 1;
 					// for the second derivative of area term
 					// mu indexes columns
 					// num indexes rows
 					//
 					//  0 1
 					// -1  0
-					Hessian[2 * j_id][2 * i_id] +=			0                           + 0                   +                 0                            + tension_magnitude * (1 / ep1vec[i].Magnitude() - pow(ep1vec[i].x, 2) / pow(ep1vec[i].Magnitude(), 3));
-					Hessian[2 * j_id][2 * i_id + 1] +=		0.5 * cell_pressure         + 0                   +                 0                            + tension_magnitude * (-1 * (ep1vec[i].x * ep1vec[i].y) / pow(ep1vec[i].Magnitude(), 3));
-					Hessian[2 * j_id + 1][2 * i_id + 1] +=	0							+ 0					  +					0							 + tension_magnitude * (1 / ep1vec[i].Magnitude() - pow(ep1vec[i].y, 2) / pow(ep1vec[i].Magnitude(), 3));
-					Hessian[2 * j_id + 1][2 * i_id] +=		-0.5 * cell_pressure		+ 0					  +                 0                            + tension_magnitude * (-1 * (ep1vec[i].x * ep1vec[i].y) / pow(ep1vec[i].Magnitude(), 3));
-				}
+					//Hessian(2 * j_id, 2 * i_id) +=			0                           + 0                   +                 0                            + tension_magnitude * (1 / ep1vec[i].Magnitude() - pow(ep1vec[i].x, 2) / pow(ep1vec[i].Magnitude(), 3));
+					//Hessian(2 * j_id, 2 * i_id + 1) +=		0.5 * cell_pressure         + 0                   +                 0                            - tension_magnitude * ( (ep1vec[i].x * ep1vec[i].y) / pow(ep1vec[i].Magnitude(), 3));
+					//Hessian(2 * j_id + 1, 2 * i_id + 1) +=	0							+ 0					  +					0							 + tension_magnitude * (1 / ep1vec[i].Magnitude() - pow(ep1vec[i].y, 2) / pow(ep1vec[i].Magnitude(), 3));
+					//Hessian(2 * j_id + 1, 2 * i_id) +=		-0.5 * cell_pressure		+ 0					  +                 0                            - tension_magnitude * ( (ep1vec[i].x * ep1vec[i].y) / pow(ep1vec[i].Magnitude(), 3));
+					d2Pdridrj_percell(2 * j_id, 2 * i_id) += tension_magnitude * (1 / ep1vec[i].Magnitude() - pow(ep1vec[i].x, 2) / pow(ep1vec[i].Magnitude(), 3));
+					d2Pdridrj_percell(2 * j_id, 2 * i_id + 1) -= tension_magnitude * ((ep1vec[i].x * ep1vec[i].y) / pow(ep1vec[i].Magnitude(), 3));
+					d2Pdridrj_percell(2 * j_id + 1, 2 * i_id + 1) += tension_magnitude * (1 / ep1vec[i].Magnitude() - pow(ep1vec[i].y, 2) / pow(ep1vec[i].Magnitude(), 3));
+					d2Pdridrj_percell(2 * j_id + 1, 2 * i_id) -= tension_magnitude * ((ep1vec[i].x * ep1vec[i].y) / pow(ep1vec[i].Magnitude(), 3));
 
+
+					d2Adridrj(2 * j_id, 2 * i_id + 1) += 0.5 * cell_pressure;
+					d2Adridrj(2 * j_id + 1, 2 * i_id) -= 0.5 * cell_pressure;
+				}
+				*errorfile << (*cwverts[j]).id << " " << (*cwverts[i]).id << " " << diff_checker << endl;
 
 
 			}
+			//*errorfile << std::setprecision(3) << "d2Adridrj = \n" << d2Adridrj << "\n" << "\n" << endl;
 		}
+		//*errorfile << "H = \n" << Hessian << "\n" << "\n" << endl;
+		*errorfile << "incidence after end of cell = \n" << cellincidence << "\n" << "\n" << endl;
+		incidenceMatrix = incidenceMatrix + cellincidence; 
+		//*errorfile << std::setprecision(3) << "d2Adridrj = \n" << d2Adridrj_percell << "\n" << "\n" << endl;
+
+		//d2Adridrj = d2Adridrj + d2Adridrj_percell;
+
+		//*errorfile << std::setprecision(3) << "d2Pdridrj = \n" << d2Pdridrj << "\n" << "\n" << endl;
+
+		//*errorfile << std::setprecision(3) << "dPdridPdrj = \n" << dPdridPdrj << "\n" << "\n" << endl;
+
+		//*errorfile << std::setprecision(3) << "dAdridAdrj = \n" << dAdridAdrj << "\n" << "\n" << endl;
 	}
+	Hessian = d2Adridrj + d2Pdridrj + dAdridAdrj + dPdridPdrj;
+	//*errorfile << std::setprecision(3) << "H = \n" << Hessian << "\n" << "\n" << endl;
+
+	*errorfile << std::setprecision(3) << "incidence at the end  = \n" << incidenceMatrix << "\n" << "\n" << endl;
+	
+	*errorfile << std::setprecision(3) << "d2Adridrj = \n" << d2Adridrj << "\n" << "\n" << endl;
+	
+	*errorfile << std::setprecision(3) << "d2Pdridrj = \n" << d2Pdridrj << "\n" << "\n" << endl;
+	
+	*errorfile << std::setprecision(3) << "dPdridPdrj = \n" << dPdridPdrj << "\n" << "\n" << endl;
+	
+	*errorfile << std::setprecision(3) << "dAdridAdrj = \n" << dAdridAdrj << "\n" << "\n" << endl;
 
 	return Hessian;
 }
 
+/*
+* MatrixXf calculateHessian()
+*
+* calculates the Hessian of the AGPerimTissue
+*
+* NEEDS UPDATING IF WE ALLOW FOR MITOSIS OR APOPTOSIS
+*
+* CHECK HOW TO WORK OUT SYMMETRY TO MAKE THIS FASTER
+*
+* MOST LIKELY NEEDS TO BE DEBUGGED BY INDIVIDUALLY CALCULATING THE DERIVATIVE TERMS IN THEIR OWN FUNCTION
+*/
+MatrixXf AGPerimTissue::calculateHessian(ofstream* errorfile)
+{
+	int numofvertices = vertices.size();
+	int vnum;
+	MatrixXf Hessian(2 * numofvertices, 2 * numofvertices);
+	Hessian.setZero(2 * numofvertices, 2 * numofvertices);
+
+	MatrixXf dAdridAdrj(2 * numofvertices, 2 * numofvertices);
+	dAdridAdrj.setZero(2 * numofvertices, 2 * numofvertices);
+
+	MatrixXf dAdridAdrj_percell(2 * numofvertices, 2 * numofvertices);
+	dAdridAdrj_percell.setZero(2 * numofvertices, 2 * numofvertices);
+
+	MatrixXf dPdridPdrj(2 * numofvertices, 2 * numofvertices);
+	dPdridPdrj.setZero(2 * numofvertices, 2 * numofvertices);
+
+	MatrixXf dPdridPdrj_percell(2 * numofvertices, 2 * numofvertices);
+	dPdridPdrj_percell.setZero(2 * numofvertices, 2 * numofvertices);
+
+	MatrixXf d2Adridrj(2 * numofvertices, 2 * numofvertices);
+	d2Adridrj.setZero(2 * numofvertices, 2 * numofvertices);
+
+	MatrixXf d2Adridrj_percell(2 * numofvertices, 2 * numofvertices);
+	d2Adridrj_percell.setZero(2 * numofvertices, 2 * numofvertices);
+
+	MatrixXf d2Pdridrj_percell(2 * numofvertices, 2 * numofvertices);
+	d2Pdridrj_percell.setZero(2 * numofvertices, 2 * numofvertices);
+
+	MatrixXf d2Pdridrj(2 * numofvertices, 2 * numofvertices);
+	d2Pdridrj.setZero(2 * numofvertices, 2 * numofvertices);
+
+	MatrixXf incidenceMatrix(2 * numofvertices, 2 * numofvertices);
+	incidenceMatrix.setZero(2 * numofvertices, 2 * numofvertices);
+
+	MatrixXf cellincidence(2 * numofvertices, 2 * numofvertices);
+	cellincidence.setZero(2 * numofvertices, 2 * numofvertices);
+
+	vector<Vertex*> cwverts;
+	
+	// vector<Edge*> cwedge;
+	vector<Vect> dAdr, dPdr, ep1vec, em1vec;
+	vector<int> vertID, vertIDp1, vertIDm1;
+	double area = 0;
+	double cell_pressure = 0;
+	double perimeter = 0;
+	double tension_magnitude = 0;
+	double a0, p0;
+	Vect CWvec_pos, vec_pos, CCWvec_pos, CWedgevec, CCWedgevec, CWedgevec_UV, CCWedgevec_UV, dAdrvec, dPdrvec;
+	double CWmag, CCWmag;
+
+	// I need to reindex the vertex indices. apparently they're not just 1-N in ascending order for some reason. 
+	unordered_map<int, int> vertex_index_map;
+	int index = 0;
+	for (list<Vertex*>::iterator vit = vertices.begin(); vit != vertices.end(); vit++)
+	{
+		// The fastest way to do this is with an unordered map (the C++ equivalent to Python dictionaries)
+		vertex_index_map[(*(*vit)).id] = index;
+		index++;
+
+	}
+	// and now we calculate the different components, cell-wise
+
+	for (list<Cell*>::iterator cit = cells.begin(); cit != cells.end(); cit++)
+	{
+		AGPerimCell* agit = dynamic_cast<AGPerimCell*>(*cit);
+		*errorfile << "Cell id: " << (*(*cit)).id << endl;
+		area = ((*agit)).GetArea();
+		perimeter = ((*agit)).GetPerimeter();
+		p0 = (*agit).P0;
+		a0 = ((*agit)).A0;
+		cwverts = (*(*cit)).SavedInfoForEvolve_CWVerts;	//Get the cw vertices in the cell from the preassigned list 
+		vnum = cwverts.size();
+		//cwverts.push_back(cwverts[0]); // we'll make the vertex list extra long so that it loops around.
+		// We effectively have 4 terms we need in the Hessian.
+
+		// the pressure
+		cell_pressure = (*(*cit)).GetPressure(area) * a0; // I want pressure to be PRESSURE = K (A - A0)
+
+		// tension magnitude should be simple enough
+		tension_magnitude = GAMMA * (perimeter - p0);
+
+		// I want to clear the old vectors each iteration of the loop. 
+		if (dAdr.size() > 0) { dAdr.clear(); }
+		if (dPdr.size() > 0) { dPdr.clear(); }
+		if (em1vec.size() > 0) { em1vec.clear(); }
+		if (ep1vec.size() > 0) { ep1vec.clear(); }
+
+		for (int vindex = 0; vindex < vnum ; vindex++)
+		{
+			// vertID, vertIDp1, vertIDm1
+
+			// get the ID and position list for each vertex in current cell
+			
+			if (vindex == vnum - 1)
+			{
+				CWvec_pos = (*cwverts[0]).r;
+				vertIDp1.push_back(vertex_index_map [ (*cwverts[0]).id ]);
+			}
+			else
+			{
+				CWvec_pos = (*cwverts[vindex + 1]).r;
+				vertIDp1.push_back(vertex_index_map [ (*cwverts[vindex + 1]).id ] );
+			}
+
+			vec_pos = (*cwverts[vindex]).r;
+			vertID.push_back(vertex_index_map [ (*cwverts[vindex]).id ]);
+
+			if (vindex == 0)
+			{
+				CCWvec_pos = (*cwverts[vnum - 1]).r;
+				vertIDm1.push_back(vertex_index_map [ (*cwverts[vnum - 1]).id ] );
+			}
+			else
+			{
+				CCWvec_pos = (*cwverts[vindex - 1]).r;
+				vertIDm1.push_back(vertex_index_map [ (*cwverts[vindex - 1]).id ]);
+			}
+			dAdrvec = (CWvec_pos - CCWvec_pos).Rotate(PI / 2) * 0.5;
+
+
+			CWedgevec = CWvec_pos - vec_pos;
+			CCWedgevec = vec_pos - CCWvec_pos;
+
+			CWmag = CWedgevec.Magnitude();
+			CCWmag = CCWedgevec.Magnitude();
+
+			CWedgevec_UV = CWedgevec / CWmag;
+			CCWedgevec_UV = CCWedgevec / CCWmag;
+			dPdrvec = (CWedgevec_UV * -1 + CCWedgevec_UV);
+
+			ep1vec.push_back(CWedgevec);
+			em1vec.push_back(CCWedgevec);
+			dAdr.push_back(dAdrvec);
+			dPdr.push_back(dPdrvec);
+		}
+
+		int i_id, j_id, jp1_id, jm1_id;
+		//vector<vector<double>> dAdidj{ { 0, 0 }, { 0, 0 } };
+		//vector<vector<double>> dPdidj{ { 0, 0 }, { 0, 0 } };
+		//vector<vector<double>> dHdidj_c{ { 0, 0 }, { 0, 0 } };
+		// In the second loop, we'll do a nested calculation and get the 2nd order derivatives as well
+
+
+		// DEBUGGING LINE TO SEE IF THE TRAVERSAL IS MAKING SENSE
+		cellincidence.setZero(2 * numofvertices, 2 * numofvertices);
+		d2Pdridrj_percell.setZero(2 * numofvertices, 2 * numofvertices);
+		dPdridPdrj_percell.setZero(2 * numofvertices, 2 * numofvertices);
+		d2Adridrj_percell.setZero(2 * numofvertices, 2 * numofvertices);
+		dAdridAdrj_percell.setZero(2 * numofvertices, 2 * numofvertices);
+
+		for (int j = 0; j < vnum; j++)
+		{
+			j_id = vertID[j];
+			jp1_id = vertIDp1[j];
+			jm1_id = vertIDm1[j];
+
+			for (int i = 0; i < vnum; i++)
+			{
+
+				//*errorfile << "incidence = \n" << incidenceMatrix << "\n" << "\n" << endl;
+				i_id = vertID[i];
+
+				cellincidence(2 * j_id, 2 * i_id) += 1;
+				cellincidence(2 * j_id, 2 * i_id + 1) += 1;
+				cellincidence(2 * j_id + 1, 2 * i_id + 1) += 1;
+				cellincidence(2 * j_id + 1, 2 * i_id) += 1;
+
+				// the dAdri * dAdrj portion
+				dAdridAdrj_percell(2 * j_id, 2 * i_id) += K * dAdr[j].x * dAdr[i].x;
+				dAdridAdrj_percell(2 * j_id, 2 * i_id + 1) += K * dAdr[j].x * dAdr[i].y;
+				dAdridAdrj_percell(2 * j_id + 1, 2 * i_id + 1) += K * dAdr[j].y * dAdr[i].y;
+				dAdridAdrj_percell(2 * j_id + 1, 2 * i_id) += K * dAdr[j].y * dAdr[i].x;
+
+				// the dPdri * dPdrj portion
+				dPdridPdrj_percell(2 * j_id, 2 * i_id) += GAMMA * dPdr[j].x * dPdr[i].x;
+				dPdridPdrj_percell(2 * j_id, 2 * i_id + 1) += GAMMA * dPdr[j].x * dPdr[i].y;
+				dPdridPdrj_percell(2 * j_id + 1, 2 * i_id + 1) += GAMMA * dPdr[j].y * dPdr[i].y;
+				dPdridPdrj_percell(2 * j_id + 1, 2 * i_id) += GAMMA * dPdr[j].y * dPdr[i].x;
+
+
+			}
+
+
+			// the second order derivatives section
+
+			// first the area portion - these only act on cases where j is not equal to i and off-diagonal components
+			d2Adridrj_percell(2 * jm1_id, 2 * j_id + 1) -= 0.5 * cell_pressure;
+			d2Adridrj_percell(2 * jm1_id + 1, 2 * j_id) += 0.5 * cell_pressure;
+			d2Adridrj_percell(2 * jp1_id, 2 * j_id + 1) += 0.5 * cell_pressure;
+			d2Adridrj_percell(2 * jp1_id + 1, 2 * j_id ) -= 0.5 * cell_pressure;
+
+			// perimeter portion - where i = j
+			d2Pdridrj_percell(2 * j_id, 2 * j_id) += tension_magnitude * (1 / em1vec[j].Magnitude() + 1 / ep1vec[j].Magnitude() - pow(em1vec[j].x, 2) / pow(em1vec[j].Magnitude(), 3) - pow(ep1vec[j].x, 2) / pow(ep1vec[j].Magnitude(), 3));
+			d2Pdridrj_percell(2 * j_id, 2 * j_id + 1) += tension_magnitude * ((em1vec[j].x * em1vec[j].y) / pow(em1vec[j].Magnitude(), 3) + (ep1vec[j].x * ep1vec[j].y) / pow(ep1vec[j].Magnitude(), 3));
+			d2Pdridrj_percell(2 * j_id + 1, 2 * j_id + 1) += tension_magnitude * (1 / em1vec[j].Magnitude() + 1 / ep1vec[j].Magnitude() - pow(em1vec[j].y, 2) / pow(em1vec[j].Magnitude(), 3) - pow(ep1vec[j].y, 2) / pow(ep1vec[j].Magnitude(), 3));
+			d2Pdridrj_percell(2 * j_id + 1, 2 * j_id) += tension_magnitude * ((em1vec[j].x * em1vec[j].y) / pow(em1vec[j].Magnitude(), 3) + (ep1vec[j].x * ep1vec[j].y) / pow(ep1vec[j].Magnitude(), 3));
+
+			// perimeter portion - where j = i-1
+			d2Pdridrj_percell(2 * jm1_id, 2 * i_id) -= tension_magnitude * (1 / em1vec[j].Magnitude() - pow(em1vec[j].x, 2) / pow(em1vec[j].Magnitude(), 3));
+			d2Pdridrj_percell(2 * jm1_id, 2 * i_id + 1) +=  tension_magnitude * ((em1vec[j].x * em1vec[j].y) / pow(em1vec[j].Magnitude(), 3));
+			d2Pdridrj_percell(2 * jm1_id + 1, 2 * i_id + 1) -= tension_magnitude * (1 / em1vec[j].Magnitude() - pow(em1vec[j].y, 2) / pow(em1vec[j].Magnitude(), 3));
+			d2Pdridrj_percell(2 * jm1_id + 1, 2 * i_id) += tension_magnitude * ((em1vec[j].x * em1vec[j].y) / pow(em1vec[j].Magnitude(), 3));
+
+			// perimeter portion - where j = i+1
+			d2Pdridrj_percell(2 * jp1_id, 2 * i_id) += tension_magnitude * (1 / ep1vec[j].Magnitude() - pow(ep1vec[j].x, 2) / pow(ep1vec[j].Magnitude(), 3));
+			d2Pdridrj_percell(2 * jp1_id, 2 * i_id + 1) -= tension_magnitude * ((ep1vec[j].x * ep1vec[j].y) / pow(ep1vec[j].Magnitude(), 3));
+			d2Pdridrj_percell(2 * jp1_id + 1, 2 * i_id + 1) += tension_magnitude * (1 / ep1vec[j].Magnitude() - pow(ep1vec[j].y, 2) / pow(ep1vec[j].Magnitude(), 3));
+			d2Pdridrj_percell(2 * jp1_id + 1, 2 * i_id) -= tension_magnitude * ((ep1vec[j].x * ep1vec[j].y) / pow(ep1vec[j].Magnitude(), 3));
+
+		}
+
+
+		//*errorfile << "H = \n" << Hessian << "\n" << "\n" << endl;
+		*errorfile << "incidence after end of cell = \n" << cellincidence << "\n" << "\n" << endl;
+		incidenceMatrix = incidenceMatrix + cellincidence;
+		*errorfile << std::setprecision(3) << "d2Adridrj = \n" << d2Adridrj_percell << "\n" << "\n" << endl;
+
+
+		*errorfile << std::setprecision(3) << "d2Pdridrj = \n" << d2Pdridrj_percell << "\n" << "\n" << endl;
+
+		*errorfile << std::setprecision(3) << "dPdridPdrj = \n" << dPdridPdrj_percell << "\n" << "\n" << endl;
+
+		*errorfile << std::setprecision(3) << "dAdridAdrj = \n" << dAdridAdrj_percell << "\n" << "\n" << endl;
+
+		d2Adridrj = d2Adridrj + d2Adridrj_percell;
+		d2Pdridrj = d2Pdridrj + d2Pdridrj_percell;
+		dAdridAdrj = dAdridAdrj + dAdridAdrj_percell;
+		dPdridPdrj = dPdridPdrj + dPdridPdrj_percell;
+	}
+	Hessian = d2Adridrj + d2Pdridrj + dAdridAdrj + dPdridPdrj;
+	//*errorfile << std::setprecision(3) << "H = \n" << Hessian << "\n" << "\n" << endl;
+
+	*errorfile << std::setprecision(3) << "incidence at the end  = \n" << incidenceMatrix << "\n" << "\n" << endl;
+
+	*errorfile << std::setprecision(3) << "d2Adridrj = \n" << d2Adridrj << "\n" << "\n" << endl;
+
+	*errorfile << std::setprecision(3) << "d2Pdridrj = \n" << d2Pdridrj << "\n" << "\n" << endl;
+
+	*errorfile << std::setprecision(3) << "dPdridPdrj = \n" << dPdridPdrj << "\n" << "\n" << endl;
+
+	*errorfile << std::setprecision(3) << "dAdridAdrj = \n" << dAdridAdrj << "\n" << "\n" << endl;
+
+	return Hessian;
+}
 /*
 * double listAverage(inputList)
 *

@@ -17,6 +17,7 @@ class Vect;
 #include <vector>
 #include <unordered_map>
 #include <stddef.h>
+#include "Eigen/Dense"
 
 #include "VectClass.h"
 #include "Constants.h"
@@ -29,6 +30,7 @@ class Vect;
 #include "AGTissue.h"
 #include "AGPerimConstants.h"
 
+using namespace Eigen;
 using namespace std;
 
 class AGPerimTissue : public AGTissue{
@@ -114,7 +116,10 @@ public:
 	virtual void HelperMitosis(Cell* parentcell, double divisionangle);
 
 	//Calculates the Hessian of the tissue
-	virtual double** getHessian();
+	virtual Eigen::MatrixXf getHessian(ofstream* errorfile);
+
+	// 10/25/2023 - I think there is a smarter way to write this function that makes it easier to debug and faster to run
+	virtual Eigen::MatrixXf calculateHessian(ofstream* errorfile);
 };
 
 double listAverage(list<double> inputList);
