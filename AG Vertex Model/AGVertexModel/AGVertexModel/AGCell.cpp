@@ -465,6 +465,10 @@ bool AGCell::IsCrossingY()
 * double GetdAdLx();
 *
 * Calculates dA/dLx for this cell
+* 
+* 
+*  11/2/2023 - there is a simple way to improve this. in fact, I'm not sure why I wrote it this in way in the first place. But in the first for loop, check the xflag of the edge
+*  and then take the average y-coordinate of that edge if the xflag is 1. 
 */
 double AGCell::GetdAdLx()
 {
@@ -477,7 +481,8 @@ double AGCell::GetdAdLx()
 	vector<Vertex*> clockwiseVertex = (*this).GetClockWiseVertices();
 	int vertexNum = clockwiseVertex.size();
 	double vectDiff;
-
+	double y1 = 0;
+	double y2 = 0;
 	clockwiseVertex.push_back(clockwiseVertex[0]);
 	
 	for (int i = 0; i < vertexNum; i++)
@@ -487,8 +492,25 @@ double AGCell::GetdAdLx()
 		e1 = (*v1).GetEdgeBetween(v2);
 		clockwiseEdges.push_back(e1);
 		edgeVects.push_back((*e1).GetVectorDifference(v1, v2));
-	}
+		/*
+		if ( ((*e1).xflag) )
+		{
+			if (xcrossingEdges < 1)
+			{ 
+				y1 = 0.5 * (v1->r.y + v2->r.y);
+				xcrossingEdges++;
+			}
+			else
+			{
+				y2 = 0.5 * (v1->r.y + v2->r.y);
+				i = vertexNum;
+			}
+		
+		}
+		*/
 
+	}
+	// everything below can be deleted if the commented snippet above works
 	for (int j = 0; j < vertexNum; j++)
 	{
 		e2 = clockwiseEdges[j];
@@ -536,7 +558,8 @@ double AGCell::GetdAdLy()
 	vector<Vertex*> clockwiseVertex = (*this).GetClockWiseVertices();
 	int vertexNum = clockwiseVertex.size();
 	double vectDiff;
-
+	double x1 = 0;
+	double x2 = 0;
 	clockwiseVertex.push_back(clockwiseVertex[0]);
 
 	for (int i = 0; i < vertexNum; i++)
@@ -546,8 +569,25 @@ double AGCell::GetdAdLy()
 		e1 = (*v1).GetEdgeBetween(v2);
 		clockwiseEdges.push_back(e1);
 		edgeVects.push_back((*e1).GetVectorDifference(v1, v2));
-	}
 
+		/*
+		if ( ((*e1).yflag) )
+		{
+			if (ycrossingEdges < 1)
+			{
+				x1 = 0.5 * (v1->r.x + v2->r.x);
+				xcrossingEdges++;
+			}
+			else
+			{
+				x2 = 0.5 * (v1->r.x + v2->r.x);
+				i = vertexNum;
+			}
+
+		} if dAdLxdy works, then thi should work
+		*/
+	}
+	// everything below can be deleted if the commented snippet above works
 	for (int j = 0; j < vertexNum; j++)
 	{
 		e2 = clockwiseEdges[j];
@@ -580,6 +620,71 @@ double AGCell::GetdAdLy()
 	return abs(dAdLy);
 }
 
+/*
+* double Getd2AdLxdy(Vertex v)
+*
+*/
+double AGCell::Getd2AdLxdy(Vertex* V)
+{
+	unsigned long int targetvertexid = (*V).id;
+	bool id_match;
+	int xcrossingEdges = 0;
+	vector<Vect> edgeVects;
+	double d2AdLxdy = 0;
+	Vertex* v1, * v2;
+	Edge* e1, * e2;
+	vector<Edge*> clockwiseEdges;
+	vector<Vertex*> clockwiseVertex = (*this).GetClockWiseVertices();
+	int vertexNum = clockwiseVertex.size();
+	double vectDiff;
+	int firstEdgeContribution = 0;
+	int secondEdgeContribution = 0;
+
+	clockwiseVertex.push_back(clockwiseVertex[0]);
+
+	for (int i = 0; i < vertexNum; i++)
+	{
+		v1 = clockwiseVertex[i];
+		v2 = clockwiseVertex[i + 1];
+		id_match = ((v1->id) == targetvertexid) || ((v2->id) == targetvertexid);
+		e1 = (*v1).GetEdgeBetween(v2);
+		clockwiseEdges.push_back(e1);
+		edgeVects.push_back((*e1).GetVectorDifference(v1, v2));
+
+		if (((*e1).xflag) && id_match)
+		{
+			if (xcrossingEdges < 1)
+			{
+				firstEdgeContribution = 1;
+				xcrossingEdges++;
+			}
+			else
+			{
+				secondEdgeContribution = 1;
+				i = vertexNum;
+			}
+		}
+	}
+	return 0.5 * LY * (firstEdgeContribution - secondEdgeContribution);
+	
+}
+/*
+* double GetdAdgammaForSimpleShearAlongXaxis()
+*
+*  Calculates dAdgamma for a simple shear where the deformation occurs along the x-axis
+*/
+double AGCell::GetdAdgammaForSimpleShearAlongXAxis()
+{
+	return LY * GetdAdLx();
+}
+/*
+* double Getd2AdgammadyForSimpleShearAlongXAxis(Vertex* V)
+*
+*/
+double AGCell::Getd2AdgammadyForSimpleShearAlongXAxis(Vertex* V)
+{
+	return LY * Getd2AdLxdy(V);
+}
 /*
 * double GetCellStressXX();
 *

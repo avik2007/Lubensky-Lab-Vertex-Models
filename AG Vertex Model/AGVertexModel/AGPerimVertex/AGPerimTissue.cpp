@@ -1230,14 +1230,14 @@ void AGPerimTissue::HelperWriteOutputData_Write2File(ofstream* datafile, bool in
 
 		//print the edge info
 		*datafile << "Edges" << endl;
-		*datafile << "id\tvertex1\tvertex2\txflag\tyflag\ttension\t_cell1\t_cell2" << endl;
+		*datafile << "id\tvertex1\tvertex2\tlength\txflag\tyflag\ttension\t_cell1\t_cell2" << endl;
 		for (list<Edge*>::iterator eit = edges.begin(); eit != edges.end(); eit++)
 		{			
 			//loop through all of the edges in the tissue
 			Vertex* v1 = (*(*eit)).vertex1;
 			Vertex* v2 = (*(*eit)).vertex2;
 			double L = (*(*eit)).GetLength();
-			*datafile << std::setprecision(outputPrecision) << (*(*eit)).id << "\t" << (*v1).id << "\t" << (*v2).id << "\t" << (*(*eit)).xflag << "\t" << (*(*eit)).yflag << "\t" << (*(*eit)).GetTension_Magnitude() << "\t" << (*(*(*eit)).cell1).id << "\t" << (*(*(*eit)).cell2).id << endl;
+			*datafile << std::setprecision(outputPrecision) << (*(*eit)).id << "\t" << (*v1).id << "\t" << (*v2).id << "\t"<< L << "\t" << (*(*eit)).xflag << "\t" << (*(*eit)).yflag << "\t" << (*(*eit)).GetTension_Magnitude() << "\t" << (*(*(*eit)).cell1).id << "\t" << (*(*(*eit)).cell2).id << endl;
 		}
 
 		//print the cell info
@@ -2163,9 +2163,10 @@ MatrixXf AGPerimTissue::calculateHessian(ofstream* errorfile)
 	cellincidence.setZero(2 * numofvertices, 2 * numofvertices);
 
 	vector<Vertex*> cwverts;
-	
-	// vector<Edge*> cwedge;
-	vector<Vect> dAdr, dPdr, ep1vec, em1vec;
+	//vector<Edge*> cwedgesp1, cwedgesm1;
+	Edge* cwedge;
+	Edge* ccwedge;
+	vector<Vect> dAdr, dPdr, ep1vec, em1vec; 
 	vector<int> vertID, vertIDp1, vertIDm1;
 	double area = 0;
 	double cell_pressure = 0;
@@ -2201,16 +2202,21 @@ MatrixXf AGPerimTissue::calculateHessian(ofstream* errorfile)
 		// We effectively have 4 terms we need in the Hessian.
 
 		// the pressure
-		cell_pressure = (*(*cit)).GetPressure(area) * a0; // I want pressure to be PRESSURE = K (A - A0)
-
+		cell_pressure = 1; // (*(*cit)).GetPressure(area)* a0; // I want pressure to be PRESSURE = K (A - A0)
 		// tension magnitude should be simple enough
-		tension_magnitude = GAMMA * (perimeter - p0);
+		tension_magnitude = 1;// LAMBDA* (perimeter - p0);
+
+		double K = 1; // this is for debugging
+		double LAMBDA = 1; // this is for debugging
 
 		// I want to clear the old vectors each iteration of the loop. 
 		if (dAdr.size() > 0) { dAdr.clear(); }
 		if (dPdr.size() > 0) { dPdr.clear(); }
 		if (em1vec.size() > 0) { em1vec.clear(); }
 		if (ep1vec.size() > 0) { ep1vec.clear(); }
+		if (vertIDp1.size() > 0) { vertIDp1.clear(); }
+		if (vertID.size() > 0) { vertID.clear(); }
+		if (vertIDm1.size() > 0) { vertIDm1.clear(); }
 
 		for (int vindex = 0; vindex < vnum ; vindex++)
 		{
@@ -2220,36 +2226,45 @@ MatrixXf AGPerimTissue::calculateHessian(ofstream* errorfile)
 			
 			if (vindex == vnum - 1)
 			{
-				CWvec_pos = (*cwverts[0]).r;
+				// CWvec_pos = (*cwverts[0]).r;
+				cwedge = (*cwverts[vindex]).GetEdgeBetween(cwverts[0]);
+				CWedgevec = cwedge->GetVectorDifference(cwverts[vindex],cwverts[0]);
 				vertIDp1.push_back(vertex_index_map [ (*cwverts[0]).id ]);
+
 			}
 			else
 			{
-				CWvec_pos = (*cwverts[vindex + 1]).r;
+				// CWvec_pos = (*cwverts[vindex + 1]).r;
+				cwedge = (*cwverts[vindex]).GetEdgeBetween(cwverts[vindex + 1]);
+				CWedgevec = cwedge->GetVectorDifference(cwverts[vindex], cwverts[vindex + 1]);
 				vertIDp1.push_back(vertex_index_map [ (*cwverts[vindex + 1]).id ] );
 			}
 
-			vec_pos = (*cwverts[vindex]).r;
+			// vec_pos = (*cwverts[vindex]).r;
 			vertID.push_back(vertex_index_map [ (*cwverts[vindex]).id ]);
 
 			if (vindex == 0)
 			{
-				CCWvec_pos = (*cwverts[vnum - 1]).r;
+				// CCWvec_pos = (*cwverts[vnum - 1]).r;
+				ccwedge = (*cwverts[vindex]).GetEdgeBetween(cwverts[vnum - 1]);
+				CCWedgevec = ccwedge->GetVectorDifference(cwverts[vnum - 1], cwverts[vindex]);
 				vertIDm1.push_back(vertex_index_map [ (*cwverts[vnum - 1]).id ] );
 			}
 			else
 			{
-				CCWvec_pos = (*cwverts[vindex - 1]).r;
+				// CCWvec_pos = (*cwverts[vindex - 1]).r;
+				ccwedge = (*cwverts[vindex]).GetEdgeBetween(cwverts[vindex - 1]);
+				CCWedgevec = ccwedge->GetVectorDifference(cwverts[vindex - 1], cwverts[vindex]);
 				vertIDm1.push_back(vertex_index_map [ (*cwverts[vindex - 1]).id ]);
 			}
-			dAdrvec = (CWvec_pos - CCWvec_pos).Rotate(PI / 2) * 0.5;
+			 dAdrvec = (CWedgevec + CCWedgevec).Rotate(PI / 2) * 0.5;
 
 
-			CWedgevec = CWvec_pos - vec_pos;
-			CCWedgevec = vec_pos - CCWvec_pos;
+			//CWvec_pos - vec_pos;
+			//vec_pos - CCWvec_pos;
 
-			CWmag = CWedgevec.Magnitude();
-			CCWmag = CCWedgevec.Magnitude();
+			CWmag = cwedge->GetLength();
+			CCWmag = ccwedge->GetLength();
 
 			CWedgevec_UV = CWedgevec / CWmag;
 			CCWedgevec_UV = CCWedgevec / CCWmag;
@@ -2299,17 +2314,17 @@ MatrixXf AGPerimTissue::calculateHessian(ofstream* errorfile)
 				dAdridAdrj_percell(2 * j_id + 1, 2 * i_id) += K * dAdr[j].y * dAdr[i].x;
 
 				// the dPdri * dPdrj portion
-				dPdridPdrj_percell(2 * j_id, 2 * i_id) += GAMMA * dPdr[j].x * dPdr[i].x;
-				dPdridPdrj_percell(2 * j_id, 2 * i_id + 1) += GAMMA * dPdr[j].x * dPdr[i].y;
-				dPdridPdrj_percell(2 * j_id + 1, 2 * i_id + 1) += GAMMA * dPdr[j].y * dPdr[i].y;
-				dPdridPdrj_percell(2 * j_id + 1, 2 * i_id) += GAMMA * dPdr[j].y * dPdr[i].x;
+				dPdridPdrj_percell(2 * j_id, 2 * i_id) += LAMBDA * dPdr[j].x * dPdr[i].x;
+				dPdridPdrj_percell(2 * j_id, 2 * i_id + 1) += LAMBDA * dPdr[j].x * dPdr[i].y;
+				dPdridPdrj_percell(2 * j_id + 1, 2 * i_id + 1) += LAMBDA * dPdr[j].y * dPdr[i].y;
+				dPdridPdrj_percell(2 * j_id + 1, 2 * i_id) += LAMBDA * dPdr[j].y * dPdr[i].x;
 
 
 			}
 
 
 			// the second order derivatives section
-
+			*errorfile << "indices: " << jm1_id << " " << j_id << " " << jp1_id << endl;
 			// first the area portion - these only act on cases where j is not equal to i and off-diagonal components
 			d2Adridrj_percell(2 * jm1_id, 2 * j_id + 1) -= 0.5 * cell_pressure;
 			d2Adridrj_percell(2 * jm1_id + 1, 2 * j_id) += 0.5 * cell_pressure;
@@ -2318,21 +2333,21 @@ MatrixXf AGPerimTissue::calculateHessian(ofstream* errorfile)
 
 			// perimeter portion - where i = j
 			d2Pdridrj_percell(2 * j_id, 2 * j_id) += tension_magnitude * (1 / em1vec[j].Magnitude() + 1 / ep1vec[j].Magnitude() - pow(em1vec[j].x, 2) / pow(em1vec[j].Magnitude(), 3) - pow(ep1vec[j].x, 2) / pow(ep1vec[j].Magnitude(), 3));
-			d2Pdridrj_percell(2 * j_id, 2 * j_id + 1) += tension_magnitude * ((em1vec[j].x * em1vec[j].y) / pow(em1vec[j].Magnitude(), 3) + (ep1vec[j].x * ep1vec[j].y) / pow(ep1vec[j].Magnitude(), 3));
+			d2Pdridrj_percell(2 * j_id, 2 * j_id + 1) -= tension_magnitude * ((em1vec[j].x * em1vec[j].y) / pow(em1vec[j].Magnitude(), 3) + (ep1vec[j].x * ep1vec[j].y) / pow(ep1vec[j].Magnitude(), 3));
 			d2Pdridrj_percell(2 * j_id + 1, 2 * j_id + 1) += tension_magnitude * (1 / em1vec[j].Magnitude() + 1 / ep1vec[j].Magnitude() - pow(em1vec[j].y, 2) / pow(em1vec[j].Magnitude(), 3) - pow(ep1vec[j].y, 2) / pow(ep1vec[j].Magnitude(), 3));
-			d2Pdridrj_percell(2 * j_id + 1, 2 * j_id) += tension_magnitude * ((em1vec[j].x * em1vec[j].y) / pow(em1vec[j].Magnitude(), 3) + (ep1vec[j].x * ep1vec[j].y) / pow(ep1vec[j].Magnitude(), 3));
+			d2Pdridrj_percell(2 * j_id + 1, 2 * j_id) -= tension_magnitude * ((em1vec[j].x * em1vec[j].y) / pow(em1vec[j].Magnitude(), 3) + (ep1vec[j].x * ep1vec[j].y) / pow(ep1vec[j].Magnitude(), 3));
 
 			// perimeter portion - where j = i-1
-			d2Pdridrj_percell(2 * jm1_id, 2 * i_id) -= tension_magnitude * (1 / em1vec[j].Magnitude() - pow(em1vec[j].x, 2) / pow(em1vec[j].Magnitude(), 3));
-			d2Pdridrj_percell(2 * jm1_id, 2 * i_id + 1) +=  tension_magnitude * ((em1vec[j].x * em1vec[j].y) / pow(em1vec[j].Magnitude(), 3));
-			d2Pdridrj_percell(2 * jm1_id + 1, 2 * i_id + 1) -= tension_magnitude * (1 / em1vec[j].Magnitude() - pow(em1vec[j].y, 2) / pow(em1vec[j].Magnitude(), 3));
-			d2Pdridrj_percell(2 * jm1_id + 1, 2 * i_id) += tension_magnitude * ((em1vec[j].x * em1vec[j].y) / pow(em1vec[j].Magnitude(), 3));
+			d2Pdridrj_percell(2 * jm1_id, 2 * j_id) -= tension_magnitude * (1 / em1vec[j].Magnitude() - pow(em1vec[j].x, 2) / pow(em1vec[j].Magnitude(), 3));
+			d2Pdridrj_percell(2 * jm1_id, 2 * j_id + 1) +=  tension_magnitude * ((em1vec[j].x * em1vec[j].y) / pow(em1vec[j].Magnitude(), 3));
+			d2Pdridrj_percell(2 * jm1_id + 1, 2 * j_id + 1) -= tension_magnitude * (1 / em1vec[j].Magnitude() - pow(em1vec[j].y, 2) / pow(em1vec[j].Magnitude(), 3));
+			d2Pdridrj_percell(2 * jm1_id + 1, 2 * j_id) += tension_magnitude * ((em1vec[j].x * em1vec[j].y) / pow(em1vec[j].Magnitude(), 3));
 
 			// perimeter portion - where j = i+1
-			d2Pdridrj_percell(2 * jp1_id, 2 * i_id) += tension_magnitude * (1 / ep1vec[j].Magnitude() - pow(ep1vec[j].x, 2) / pow(ep1vec[j].Magnitude(), 3));
-			d2Pdridrj_percell(2 * jp1_id, 2 * i_id + 1) -= tension_magnitude * ((ep1vec[j].x * ep1vec[j].y) / pow(ep1vec[j].Magnitude(), 3));
-			d2Pdridrj_percell(2 * jp1_id + 1, 2 * i_id + 1) += tension_magnitude * (1 / ep1vec[j].Magnitude() - pow(ep1vec[j].y, 2) / pow(ep1vec[j].Magnitude(), 3));
-			d2Pdridrj_percell(2 * jp1_id + 1, 2 * i_id) -= tension_magnitude * ((ep1vec[j].x * ep1vec[j].y) / pow(ep1vec[j].Magnitude(), 3));
+			d2Pdridrj_percell(2 * jp1_id, 2 * j_id) -= tension_magnitude * (1 / ep1vec[j].Magnitude() - pow(ep1vec[j].x, 2) / pow(ep1vec[j].Magnitude(), 3));
+			d2Pdridrj_percell(2 * jp1_id, 2 * j_id + 1) += tension_magnitude * ((ep1vec[j].x * ep1vec[j].y) / pow(ep1vec[j].Magnitude(), 3));
+			d2Pdridrj_percell(2 * jp1_id + 1, 2 * j_id + 1) -= tension_magnitude * (1 / ep1vec[j].Magnitude() - pow(ep1vec[j].y, 2) / pow(ep1vec[j].Magnitude(), 3));
+			d2Pdridrj_percell(2 * jp1_id + 1, 2 * j_id) += tension_magnitude * ((ep1vec[j].x * ep1vec[j].y) / pow(ep1vec[j].Magnitude(), 3));
 
 		}
 
@@ -2357,15 +2372,18 @@ MatrixXf AGPerimTissue::calculateHessian(ofstream* errorfile)
 	Hessian = d2Adridrj + d2Pdridrj + dAdridAdrj + dPdridPdrj;
 	//*errorfile << std::setprecision(3) << "H = \n" << Hessian << "\n" << "\n" << endl;
 
-	*errorfile << std::setprecision(3) << "incidence at the end  = \n" << incidenceMatrix << "\n" << "\n" << endl;
+	*errorfile << std::setprecision(6) << "incidence at the end  = \n" << incidenceMatrix << "\n" << "\n" << endl;
 
-	*errorfile << std::setprecision(3) << "d2Adridrj = \n" << d2Adridrj << "\n" << "\n" << endl;
+	*errorfile << std::setprecision(6) << "d2Adridrj = \n" << d2Adridrj << "\n" << "\n" << endl;
 
-	*errorfile << std::setprecision(3) << "d2Pdridrj = \n" << d2Pdridrj << "\n" << "\n" << endl;
+	*errorfile << std::setprecision(6) << "d2Pdridrj = \n" << d2Pdridrj << "\n" << "\n" << endl;
 
-	*errorfile << std::setprecision(3) << "dPdridPdrj = \n" << dPdridPdrj << "\n" << "\n" << endl;
+	*errorfile << std::setprecision(6) << "dPdridPdrj = \n" << dPdridPdrj << "\n" << "\n" << endl;
 
-	*errorfile << std::setprecision(3) << "dAdridAdrj = \n" << dAdridAdrj << "\n" << "\n" << endl;
+	*errorfile << std::setprecision(6) << "dAdridAdrj = \n" << dAdridAdrj << "\n" << "\n" << endl;
+
+	//*errorfile << std::setprecision(6) << "dPdridPdrj - normed dAdridAdrj = \n" << dPdridPdrj - dAdridAdrj / 952.8286 << "\n" << "\n" << endl;
+	*errorfile << std::setprecision(6) << "Hessian = \n" << Hessian << "\n" << "\n" << endl;
 
 	return Hessian;
 }

@@ -32,5 +32,18 @@ public:
 	// additional functions
 	virtual double GetEnergy();
 	// calculates the individual energy for a cell in the area model
+
+	virtual double GetdPdLx(); // gets the derivative of the cell's area w.r.t LX
+
+	virtual double GetdPdLy(); // gets the derivative of the cell's area w.r.t. LY
+
+	virtual double Getd2PdLxdy(Vertex* v);
+	// gets the derivative of cell area with respect to gamma and a vertex y-coordinate (the derivative with respect to gamma and a vertex x-coordinate would be 0)
+
+	//virtual double GetdPdgammaForSimpleShearAlongXAxis();
+	// gets the derivative of the cells area w.r.t. gamma if gamma is the shear strength for a simple shear in the x-direction
+
+	//virtual double Getd2PdgammadyForSimpleShearAlongXAxis(Vertex* v);
+	// gets the derivative of the cells area w.r.t. gamma and a vertex y coordinate if gamma is the shear strength for a simple shear in the x-direction
 };
 #endif

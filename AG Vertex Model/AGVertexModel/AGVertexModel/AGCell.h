@@ -91,6 +91,15 @@ public:
 
 	virtual double GetdAdLy(); // gets the derivative of the cell's area w.r.t. LY
 
+	virtual double Getd2AdLxdy(Vertex* v); 
+	// gets the derivative of cell area with respect to gamma and a vertex y-coordinate (the derivative with respect to gamma and a vertex x-coordinate would be 0)
+
+	virtual double GetdAdgammaForSimpleShearAlongXAxis(); 
+	// gets the derivative of the cells area w.r.t. gamma if gamma is the shear strength for a simple shear in the x-direction
+
+	virtual double Getd2AdgammadyForSimpleShearAlongXAxis(Vertex* v);
+	// gets the derivative of the cells area w.r.t. gamma and a vertex y coordinate if gamma is the shear strength for a simple shear in the x-direction
+
 	virtual double GetCellStressXX(); // gets the xx component of the cell's average cauchy stress tensor
 
 	virtual double GetCellStressYY(); // gets the yy component of the cell's average cauchy stress tensor

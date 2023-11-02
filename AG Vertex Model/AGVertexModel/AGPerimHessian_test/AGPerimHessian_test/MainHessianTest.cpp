@@ -85,7 +85,7 @@ double LAMBDA = 0.1;
 double DEFORM_NUM = 0.001;
 double C4 = 1;
 int energyListSize = 50;
-double equilibriumtolerance = 0.0000000000001;
+double equilibriumtolerance = 0.000000001;
 
 //This is the generator for random numbers to use call "distribution(generator)" 
 mt19937_64 generator;

@@ -38,8 +38,11 @@ class AGPerimTissue : public AGTissue{
 	* It's important to mention, this class descends from AGTissue but is not really intended to grow.
 	*
 	* If one would like to make the box grow, it wouldn't be crazy difficult, but you'd have to modify
-	* ForceFunction and stress tensor calculation functions found in AGTissue
+	* ForceFunction and stress tensor calculation functions found in AGTissue. AM
 	*
+	* 11/2/2023: I haven't checked, but briefly looking at the forcefunction and stress function calculations,
+	* I actually think nothing has to be changed for the AGPerimTissue to grow. Do check if it behaves well if you
+	* want growth. AM
 	*/
 public:
 	//DATA
