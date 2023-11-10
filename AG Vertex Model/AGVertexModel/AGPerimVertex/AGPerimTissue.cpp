@@ -2324,7 +2324,7 @@ MatrixXf AGPerimTissue::calculateHessian(ofstream* errorfile)
 
 
 			// the second order derivatives section
-			*errorfile << "indices: " << jm1_id << " " << j_id << " " << jp1_id << endl;
+			//*errorfile << "indices: " << jm1_id << " " << j_id << " " << jp1_id << endl;
 			// first the area portion - these only act on cases where j is not equal to i and off-diagonal components
 			d2Adridrj_percell(2 * jm1_id, 2 * j_id + 1) -= 0.5 * cell_pressure;
 			d2Adridrj_percell(2 * jm1_id + 1, 2 * j_id) += 0.5 * cell_pressure;
@@ -2353,16 +2353,16 @@ MatrixXf AGPerimTissue::calculateHessian(ofstream* errorfile)
 
 
 		//*errorfile << "H = \n" << Hessian << "\n" << "\n" << endl;
-		*errorfile << "incidence after end of cell = \n" << cellincidence << "\n" << "\n" << endl;
-		incidenceMatrix = incidenceMatrix + cellincidence;
-		*errorfile << std::setprecision(3) << "d2Adridrj = \n" << d2Adridrj_percell << "\n" << "\n" << endl;
+		//*errorfile << "incidence after end of cell = \n" << cellincidence << "\n" << "\n" << endl;
+		//incidenceMatrix = incidenceMatrix + cellincidence;
+		//*errorfile << std::setprecision(3) << "d2Adridrj = \n" << d2Adridrj_percell << "\n" << "\n" << endl;
 
 
-		*errorfile << std::setprecision(3) << "d2Pdridrj = \n" << d2Pdridrj_percell << "\n" << "\n" << endl;
+		//*errorfile << std::setprecision(3) << "d2Pdridrj = \n" << d2Pdridrj_percell << "\n" << "\n" << endl;
 
-		*errorfile << std::setprecision(3) << "dPdridPdrj = \n" << dPdridPdrj_percell << "\n" << "\n" << endl;
+		//*errorfile << std::setprecision(3) << "dPdridPdrj = \n" << dPdridPdrj_percell << "\n" << "\n" << endl;
 
-		*errorfile << std::setprecision(3) << "dAdridAdrj = \n" << dAdridAdrj_percell << "\n" << "\n" << endl;
+		//*errorfile << std::setprecision(3) << "dAdridAdrj = \n" << dAdridAdrj_percell << "\n" << "\n" << endl;
 
 		d2Adridrj = d2Adridrj + d2Adridrj_percell;
 		d2Pdridrj = d2Pdridrj + d2Pdridrj_percell;
@@ -2372,18 +2372,18 @@ MatrixXf AGPerimTissue::calculateHessian(ofstream* errorfile)
 	Hessian = d2Adridrj + d2Pdridrj + dAdridAdrj + dPdridPdrj;
 	//*errorfile << std::setprecision(3) << "H = \n" << Hessian << "\n" << "\n" << endl;
 
-	*errorfile << std::setprecision(6) << "incidence at the end  = \n" << incidenceMatrix << "\n" << "\n" << endl;
+	//*errorfile << std::setprecision(6) << "incidence at the end  = \n" << incidenceMatrix << "\n" << "\n" << endl;
 
-	*errorfile << std::setprecision(6) << "d2Adridrj = \n" << d2Adridrj << "\n" << "\n" << endl;
+	//*errorfile << std::setprecision(6) << "d2Adridrj = \n" << d2Adridrj << "\n" << "\n" << endl;
 
-	*errorfile << std::setprecision(6) << "d2Pdridrj = \n" << d2Pdridrj << "\n" << "\n" << endl;
+	//*errorfile << std::setprecision(6) << "d2Pdridrj = \n" << d2Pdridrj << "\n" << "\n" << endl;
 
-	*errorfile << std::setprecision(6) << "dPdridPdrj = \n" << dPdridPdrj << "\n" << "\n" << endl;
+	//*errorfile << std::setprecision(6) << "dPdridPdrj = \n" << dPdridPdrj << "\n" << "\n" << endl;
 
-	*errorfile << std::setprecision(6) << "dAdridAdrj = \n" << dAdridAdrj << "\n" << "\n" << endl;
+	//*errorfile << std::setprecision(6) << "dAdridAdrj = \n" << dAdridAdrj << "\n" << "\n" << endl;
 
 	//*errorfile << std::setprecision(6) << "dPdridPdrj - normed dAdridAdrj = \n" << dPdridPdrj - dAdridAdrj / 952.8286 << "\n" << "\n" << endl;
-	*errorfile << std::setprecision(6) << "Hessian = \n" << Hessian << "\n" << "\n" << endl;
+	//*errorfile << std::setprecision(6) << "Hessian = \n" << Hessian << "\n" << "\n" << endl;
 
 	return Hessian;
 }

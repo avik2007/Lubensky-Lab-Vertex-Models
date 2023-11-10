@@ -492,7 +492,7 @@ double AGCell::GetdAdLx()
 		e1 = (*v1).GetEdgeBetween(v2);
 		clockwiseEdges.push_back(e1);
 		edgeVects.push_back((*e1).GetVectorDifference(v1, v2));
-		/*
+		
 		if ( ((*e1).xflag) )
 		{
 			if (xcrossingEdges < 1)
@@ -507,40 +507,11 @@ double AGCell::GetdAdLx()
 			}
 		
 		}
-		*/
+		
 
 	}
-	// everything below can be deleted if the commented snippet above works
-	for (int j = 0; j < vertexNum; j++)
-	{
-		e2 = clockwiseEdges[j];
-		vectDiff = (edgeVects[j]).y; 
-		if (xcrossingEdges == 0)
-		{
-			if ((*e2).xflag)
-			{
-				dAdLx += 0.5 * vectDiff;
-				xcrossingEdges++;
-			}
-		}
-		else if (xcrossingEdges == 1)
-		{
-			if ((*e2).xflag)
-			{
-				dAdLx += 0.5 * vectDiff;
-				xcrossingEdges++;
-			}
-			else
-			{
-				dAdLx += vectDiff;
-			}
-		}
-		else if (xcrossingEdges == 2)
-		{
-			j = vertexNum;
-		}
-	}
-	return abs(dAdLx);
+	
+	return abs(y2 - y1);
 }
 /*
 * double GetdAdLy();
@@ -570,13 +541,12 @@ double AGCell::GetdAdLy()
 		clockwiseEdges.push_back(e1);
 		edgeVects.push_back((*e1).GetVectorDifference(v1, v2));
 
-		/*
 		if ( ((*e1).yflag) )
 		{
 			if (ycrossingEdges < 1)
 			{
 				x1 = 0.5 * (v1->r.x + v2->r.x);
-				xcrossingEdges++;
+				ycrossingEdges++;
 			}
 			else
 			{
@@ -584,9 +554,10 @@ double AGCell::GetdAdLy()
 				i = vertexNum;
 			}
 
-		} if dAdLxdy works, then thi should work
-		*/
+		}// if dAdLxdy works, then this should work
+		
 	}
+	/*
 	// everything below can be deleted if the commented snippet above works
 	for (int j = 0; j < vertexNum; j++)
 	{
@@ -617,11 +588,12 @@ double AGCell::GetdAdLy()
 			j = vertexNum;
 		}
 	}
-	return abs(dAdLy);
+	*/
+	return abs(x2 - x1);
 }
 
 /*
-* double Getd2AdLxdy(Vertex v)
+* Vect Getd2AdLxdv(Vertex v)
 *
 */
 double AGCell::Getd2AdLxdy(Vertex* V)
@@ -639,7 +611,9 @@ double AGCell::Getd2AdLxdy(Vertex* V)
 	double vectDiff;
 	int firstEdgeContribution = 0;
 	int secondEdgeContribution = 0;
-
+	int total_contribution = 0;
+	double firstEdgey = 0;
+	double secondEdgey = 0;
 	clockwiseVertex.push_back(clockwiseVertex[0]);
 
 	for (int i = 0; i < vertexNum; i++)
@@ -651,6 +625,17 @@ double AGCell::Getd2AdLxdy(Vertex* V)
 		clockwiseEdges.push_back(e1);
 		edgeVects.push_back((*e1).GetVectorDifference(v1, v2));
 
+		if ((*e1).xflag)
+		{
+			if (xcrossingEdges < 1)
+			{
+				firstEdgey = (*e1).GetCenter().y;
+			}	
+			else
+			{
+				secondEdgey = (*e1).GetCenter().y;
+			}
+		}
 		if (((*e1).xflag) && id_match)
 		{
 			if (xcrossingEdges < 1)
@@ -665,7 +650,15 @@ double AGCell::Getd2AdLxdy(Vertex* V)
 			}
 		}
 	}
-	return 0.5 * LY * (firstEdgeContribution - secondEdgeContribution);
+	if (firstEdgey < secondEdgey)
+	{
+		firstEdgeContribution *= -1;
+	} 
+	else if (firstEdgey > secondEdgey)// take into the account the equal sign
+	{
+		secondEdgeContribution *= -1;
+	}
+	return 0.5 * (firstEdgeContribution + secondEdgeContribution);
 	
 }
 /*
@@ -691,6 +684,7 @@ double AGCell::Getd2AdgammadyForSimpleShearAlongXAxis(Vertex* V)
 * Calculates the xx component of the Cauchy stress tensor for a cell
 */
 double AGCell::GetCellStressXX()
+
 {
 	vector<Vertex*> clockwiseVertex = (*this).GetClockWiseVertices();
 	int vertexNum = clockwiseVertex.size();

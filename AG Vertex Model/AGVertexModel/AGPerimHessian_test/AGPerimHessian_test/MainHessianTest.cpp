@@ -31,6 +31,7 @@
 #include "AGConstants.h"
 #include "AGPerimConstants.h"
 #include "AGPerimTissue.h"
+#include "AGPerimCell.h"
 
 
 using namespace Eigen;
@@ -185,9 +186,34 @@ int main()
 	string OutputFileName4 = filename + "_H.txt";
 	eqfile.open(OutputFileName3);
 	tissue.WriteOutputDataAppend(&eqfile);
-	MatrixXf H = tissue.calculateHessian(&errorfile);
-	//hfile << asym << endl;
+
+	vector<Vertex*> verts;
+	int currID;
+	Vertex* currVertex;
+	//MatrixXf H = tissue.calculateHessian(&errorfile);
 	//double currentFreeEnergy = tissue.CalculateFreeEnergy();
+	for (list<Cell*>::iterator cit = tissue.cells.begin(); cit != tissue.cells.end(); cit++)
+	{
+		AGPerimCell* agit = dynamic_cast<AGPerimCell*>(*cit);
+		errorfile << "Cell " << (*(*cit)).id << endl;
+		errorfile << "dA / dLx = " << (*agit).GetdAdLx()  << "\n" << endl;
+		errorfile << "dP / dLx = " << (*agit).GetdPdLx() << "\n" << endl;
+		errorfile << "dA / dLy = " << (*agit).GetdAdLy() << "\n" << endl;
+		errorfile << "dP / dLy = " << (*agit).GetdPdLy() << "\n" << endl;
+		errorfile << " d2P / dLx2 = " << (*agit).Getd2PdLx2() << "\n" << endl;
+		errorfile << " d2P / dLy2 = " << (*agit).Getd2PdLy2() << "\n" << endl;
+
+		verts = (*agit).GetClockWiseVertices();
+		int vertexNum = verts.size();
+		
+		for (int i = 0; i < vertexNum; i++)
+		{
+			currVertex = (verts[i]);
+			currID = currVertex->id;
+			errorfile << "d2P / dLxdv = (" << (*agit).Getd2PdLxdv(currVertex).x << ", " << (*agit).Getd2PdLxdv(currVertex).y << "), Vertex id = " << (*verts[i]).id << endl;
+			//errorfile << "d2A / dLxdy = (" << (*agit).Getd2AdLxdy(currVertex)  << "), Vertex id = " << (*verts[i]).id << endl;
+		}
+	}
 	errorfile << tissue.currentFreeEnergy << endl;
 
 	///////******************************End***********************************************************************
