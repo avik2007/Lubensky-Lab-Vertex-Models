@@ -462,6 +462,118 @@ bool AGCell::IsCrossingY()
 	return result; 
 }
 /*
+* Vect GetdAdv(Vertex* v);
+* 
+*  Calculates the derivative of a cell's area with respect to one of its vertices
+* "Plus" and "Minus" in the variable names refers to counterclockwise and clockwise
+*/
+Vect AGCell::GetdAdv(Vertex* v)
+{
+	vector<Vertex*> cwverts;
+	int vnum, specvindex,specm1, specp1;
+	specm1 = 0;
+	specp1 = 0;
+	bool isvertexincell = false;
+	Vertex *vplus, *vminus;
+	Vect dAdv(0, 0);
+	Edge * eplus, *eminus;
+	Vect vTovplus, vminusTovplus;
+	cwverts = (*this).SavedInfoForEvolve_CWVerts;
+	vnum = cwverts.size();
+	
+	for (int vindex = 0; vindex < vnum; vindex++)
+	{
+		if ((*cwverts[vindex]).id == (*v).id)
+		{
+			specvindex = vindex;
+			if (vindex == 0)
+			{
+				specm1 = vnum - 1;
+				specp1 = 1;
+			} 
+			else if (vindex == vnum - 1)
+			{
+				specp1 = 0;
+				specm1 = vnum - 2;
+			}
+			else
+			{
+				specp1 = vindex + 1;
+				specm1 = vindex - 1;
+			}
+			isvertexincell = ((*cwverts[vindex]).id == (*v).id);
+		}
+	}
+	vplus = cwverts[specp1];
+	vminus = cwverts[specm1];
+	if (isvertexincell)
+	{
+		eplus = (*v).GetEdgeBetween(vplus);
+		eminus = (*v).GetEdgeBetween(vminus);
+		vTovplus = (*eplus).GetVectorDifference(v, vplus);
+		vminusTovplus = (*eminus).GetVectorDifference(vminus, v);
+		dAdv =  (vTovplus + vminusTovplus).Rotate(PI / 2) * 0.5;
+	}
+
+	return dAdv;
+}
+/*
+* Vect GetdPdv(Vertex* v);
+*
+*  Calculates the derivative of a cell's perimeter with respect to one of its vertices
+*/
+Vect AGCell::GetdPdv(Vertex* v)
+{
+	vector<Vertex*> cwverts;
+	int vnum, specvindex, specm1, specp1;
+	specm1 = 0;
+	specp1 = 0;
+	bool isvertexincell = false;
+	Vect dPdv(0, 0);
+	Vertex* vplus, * vminus;
+	Vect dAdv(0, 0);
+	Edge* eplus, * eminus;
+	Vect vTovplus, vminusTovplus;
+	cwverts = (*this).SavedInfoForEvolve_CWVerts;
+	vnum = cwverts.size();
+
+	for (int vindex = 0; vindex < vnum; vindex++)
+	{
+		if ((*cwverts[vindex]).id == (*v).id)
+		{
+			specvindex = vindex;
+			if (vindex == 0)
+			{
+				specm1 = vnum - 1;
+				specp1 = 1;
+			}
+			else if (vindex == vnum - 1)
+			{
+				specp1 = 0;
+				specm1 = vnum - 2;
+			}
+			else
+			{
+				specp1 = vindex + 1;
+				specm1 = vindex - 1;
+			}
+			isvertexincell = ((*cwverts[vindex]).id == (*v).id);
+		}
+	}
+	vplus = cwverts[specp1];
+	vminus = cwverts[specm1];
+	if (isvertexincell)
+	{
+		eplus = (*v).GetEdgeBetween(vplus);
+		eminus = (*v).GetEdgeBetween(vminus);
+		vTovplus = (*eplus).GetVectorDifference(v, vplus);
+		vminusTovplus = (*eminus).GetVectorDifference(vminus, v);
+		dPdv = vTovplus / vTovplus.Magnitude()*(-1) + vminusTovplus / vminusTovplus.Magnitude();
+	}
+
+	return dPdv;
+}
+/*
 * double GetdAdLx();
 *
 * Calculates dA/dLx for this cell
@@ -593,8 +705,9 @@ double AGCell::GetdAdLy()
 }
 
 /*
-* Vect Getd2AdLxdv(Vertex v)
+* double Getd2AdLxdy(Vertex v)
 *
+* Only returns y component because x component is always zero for a rectangular box
 */
 double AGCell::Getd2AdLxdy(Vertex* V)
 {

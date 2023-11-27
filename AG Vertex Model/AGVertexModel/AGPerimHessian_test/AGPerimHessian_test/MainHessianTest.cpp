@@ -20,6 +20,7 @@
 #include <cassert> 
 #include <stddef.h>
 #include <Eigen/Dense>
+#include <complex> 
 
 #include "CellClass.h"
 #include "EdgeClass.h"
@@ -195,6 +196,7 @@ int main()
 	for (list<Cell*>::iterator cit = tissue.cells.begin(); cit != tissue.cells.end(); cit++)
 	{
 		AGPerimCell* agit = dynamic_cast<AGPerimCell*>(*cit);
+		/*
 		errorfile << "Cell " << (*(*cit)).id << endl;
 		errorfile << "dA / dLx = " << (*agit).GetdAdLx()  << "\n" << endl;
 		errorfile << "dP / dLx = " << (*agit).GetdPdLx() << "\n" << endl;
@@ -202,7 +204,7 @@ int main()
 		errorfile << "dP / dLy = " << (*agit).GetdPdLy() << "\n" << endl;
 		errorfile << " d2P / dLx2 = " << (*agit).Getd2PdLx2() << "\n" << endl;
 		errorfile << " d2P / dLy2 = " << (*agit).Getd2PdLy2() << "\n" << endl;
-
+		*/
 		verts = (*agit).GetClockWiseVertices();
 		int vertexNum = verts.size();
 		
@@ -210,17 +212,67 @@ int main()
 		{
 			currVertex = (verts[i]);
 			currID = currVertex->id;
+			/*
 			errorfile << "d2P / dLxdv = (" << (*agit).Getd2PdLxdv(currVertex).x << ", " << (*agit).Getd2PdLxdv(currVertex).y << "), Vertex id = " << (*verts[i]).id << endl;
-			//errorfile << "d2A / dLxdy = (" << (*agit).Getd2AdLxdy(currVertex)  << "), Vertex id = " << (*verts[i]).id << endl;
+			errorfile << "d2A / dLxdy = (" << (*agit).Getd2AdLxdy(currVertex)  << "), Vertex id = " << (*verts[i]).id << endl;
+			*/
 		}
+		
 	}
-	errorfile << tissue.currentFreeEnergy << endl;
+	//errorfile << tissue.currentFreeEnergy << endl;
+	MatrixXf hessian(2 * tissue.cells.size(), 2 * tissue.cells.size());
+	MatrixXf hessian_check(2 * tissue.cells.size(), 2 * tissue.cells.size());
+	hessian = tissue.calculateHessian(&errorfile);
+	hessian_check = hessian - hessian.transpose();
+	errorfile << "hessian = " << (hessian) << "\n \n \n \n ";
+	errorfile << "hessian symmetry check = " << hessian_check << "\n \n \n \n ";
+	errorfile << "shear modulus = " << (tissue).calculateShearModulusWithEigenDecomposition(&errorfile) << endl;;
+	/*
+	MatrixXf a(5,5);
+	a.setZero(5,5);
+	a(0, 0) = 1;
+	a(0, 1) = 1;
+	a(0, 2) = 1;
+	a(0, 3) = 1;
+	a(0, 4) = 1;
+	a(1, 1) = 2;
+	a(1, 2) = 1;
+	a(2, 1) = 1;
+	a(2, 2) = 3;
+	a(3, 1) = 1;
+	a(3, 3) = 4;
+	a(4, 4) = 5;
+	a(4, 2) = 10;
 
+	EigenSolver<MatrixXf> eigensolver(a);
+	if (eigensolver.info() != Success) abort();
+	errorfile << a << endl;
+	errorfile << "The eigenvalues of A are:\n" << eigensolver.eigenvalues() << "\n \n \n \n \n \n " << endl;
+
+	errorfile << "Eigenvalue 0 = " << real(eigensolver.eigenvalues()[0]) << "\n \n \n \n \n \n \n ";
+	errorfile << "There are " << eigensolver.eigenvalues().size() << " eigenvalues." << endl;
+	errorfile << "Here's a matrix whose columns are eigenvectors of A \n"
+		<< "corresponding to these eigenvalues:\n"
+		<< eigensolver.eigenvectors()  << endl;
+	errorfile << a.inverse() << "\n \n \n " << endl;
+	errorfile << a * a.inverse() << endl;
+	*/
+	/*
+	MatrixXd ones = MatrixXd::Random(3, 3);
+	EigenSolver<MatrixXd> es(ones);
+	errorfile << ones << "\n \n \n ";
+	errorfile << "The first eigenvector of the 3x3 matrix of ones is:"
+		<< endl << es.eigenvectors().col(0) << endl;
+	errorfile << "Eigenvectors = " << es.eigenvectors() << endl;
+	errorfile << "Eigenvalues  = " << es.eigenvalues() << endl;
+	*/
 	///////******************************End***********************************************************************
 	///////**********************************************************************************************************
 	endtime = std::chrono::system_clock::now();
 	std::chrono::duration<double> elapsed_seconds = endtime - starttime;
 	cout << "ELAPSED TIME: " << elapsed_seconds.count() / 60.0 << "  min\n";
+
+	
 
 	return 0;
 }

@@ -607,6 +607,41 @@ double AGTissue::CountNumberOfYCrossingEdges()
 	return numYCrossingEdges;
 }
 
+/*
+* vector<Cell*> GetYCrossingCellVector()
+* 
+*  finds a list of cells that cross the top boundary
+*/
+vector<Cell*> AGTissue::GetYCrossingCellVector()
+{
+	vector<Cell*> yboundarycrossingcells;
+	for (list<Cell*>::iterator cit = cells.begin(); cit != cells.end(); cit++)
+	{
+		if ((*(*cit)).GetYFlag())
+		{
+			yboundarycrossingcells.push_back((*cit));
+		}
+	}
+	return yboundarycrossingcells;
+}
+
+/*
+* vector<Cell*> GetXCrossingCellVector()
+*
+*  finds a list of cells that cross the right boundary
+*/
+vector<Cell*> AGTissue::GetXCrossingCellVector()
+{
+	vector<Cell*> xboundarycrossingcells;
+	for (list<Cell*>::iterator cit = cells.begin(); cit != cells.end(); cit++)
+	{
+		if ((*(*cit)).GetXFlag())
+		{
+			xboundarycrossingcells.push_back((*cit));
+		}
+	}
+	return xboundarycrossingcells;
+}
 	//*********************************************************************************************************************
 	//******************* FUNCTIONS FOR PREFORMING TOPOLOGICAL CHANGES (Mostly Overloads) *********************************
 	//*********************************************************************************************************************
@@ -1900,3 +1935,4 @@ double AGTissue::HelperResolveVertices_CheckStability(Vertex* vert, Edge* edge1,
 	stability = (*Force).Magnitude() - ForceNewEdge.Magnitude();
 	return stability;
 }
+

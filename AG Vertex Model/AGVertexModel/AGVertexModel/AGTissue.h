@@ -71,6 +71,12 @@ public:
 	// Finds the number of Y - crossing edges
 	double CountNumberOfYCrossingEdges();
 
+	//Get vector of X - crossing edges
+	vector<Cell*> GetXCrossingCellVector();
+
+	//Get vector of Y - crossing edges
+	vector<Cell*> GetYCrossingCellVector();
+	
 	//*********************************************************************************************************************
 	//******************* FUNCTIONS FOR PREFORMING TOPOLOGICAL CHANGES (Mostly Overloads) *********************************
 	//*********************************************************************************************************************

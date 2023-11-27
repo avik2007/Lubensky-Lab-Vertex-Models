@@ -117,7 +117,7 @@ double AGPerimCell::Getd2PdLx2()
 		{
 			angle = (*e1).GetAngle(v1);
 			directionsin = abs(sin(angle));
-			d2PdLx2 += 1 / (*e1).GetLength() * pow(directionsin,2);
+			d2PdLx2 += 1 / (*e1).GetLength() * pow(directionsin,2); 
 			if (xcrossingEdges < 1)
 			{
 				xcrossingEdges++;
@@ -286,7 +286,10 @@ Vect AGPerimCell::Getd2PdLxdv(Vertex* V)
 	Vect d2PdLxdv(d2PdLxdx, d2PdLxdy);
 	return d2PdLxdv;
 }
-
+double AGPerimCell::Getd2Pdgamma2ForSimpleShearAlongXAxis()
+{
+	return Getd2PdLx2() * LY * LY;
+}
 double AGPerimCell::GetdPdgammaForSimpleShearAlongXAxis()
 {
 	return GetdPdLx() * LY;

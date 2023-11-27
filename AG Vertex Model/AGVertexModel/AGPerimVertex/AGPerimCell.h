@@ -43,10 +43,13 @@ public:
 	virtual double Getd2PdLy2(); // gets the second derivativ of the cell's perimeter w.r.t. LY
 
 	virtual Vect Getd2PdLxdv(Vertex* v);
-	// gets the derivative of cell area with respect to gamma and a vertex y-coordinate (the derivative with respect to gamma and a vertex x-coordinate would be 0)
+	// gets the derivative of cell perimeter with respect to gamma and a vertex y-coordinate (the derivative with respect to gamma and a vertex x-coordinate would be 0)
 
 	virtual double GetdPdgammaForSimpleShearAlongXAxis();
 	// gets the derivative of the cells area w.r.t. gamma if gamma is the shear strength for a simple shear in the x-direction
+
+	virtual double Getd2Pdgamma2ForSimpleShearAlongXAxis();
+	//gets the second derivative of the cell perimeter with respect to gamma for simple shear along the x-axis
 
 	virtual Vect Getd2PdgammadvForSimpleShearAlongXAxis(Vertex* v);
 	// gets the derivative of the cells area w.r.t. gamma and a vertex y coordinate if gamma is the shear strength for a simple shear in the x-direction

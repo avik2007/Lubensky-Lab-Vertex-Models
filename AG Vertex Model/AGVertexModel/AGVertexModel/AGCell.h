@@ -87,6 +87,10 @@ public:
 
 	bool IsCrossingY(); // checks whether a cell is crossing the Y-boundary
 
+	virtual Vect GetdAdv(Vertex* v); // gives the vector corresponding to the derivative of a cell area with respect to a vertex 
+
+	virtual Vect GetdPdv(Vertex* v); // gives the vector corresponding to the derivative of a cell perimeter with respect to a vertex 
+
 	virtual double GetdAdLx(); // gets the derivative of the cell's area w.r.t LX
 
 	virtual double GetdAdLy(); // gets the derivative of the cell's area w.r.t. LY

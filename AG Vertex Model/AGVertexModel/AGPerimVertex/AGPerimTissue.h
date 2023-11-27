@@ -17,6 +17,7 @@ class Vect;
 #include <vector>
 #include <unordered_map>
 #include <stddef.h>
+#include <complex> 
 #include "Eigen/Dense"
 
 #include "VectClass.h"
@@ -116,13 +117,16 @@ public:
 	virtual Cell* CreateCell(int typ, vector<Edge*> edgs, string potential, double tcjstrength, double thetaan, double anstrenght);
 
 	//! This is the helper function that actually do mitosis on cells.
-	virtual void HelperMitosis(Cell* parentcell, double divisionangle);
+	virtual void HelperMitosis(Cell* parentcell, double divisionangle);	
 
-	//Calculates the Hessian of the tissue
-	virtual Eigen::MatrixXf getHessian(ofstream* errorfile);
-
-	// 10/25/2023 - I think there is a smarter way to write this function that makes it easier to debug and faster to run
+	// calculates the Hessian of the model
 	virtual Eigen::MatrixXf calculateHessian(ofstream* errorfile);
+
+	// calculates the shear modulus of the tissue by inverting a matrix
+	virtual double CalculateShearModulusWithMatrixInversion(ofstream* errorfile);
+
+	// calculates the shear modulus of the tissue using eigendecomposition of hessian
+	virtual double calculateShearModulusWithEigenDecomposition(ofstream* errorfile);
 };
 
 double listAverage(list<double> inputList);
