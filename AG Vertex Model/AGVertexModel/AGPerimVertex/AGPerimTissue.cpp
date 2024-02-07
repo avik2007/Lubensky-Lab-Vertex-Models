@@ -659,9 +659,9 @@ void AGPerimTissue::Evolve(double interval, double *stepsize, ofstream* errorfil
 					break;
 					// This is a step I take so that the adaptive time stepper doesn't keep pushing the stepsize all the way down the machine precision 
 				}
-				*errorfile << "Current FE \t Stepsize\t Energy Change \t Polydispersity \n";
-				*errorfile << std::setprecision(outputPrecision) << currentFreeEnergy  << "\t" << *stepsize << "\t" << currentFreeEnergy - pastFreeEnergy << "\t" << (*this).calculatePolydispersity() << endl;
-				*errorfile << "Energy Increase - change timestep and redo step\n";
+				//*errorfile << "Current FE \t Stepsize\t Energy Change \t Polydispersity \n";
+				//*errorfile << std::setprecision(outputPrecision) << currentFreeEnergy  << "\t" << *stepsize << "\t" << currentFreeEnergy - pastFreeEnergy << "\t" << (*this).calculatePolydispersity() << endl;
+				//*errorfile << "Energy Increase - change timestep and redo step\n";
 				*errorfile << "\n";
 				//*errorfile << "--------------------------------------------------------------------------\n";
 				
@@ -705,7 +705,7 @@ void AGPerimTissue::Evolve(double interval, double *stepsize, ofstream* errorfil
 		perimEnergy = (*this).CalculatePerimeterEnergy();
 		//energy_wo_quartic = perimEnergy + quadraticPressureEnergy;
 		
-		*errorfile << std::setprecision(outputPrecision) << CURRENTTIME << "\t" << currentFreeEnergy << "\t" << energySlope << "\t"<< (*this).calculatePolydispersity() << endl;
+		//*errorfile << std::setprecision(outputPrecision) << CURRENTTIME << "\t" << currentFreeEnergy << "\t" << energySlope << "\t"<< (*this).calculatePolydispersity() << endl;
 
 		//if ((abs((currentFreeEnergy - pastFreeEnergy) / ((CURRENTTIME - previoustime)*(cells.size() * K * A0))) < equilibriumtolerance) && currentFreeEnergy - pastFreeEnergy < 0)
 
@@ -2110,15 +2110,15 @@ MatrixXf AGPerimTissue::calculateHessian(ofstream* errorfile)
 	Hessian = d2Adridrj + d2Pdridrj + dAdridAdrj + dPdridPdrj;
 	//*errorfile << std::setprecision(3) << "H = \n" << Hessian << "\n" << "\n" << endl;
 
-	//*errorfile << std::setprecision(6) << "incidence at the end  = \n" << incidenceMatrix << "\n" << "\n" << endl;
+	*errorfile << std::setprecision(6) << "incidence at the end  = \n" << incidenceMatrix << "\n" << "\n" << endl;
 
-	//*errorfile << std::setprecision(6) << "d2Adridrj = \n" << d2Adridrj << "\n" << "\n" << endl;
+	*errorfile << std::setprecision(6) << "d2Adridrj = \n" << d2Adridrj << "\n" << "\n" << endl;
 
-	//*errorfile << std::setprecision(6) << "d2Pdridrj = \n" << d2Pdridrj << "\n" << "\n" << endl;
+	*errorfile << std::setprecision(6) << "d2Pdridrj = \n" << d2Pdridrj << "\n" << "\n" << endl;
 
-	//*errorfile << std::setprecision(6) << "dPdridPdrj = \n" << dPdridPdrj << "\n" << "\n" << endl;
+	*errorfile << std::setprecision(6) << "dPdridPdrj = \n" << dPdridPdrj << "\n" << "\n" << endl;
 
-	//*errorfile << std::setprecision(6) << "dAdridAdrj = \n" << dAdridAdrj << "\n" << "\n" << endl;
+	*errorfile << std::setprecision(6) << "dAdridAdrj = \n" << dAdridAdrj << "\n" << "\n" << endl;
 
 	//*errorfile << std::setprecision(6) << "dPdridPdrj - normed dAdridAdrj = \n" << dPdridPdrj - dAdridAdrj / 952.8286 << "\n" << "\n" << endl;
 	//*errorfile << std::setprecision(6) << "Hessian = \n" << Hessian << "\n" << "\n" << endl;
@@ -2149,6 +2149,8 @@ double AGPerimTissue::calculateShearModulusWithEigenDecomposition(ofstream* erro
 	SelfAdjointEigenSolver<MatrixXf> hessianeigen(Hessian);
 	//MatrixXf hessianeigenvalues(2 * numofvertices, 1);
 	//hessianeigenvalues = eigensolver.eigenvalues();
+
+	FullPivLU<MatrixXf> lu_decomp(Hessian);
 
 	//MatrixXf hessianeigenvectors(2 * numofvertices, 2 * numofvertices);
 	//hessianeigenvectors = eigensolver.eigenvectors();
@@ -2232,56 +2234,55 @@ double AGPerimTissue::calculateShearModulusWithEigenDecomposition(ofstream* erro
 		}
 	}
 	d2Edgamma2_mat(0, 0) = d2Edgamma2;
-	// commented code is for calculating shear modulus with a matrix inversion of the Hessian.
-	//shearModulus = 1 / numofvertices * (d2Edgamma2_mat - BoundaryVector.transpose() * Hessian.inverse() * BoundaryVector);
-	/*
-	SelfAdjointEigenSolver<MatrixXf> eigensolver(Hessian);
-	if (eigensolver.info() != Eigen::Success) abort();
-
-	std::cout << "The eigenvalues of A are:\n" << eigensolver.eigenvalues() << std::endl;
-	std::cout << "Here's a matrix whose columns are eigenvectors of A \n"
-		<< "corresponding to these eigenvalues:\n"
-		<< eigensolver.eigenvectors() << std::endl;
-	*/
-
-	//*errorfile << "Boundary Vector = " << BoundaryVector << "\n \n \n \n " << endl;
-	//*errorfile << "Hessian = " << Hessian << "\n \n \n \n " << endl;
-	//*errorfile << "Hessian det = " << Hessian.determinant() << "\n \n \n \n " << endl;
-	//*errorfile << "Hessian times its Inverse = " << Hessian * Hessian.inverse() << "\n \n \n \n " << endl;
-	//*errorfile << shearModulus << "\n \n \n \n" << endl;
-	//*errorfile << d2Edgamma2_mat << "\n \n \n \n" << endl;
+	
 
 	//following code is for calculating the shear modulus with Manning and Merkel's method (drops zero modes)
 	* errorfile << "\n \n \n \n Boundary Vector = " << BoundaryVector << "\n \n \n \n " << endl;
 	double nonaffine_shearportion = 0;
+	//double dispx, dispy, rot;
 	*errorfile << "Number of eigenvalues = " << hessianeigen.eigenvalues().size() << "\n \n \n" << endl;
 	for (int index = 0; index < hessianeigen.eigenvalues().size(); index++)
 	{
 		int jndex = 0;
-		//currenteigenvalue = real(hessianeigen.eigenvalues()(index, 0));
-		*errorfile << hessianeigen.eigenvalues()(index, 0) << " and the vect: \n";
+		//dispx = 0;
+		//dispy = 0;
+		//rot = 0;
+		currenteigenvalue = real(hessianeigen.eigenvalues()(index, 0));
+		*errorfile << hessianeigen.eigenvalues()(index, 0) << " , eigenvalue " << index << " and the vect : \n";
+		// debug code for eigenvalues
 		for (list<Vertex*>::iterator vit = vertices.begin(); vit != vertices.end(); vit++)
 		{
 			*errorfile << "Vertex " << (*(*vit)).id << "x " << hessianeigen.eigenvectors().col(index)(jndex) << " Bvx " << BoundaryVector(jndex, 0) << endl;
+			//dispx += hessianeigen.eigenvectors().col(index)(jndex) / hessianeigen.eigenvalues().size();
+			//rot -= (*(*vit)).r.y * hessianeigen.eigenvectors().col(index)(jndex) / hessianeigen.eigenvalues().size();
 			jndex++; 
 			*errorfile << "Vertex " << (*(*vit)).id << "y " << hessianeigen.eigenvectors().col(index)(jndex) << " Bvy " << BoundaryVector(jndex, 0) << endl;
+			//dispy += hessianeigen.eigenvectors().col(index)(jndex) / hessianeigen.eigenvalues().size();
+			//rot += (*(*vit)).r.x * hessianeigen.eigenvectors().col(index)(jndex) / hessianeigen.eigenvalues().size();
 			jndex++;
 		}
+		//errorfile << " \n \n COM displacement =(" << dispx << ", " << dispy << ")      ROTATION = " << rot << "\n \n" << endl;
 		
-		if (hessianeigen.eigenvalues()(index, 0) > 1e-10) // IS THIS A GOOD VALUE FOR ZERO TOLERANCE?
+		if ((index > lu_decomp.rank() - 1)) // HOW TO IDENTIFY ZERO MODES?
 		{
 			nonaffine_shearportion += 1 / hessianeigen.eigenvalues()(index, 0) * pow((hessianeigen.eigenvectors().col(index).transpose() * BoundaryVector)(0, 0), 2);
 			//nonaffine_shearportion = hessianeigenvalues(index, 0);
 		}
 	}
+	*errorfile << "\n \n \n The column of the Hessian is the number of vertices" << " - " << hessianeigen.eigenvalues().size() - lu_decomp.rank() << endl;
+	*errorfile << "Here is a matrix whose columns form a basis of the null-space of A:\n"
+		<< lu_decomp.kernel() <<"\n \n" << endl;
 	//*errorfile << "Eigenvalues " << hessianeigenvalues << endl;
-	shearmodulus = 1 / (K * A0 * A0 * numofcells) * (d2Edgamma2 - nonaffine_shearportion);//numofcells / (K * pow((LX * LY),2)) * (d2Edgamma2 - nonaffine_shearportion);
+	shearmodulus = 1 / (K * A0 * A0 * numofcells * LX * LY) * (d2Edgamma2 - nonaffine_shearportion);//numofcells / (K * pow((LX * LY),2)) * (d2Edgamma2 - nonaffine_shearportion);
+	//shearmodulus = 1 / (K * A0 * LX * LY) * (d2Edgamma2 - nonaffine_shearportion);
 	return shearmodulus;
 
 }
 
 /*
 * double CalculateShearModulusWithMatrixInversion(errorfile)
+* 
+*  NOT USABLE CURRENTLY (11/30/2023)
 *
 * here, I will implement the shear modulus calculation with the theory developed in Dapeng (Max) Bi's Multicellular Rosette's paper
 * (Multicellular Rosettes Drive Fluid-Solid Transition in Epithelial Tissue)

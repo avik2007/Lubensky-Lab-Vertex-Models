@@ -155,9 +155,9 @@ double AGPerimCell::GetdPdLy()
 	{
 		v1 = clockwiseVertex[i];
 		v2 = clockwiseVertex[i + 1];
-e1 = (*v1).GetEdgeBetween(v2);
-clockwiseEdges.push_back(e1);
-edgeVects.push_back((*e1).GetVectorDifference(v1, v2));
+		e1 = (*v1).GetEdgeBetween(v2);
+		clockwiseEdges.push_back(e1);
+		edgeVects.push_back((*e1).GetVectorDifference(v1, v2));
 
 if (((*e1).yflag))
 {
@@ -267,10 +267,10 @@ Vect AGPerimCell::Getd2PdLxdv(Vertex* V)
 
 			if (((*e1).xflag))
 			{
-				directioncos = v.x;
-				directionsin = v.y;
-				d2PdLxdy -= 1 / (*e1).GetLength() * (1 + directioncos * directionsin);
-				d2PdLxdx -= 1 / (*e1).GetLength() * (1 + directioncos * directioncos);
+				directioncos = abs(v.x); // these absolute values are part of a convention needed to get this derivative right I believe
+				directionsin = abs(v.y);
+				d2PdLxdy += 1 / (*e1).GetLength() * (-1* directioncos * directionsin );
+				d2PdLxdx += 1 / (*e1).GetLength() * (directioncos * directioncos); //(1 - directionsin * directionsin ) ;
 				if (xcrossingEdges < 1)
 				{
 					xcrossingEdges++;

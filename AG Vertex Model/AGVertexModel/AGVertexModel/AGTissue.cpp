@@ -1346,7 +1346,7 @@ void AGTissue::Evolve(double interval, double *stepsize, ofstream* errorfile)
 		pastFreeEnergy = currentFreeEnergy;
 		currentFreeEnergy = (*this).CalculateFreeEnergy();	
 
-		*errorfile << "Current Time \t" << CURRENTTIME << "\tEnergy\t" << currentFreeEnergy << "\tFractional E Change \t" << (currentFreeEnergy - pastFreeEnergy) / pastFreeEnergy << "\n";
+		//*errorfile << "Current Time \t" << CURRENTTIME << "\tEnergy\t" << currentFreeEnergy << "\tFractional E Change \t" << (currentFreeEnergy - pastFreeEnergy) / pastFreeEnergy << "\n";
 		/*
 		if (CURRENTTIME > 0.348 && CURRENTTIME < 0.350)
 		{

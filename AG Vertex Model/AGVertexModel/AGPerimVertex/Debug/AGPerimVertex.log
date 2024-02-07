@@ -1,2 +1,9 @@
-﻿  MainAGPerim.cpp
-  AGPerimVertex.vcxproj -> C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\Debug\AGPerimVertex.exe
+﻿  AGPerimCell.cpp
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGPerimVertex\AGPerimTissue.h(20,10): fatal error C1083: Cannot open include file: 'Eigen/Dense': No such file or directory
+  AGPerimEdge.cpp
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGPerimVertex\AGPerimTissue.h(20,10): fatal error C1083: Cannot open include file: 'Eigen/Dense': No such file or directory
+  AGPerimTissue.cpp
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGPerimVertex\AGPerimTissue.cpp(17,10): fatal error C1083: Cannot open include file: 'Eigen/Dense': No such file or directory
+  MainAGPerim.cpp
+C:\Users\abmondal\Documents\Lubensky-Lab-Vertex-Models\AG Vertex Model\AGVertexModel\AGPerimVertex\AGPerimTissue.h(20,10): fatal error C1083: Cannot open include file: 'Eigen/Dense': No such file or directory
+  Generating Code...

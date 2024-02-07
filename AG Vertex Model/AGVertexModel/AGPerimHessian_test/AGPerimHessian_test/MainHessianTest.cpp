@@ -112,8 +112,9 @@ AGPerimTissue tissue;
 int main()
 {
 	//Path to the folder that your initial files are in 
-	string PathName = "C:\\Users\\abmondal\\Documents\\Lubensky-Lab-Vertex-Models\\MATLAB Data Folder\\";
 	//string PathName = "C:\\Users\\abmondal\\Desktop\\";
+	string PathName = "C:\\Users\\abmondal\\Documents\\Lubensky-Lab-Vertex-Models\\MATLAB Data Folder\\";
+
 
 	cout << "Enter name of imput file: ";
 	cin >> InputFileName;
@@ -165,7 +166,7 @@ int main()
 
 
 	double currentFreeEnergy = tissue.CalculateFreeEnergy();
-	errorfile << currentFreeEnergy << endl;
+	errorfile << "Current Free Energy" << currentFreeEnergy << endl;
 
 	double polydispersity = tissue.calculatePolydispersity();
 	errorfile << "Polydispersity = " << polydispersity << endl;
@@ -191,6 +192,8 @@ int main()
 	vector<Vertex*> verts;
 	int currID;
 	Vertex* currVertex;
+
+ 
 	//MatrixXf H = tissue.calculateHessian(&errorfile);
 	//double currentFreeEnergy = tissue.CalculateFreeEnergy();
 	for (list<Cell*>::iterator cit = tissue.cells.begin(); cit != tissue.cells.end(); cit++)
@@ -212,21 +215,22 @@ int main()
 		{
 			currVertex = (verts[i]);
 			currID = currVertex->id;
-			/*
+			
 			errorfile << "d2P / dLxdv = (" << (*agit).Getd2PdLxdv(currVertex).x << ", " << (*agit).Getd2PdLxdv(currVertex).y << "), Vertex id = " << (*verts[i]).id << endl;
 			errorfile << "d2A / dLxdy = (" << (*agit).Getd2AdLxdy(currVertex)  << "), Vertex id = " << (*verts[i]).id << endl;
-			*/
+			
 		}
 		
 	}
 	//errorfile << tissue.currentFreeEnergy << endl;
 	MatrixXf hessian(2 * tissue.cells.size(), 2 * tissue.cells.size());
 	MatrixXf hessian_check(2 * tissue.cells.size(), 2 * tissue.cells.size());
-	hessian = tissue.calculateHessian(&errorfile);
+	hessian = tissue.calculateHessian(&eqfile);
 	hessian_check = hessian - hessian.transpose();
-	errorfile << "hessian = " << (hessian) << "\n \n \n \n ";
-	errorfile << "hessian symmetry check = " << hessian_check << "\n \n \n \n ";
-	errorfile << "shear modulus = " << (tissue).calculateShearModulusWithEigenDecomposition(&errorfile) << endl;;
+
+	eqfile << "hessian = " << (hessian) << "\n \n \n \n ";
+	eqfile << "hessian symmetry check = " << hessian_check << "\n \n \n \n ";
+	eqfile << "shear modulus = " << (tissue).calculateShearModulusWithEigenDecomposition(&errorfile) << endl;;
 	/*
 	MatrixXf a(5,5);
 	a.setZero(5,5);
