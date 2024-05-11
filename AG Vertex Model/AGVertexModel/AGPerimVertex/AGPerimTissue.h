@@ -59,10 +59,10 @@ public:
 	bool equilibrated; //defines whether the tissue is considered equilibrated
 	double outputPrecision = 32;
 	//CONSTRUCTOR
-	AGPerimTissue(){};
+	//AGPerimTissue(){};
 
 	//DESTRUCTOR
-	virtual ~AGPerimTissue(){};
+	//virtual ~AGPerimTissue(){};
 
 	//ADDITIONAL FUNCTIONS
 	// Updates read input function to accept new global variables 

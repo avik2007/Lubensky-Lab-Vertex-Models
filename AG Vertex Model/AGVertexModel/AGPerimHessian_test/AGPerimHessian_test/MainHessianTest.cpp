@@ -26,13 +26,15 @@
 #include "EdgeClass.h"
 #include "VertexClass.h"
 #include "TissueClass.h"
-#include "AGCell.h"
-#include "AGTissue.h"
 #include "Constants.h"
 #include "AGConstants.h"
 #include "AGPerimConstants.h"
+#include "TissueClass.h"
+#include "VectClass.h"
+#include "AGTissue.h"
 #include "AGPerimTissue.h"
-#include "AGPerimCell.h"
+#include "AGPerimEdge.h"
+#include "AGCell.h"
 
 
 using namespace Eigen;
@@ -169,7 +171,7 @@ int main()
 	errorfile << "Current Free Energy" << currentFreeEnergy << endl;
 
 	double polydispersity = tissue.calculatePolydispersity();
-	errorfile << "Polydispersity = " << polydispersity << endl;
+	errorfile << "Polydispersity initial = " << polydispersity << endl;
 
 	// above time variables allow us to pick how often we write to the appendfile
 	while ((CURRENTTIME < TOTALTIME) && !(tissue.equilibrated))
@@ -182,7 +184,7 @@ int main()
 		// equilibrated gets updated in Evolve
 	}
 	polydispersity = tissue.calculatePolydispersity();
-	errorfile << "Polydispersity = " << polydispersity << endl;
+	errorfile << "Polydispersity final = " << polydispersity << endl;
 	tissue.WriteOutputDataAppend(&datafile);
 	string OutputFileName3 = filename + "_EQ.txt";
 	string OutputFileName4 = filename + "_H.txt";
@@ -210,14 +212,15 @@ int main()
 		*/
 		verts = (*agit).GetClockWiseVertices();
 		int vertexNum = verts.size();
-		
+		errorfile << "dP/dgamma = " << (*agit).GetdPdgammaForSimpleShearAlongXAxis() << ", Cell id = " << (*agit).id << endl;
+		errorfile << "dA/dgamma = " << (*agit).GetdAdgammaForSimpleShearAlongXAxis() << ", Cell id = " << (*agit).id << endl;
 		for (int i = 0; i < vertexNum; i++)
 		{
 			currVertex = (verts[i]);
 			currID = currVertex->id;
 			
-			errorfile << "d2P / dLxdv = (" << (*agit).Getd2PdLxdv(currVertex).x << ", " << (*agit).Getd2PdLxdv(currVertex).y << "), Vertex id = " << (*verts[i]).id << endl;
-			errorfile << "d2A / dLxdy = (" << (*agit).Getd2AdLxdy(currVertex)  << "), Vertex id = " << (*verts[i]).id << endl;
+			errorfile << "d2P / dLydv = (" << (*agit).Getd2PdgammadvForSimpleShearAlongXAxis(currVertex).x << ", " << (*agit).Getd2PdgammadvForSimpleShearAlongXAxis(currVertex).y << "), Vertex id = " << (*verts[i]).id << ", Cell id = " << (*agit).id << endl;
+			errorfile << "d2A / dLydy = (" << (*agit).Getd2AdgammadyForSimpleShearAlongXAxis(currVertex)  << "), Vertex id = " << (*verts[i]).id << ", Cell id = "<< (*agit).id << endl;
 			
 		}
 		

@@ -227,6 +227,10 @@ double AGPerimCell::Getd2PdLy2()
 * Vect Getd2PdLxdy(Vertex* V)
 *
 * derivative of perimeter with respect to Lx and to the y of a vertex V
+* *
+* *
+* *
+*  MAKE SURE YOU RECHECK THIS ONE
 */
 Vect AGPerimCell::Getd2PdLxdv(Vertex* V)
 {
@@ -286,16 +290,169 @@ Vect AGPerimCell::Getd2PdLxdv(Vertex* V)
 	Vect d2PdLxdv(d2PdLxdx, d2PdLxdy);
 	return d2PdLxdv;
 }
-double AGPerimCell::Getd2Pdgamma2ForSimpleShearAlongXAxis()
-{
-	return Getd2PdLx2() * LY * LY;
-}
+
+/*
+* double GetdPdgamma()
+*
+* derivative of perimeter of a cell with respect to gamma, where gamma is the shear parameter for Lee Edwards Boundary conditions (see Merkel Manning 2018). We shear the unit cells in the x-direction
+*/
 double AGPerimCell::GetdPdgammaForSimpleShearAlongXAxis()
 {
-	return GetdPdLx() * LY;
-}
+	int ycrossingEdges = 0;
+	vector<Vect> edgeVects;
+	double dPdgamma = 0;
+	Vertex* v1, * v2;
+	Edge* e1, * e2;
+	vector<Edge*> clockwiseEdges;
+	vector<Vertex*> clockwiseVertex = (*this).GetClockWiseVertices();
+	int vertexNum = clockwiseVertex.size();
+	double vectDiff;
+	double angle = 0;
+	double directioncos = 0;
+	clockwiseVertex.push_back(clockwiseVertex[0]);
 
+	for (int i = 0; i < vertexNum; i++)
+	{
+		v1 = clockwiseVertex[i];
+		v2 = clockwiseVertex[i + 1];
+		e1 = (*v1).GetEdgeBetween(v2);
+		clockwiseEdges.push_back(e1);
+		edgeVects.push_back((*e1).GetVectorDifference(v1, v2));
+
+		if (((*e1).yflag))
+		{
+			angle = (*e1).GetAngle(v1);
+			directioncos = abs(cos(angle)); // the x-magnitude of the edge scales this derivative, must be positive
+			dPdgamma += LY*directioncos;
+			if (ycrossingEdges < 1)
+			{
+				ycrossingEdges++;
+			}
+			else
+			{
+				i = vertexNum;
+			}
+
+		}
+	}
+	return dPdgamma;
+}
+/*
+* double GetdPdgamma()
+*
+* second derivative of perimeter of a cell with respect to gamma, where gamma is the shear parameter for Lee Edwards Boundary conditions (see Merkel Manning 2018). We shear the unit cells in the x-direction
+*/
+double AGPerimCell::Getd2Pdgamma2ForSimpleShearAlongXAxis()
+{
+	int ycrossingEdges = 0;
+	vector<Vect> edgeVects;
+	double d2Pdgamma2 = 0;
+	Vertex* v1, * v2;
+	Edge* e1, * e2;
+	vector<Edge*> clockwiseEdges;
+	vector<Vertex*> clockwiseVertex = (*this).GetClockWiseVertices();
+	int vertexNum = clockwiseVertex.size();
+	double vectDiff;
+	double angle = 0;
+	double directionsin = 0;
+	clockwiseVertex.push_back(clockwiseVertex[0]);
+	double edgelength = 0;
+	for (int i = 0; i < vertexNum; i++)
+	{
+		v1 = clockwiseVertex[i];
+		v2 = clockwiseVertex[i + 1];
+		e1 = (*v1).GetEdgeBetween(v2);
+		clockwiseEdges.push_back(e1);
+		edgeVects.push_back((*e1).GetVectorDifference(v1, v2));
+
+		if (((*e1).yflag))
+		{
+			angle = (*e1).GetAngle(v1);
+			edgelength = (*e1).GetLength();
+			directionsin = sin(angle); // the x-magnitude of the edge scales this derivative, must be positive
+			d2Pdgamma2 += LY * LY * pow(directionsin,2) / edgelength;
+			if (ycrossingEdges < 1)
+			{
+				ycrossingEdges++;
+			}
+			else
+			{
+				i = vertexNum;
+			}
+
+		}
+	}
+	
+	return d2Pdgamma2;
+}
 Vect AGPerimCell::Getd2PdgammadvForSimpleShearAlongXAxis(Vertex* v)
 {
-	return Getd2PdLxdv(v) * LY;
+	unsigned long int targetvertexid = (*v).id;
+	bool id_match = false;
+	int ycrossingEdges = 0;
+	double d2PdLydy = 0;
+	double d2PdLydx = 0;
+	Vertex* v1, * v2;
+	Edge* e1, * e2;
+	Vect vec;
+	vector<Edge*> clockwiseEdges;
+	vector<Vertex*> clockwiseVertex = (*this).GetClockWiseVertices();
+	int vertexNum = clockwiseVertex.size();
+	double vectDiff;
+	double directionsin = 0;
+	double directioncos = 0;
+	bool rightvert = false;
+	int rightVertFactor = -1;
+	clockwiseVertex.push_back(clockwiseVertex[0]);
+
+	for (int i = 0; i < vertexNum; i++)
+	{
+		v1 = clockwiseVertex[i];
+		v2 = clockwiseVertex[i + 1];
+		if ((v1->id) == targetvertexid || (v2->id) == targetvertexid)
+		{
+			e1 = (*v1).GetEdgeBetween(v2);
+			if ((v1->id) == targetvertexid)
+			{
+				vec = (*e1).MakeUnitVector(v1);
+				if ((*v1).r.x > (*v2).r.x)
+				{
+					rightvert = true;
+				}
+			}
+			else
+			{
+				vec = (*e1).MakeUnitVector(v2);
+				if ((*v2).r.x > (*v1).r.x)
+				{
+					rightvert = true;
+				}
+			}
+			if (rightvert)
+			{
+				rightVertFactor = 1;
+			}
+
+			clockwiseEdges.push_back(e1);
+
+			if (((*e1).yflag))
+			{
+				directioncos = abs(vec.x); // these absolute values are part of a convention needed to get this derivative right I believe
+				directionsin = abs(vec.y);
+				d2PdLydx += LY / (*e1).GetLength() * (rightVertFactor - directioncos * directioncos); //(1 - directionsin * directionsin ) ;
+				d2PdLydy += LY / (*e1).GetLength() * (-1 * directioncos * directionsin);
+				if (ycrossingEdges < 1)
+				{
+					ycrossingEdges++;
+				}
+				else
+				{
+					i = vertexNum;
+				}
+
+			}
+		}
+	}
+	Vect d2PdLydv(d2PdLydx, d2PdLydy);
+	return d2PdLydv;
 }

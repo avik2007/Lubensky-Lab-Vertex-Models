@@ -31,6 +31,7 @@
 #include "AGPerimEdge.h"
 
 using namespace Eigen;
+using namespace std;
 
 /*
 * void HelperReadInputData_SetGlobalValues(ifstream* datafile)
@@ -2155,7 +2156,7 @@ double AGPerimTissue::calculateShearModulusWithEigenDecomposition(ofstream* erro
 	//MatrixXf hessianeigenvectors(2 * numofvertices, 2 * numofvertices);
 	//hessianeigenvectors = eigensolver.eigenvectors();
 
-	MatrixXf BoundaryVector(2 * numofvertices, 1);
+	MatrixXf BoundaryVector(2 * numofvertices, 1); // boundary vector is dE/(dgamma dv) where v is a vertex vector
 	BoundaryVector.setZero(2 * numofvertices, 1);
 
 	MatrixXf d2Edgamma2_mat(1, 1);
@@ -2177,6 +2178,10 @@ double AGPerimTissue::calculateShearModulusWithEigenDecomposition(ofstream* erro
 	int cellid = 0;
 	int relid = 0;
 	int index = 0;
+	double nonaffine_shearcontribution = 0;
+	double dadgterm = 0;
+	double dpdgterm = 0;
+	double dpdpdgdgterm = 0;
 	int currenteigenvalue;
 	for (list<Vertex*>::iterator vit = vertices.begin(); vit != vertices.end(); vit++)
 	{
@@ -2185,8 +2190,8 @@ double AGPerimTissue::calculateShearModulusWithEigenDecomposition(ofstream* erro
 		index++;
 	}
 
-	vector<Cell*> xboundarycrossingcell = (*this).GetXCrossingCellVector();
-	for (vector<Cell*>::iterator cit = xboundarycrossingcell.begin(); cit != xboundarycrossingcell.end(); cit++)
+	vector<Cell*> yboundarycrossingcell = (*this).GetYCrossingCellVector();
+	for (vector<Cell*>::iterator cit = yboundarycrossingcell.begin(); cit != yboundarycrossingcell.end(); cit++)
 	{
 		AGPerimCell* agit = dynamic_cast<AGPerimCell*>(*cit);
 		cellid = (*(*cit)).id;
@@ -2203,7 +2208,7 @@ double AGPerimTissue::calculateShearModulusWithEigenDecomposition(ofstream* erro
 		//LAMBDA = 1; // this is for debugging, just as in the Hessian calculation
 
 		// the pressure
-		cell_pressure = (*(*cit)).GetPressure(area) * a0; // I want pressure to be PRESSURE = K (A - A0)
+		cell_pressure = -1*(*(*cit)).GetPressure(area) * a0; // I want pressure to be PRESSURE = K (A - A0), but since PRESSURE = - dE/dA, we need the minus sign
 		// tension magnitude should be simple enough
 		tension_magnitude = LAMBDA * (perimeter - p0);
 
@@ -2212,9 +2217,13 @@ double AGPerimTissue::calculateShearModulusWithEigenDecomposition(ofstream* erro
 		dpdgcheck = (*agit).GetdPdgammaForSimpleShearAlongXAxis();
 		dpdpdgdgcheck = (*agit).Getd2Pdgamma2ForSimpleShearAlongXAxis();
 		// let's do d2Edgamma2 first:
-		d2Edgamma2 += K * dadgcheck * dadgcheck;
-		d2Edgamma2 += tension_magnitude * dpdpdgdgcheck;
-		d2Edgamma2 += LAMBDA * dpdgcheck * dpdgcheck;
+		
+		dadgterm = K * dadgcheck * dadgcheck;
+		dpdgterm = LAMBDA * dpdgcheck * dpdgcheck;
+		dpdpdgdgterm = tension_magnitude * dpdpdgdgcheck;
+		d2Edgamma2 += dadgterm;
+		d2Edgamma2 += dpdpdgdgterm;
+		d2Edgamma2 += dpdgterm;
 
 		for (vector<Vertex*>::iterator vit = cwverts.begin(); vit != cwverts.end(); vit++)
 		{
@@ -2253,7 +2262,7 @@ double AGPerimTissue::calculateShearModulusWithEigenDecomposition(ofstream* erro
 		for (list<Vertex*>::iterator vit = vertices.begin(); vit != vertices.end(); vit++)
 		{
 			*errorfile << "Vertex " << (*(*vit)).id << "x " << hessianeigen.eigenvectors().col(index)(jndex) << " Bvx " << BoundaryVector(jndex, 0) << endl;
-			//dispx += hessianeigen.eigenvectors().col(index)(jndex) / hessianeigen.eigenvalues().size();
+			//dispx += hessianeigen.eigenvectors().col(in	dex)(jndex) / hessianeigen.eigenvalues().size();
 			//rot -= (*(*vit)).r.y * hessianeigen.eigenvectors().col(index)(jndex) / hessianeigen.eigenvalues().size();
 			jndex++; 
 			*errorfile << "Vertex " << (*(*vit)).id << "y " << hessianeigen.eigenvectors().col(index)(jndex) << " Bvy " << BoundaryVector(jndex, 0) << endl;
@@ -2263,16 +2272,22 @@ double AGPerimTissue::calculateShearModulusWithEigenDecomposition(ofstream* erro
 		}
 		//errorfile << " \n \n COM displacement =(" << dispx << ", " << dispy << ")      ROTATION = " << rot << "\n \n" << endl;
 		
-		if ((index > lu_decomp.rank() - 1)) // HOW TO IDENTIFY ZERO MODES?
+		if (hessianeigen.eigenvalues()(index, 0) > 10e-14)//((index > hessianeigen.eigenvalues().size() - lu_decomp.rank() - 1)) // HOW TO IDENTIFY ZERO MODES? Mathias Merkel use a cutoff value
 		{
-			nonaffine_shearportion += 1 / hessianeigen.eigenvalues()(index, 0) * pow((hessianeigen.eigenvectors().col(index).transpose() * BoundaryVector)(0, 0), 2);
+			nonaffine_shearcontribution = 1 / hessianeigen.eigenvalues()(index, 0) * pow((hessianeigen.eigenvectors().col(index).transpose() * BoundaryVector)(0, 0), 2);
+			*errorfile << "Non affine check" << (hessianeigen.eigenvectors().col(index).transpose() * BoundaryVector) << endl;
+			*errorfile << "Eigenvalue " << index << " contribution to nonaffine = " << nonaffine_shearcontribution << endl;
+			nonaffine_shearportion += nonaffine_shearcontribution;
+
 			//nonaffine_shearportion = hessianeigenvalues(index, 0);
 		}
 	}
-	*errorfile << "\n \n \n The column of the Hessian is the number of vertices" << " - " << hessianeigen.eigenvalues().size() - lu_decomp.rank() << endl;
+	*errorfile << "\n \n \n The size of the columns space of the Hessian is the number of vertices" << " = " << hessianeigen.eigenvalues().size() - lu_decomp.rank() << endl;
 	*errorfile << "Here is a matrix whose columns form a basis of the null-space of A:\n"
 		<< lu_decomp.kernel() <<"\n \n" << endl;
 	//*errorfile << "Eigenvalues " << hessianeigenvalues << endl;
+	*errorfile << "d2Edgamma2 = " << d2Edgamma2 << endl;
+	*errorfile << "nonaffine_shear = " << nonaffine_shearportion << endl;
 	shearmodulus = 1 / (K * A0 * A0 * numofcells * LX * LY) * (d2Edgamma2 - nonaffine_shearportion);//numofcells / (K * pow((LX * LY),2)) * (d2Edgamma2 - nonaffine_shearportion);
 	//shearmodulus = 1 / (K * A0 * LX * LY) * (d2Edgamma2 - nonaffine_shearportion);
 	return shearmodulus;
@@ -2282,7 +2297,7 @@ double AGPerimTissue::calculateShearModulusWithEigenDecomposition(ofstream* erro
 /*
 * double CalculateShearModulusWithMatrixInversion(errorfile)
 * 
-*  NOT USABLE CURRENTLY (11/30/2023)
+*  NOT USABLE CURRENTLY (11/30/2023) (IMPORTANTLY, ZERO STRESS EDGES PREVENT THIS FROM WORKING - THE MATRIX BECOMES SINGULAR)
 *
 * here, I will implement the shear modulus calculation with the theory developed in Dapeng (Max) Bi's Multicellular Rosette's paper
 * (Multicellular Rosettes Drive Fluid-Solid Transition in Epithelial Tissue)

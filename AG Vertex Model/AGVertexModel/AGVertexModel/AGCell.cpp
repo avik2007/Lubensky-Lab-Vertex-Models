@@ -777,11 +777,62 @@ double AGCell::Getd2AdLxdy(Vertex* V)
 /*
 * double GetdAdgammaForSimpleShearAlongXaxis()
 *
-*  Calculates dAdgamma for a simple shear where the deformation occurs along the x-axis
+*  Calculates dAdgamma for a simple shear where the deformation occurs along the x-axis (so the unit cell above the main unit cell is shifted to the right)
 */
 double AGCell::GetdAdgammaForSimpleShearAlongXAxis()
 {
-	return LY * GetdAdLx();
+	int ycrossingEdges = 0;
+	vector<Vect> edgeVects;
+	double dAdLy = 0;
+	Vertex* v1, * v2;
+	Edge* e1, * e2;
+	vector<Edge*> clockwiseEdges;
+	vector<Vertex*> clockwiseVertex = (*this).GetClockWiseVertices();
+	int vertexNum = clockwiseVertex.size();
+	double vectDiff;
+	double y1 = 0;
+	double y2 = 0;
+	double x1 = 0;
+	double x2 = 0;
+	double finalVal = 0;
+	clockwiseVertex.push_back(clockwiseVertex[0]);
+
+	for (int i = 0; i < vertexNum; i++)
+	{
+		v1 = clockwiseVertex[i];
+		v2 = clockwiseVertex[i + 1];
+		e1 = (*v1).GetEdgeBetween(v2);
+		clockwiseEdges.push_back(e1);
+		edgeVects.push_back((*e1).GetVectorDifference(v1, v2));
+
+		if (((*e1).yflag))
+		{
+			if (ycrossingEdges < 1)
+			{
+				y1 = (*e1).GetCenter().y;
+				x1 = (*e1).GetCenter().x;
+				ycrossingEdges++;
+			}
+			else
+			{
+				y2 = (*e1).GetCenter().y;
+				x2 = (*e1).GetCenter().x;
+				// alternatively, (*e1).getCenter().y can do the same thing 
+				i = vertexNum;
+			}
+
+		}// if dAdLxdy works, then this should work
+
+	}
+	if (x2 > x1)
+	{
+		finalVal = y1 - y2;
+	} 
+	else 
+	{
+		finalVal = y2 - y1;
+	}
+	return LY * finalVal; // 4/12/24 ORDERING SHOULD BE RIGHT - POTENTIAL WORRIES ABOUT CORNER CELLS (KEEP IN MIND IF BUGS COME UP)
 }
 /*
 * double Getd2AdgammadyForSimpleShearAlongXAxis(Vertex* V)
@@ -789,7 +840,67 @@ double AGCell::GetdAdgammaForSimpleShearAlongXAxis()
 */
 double AGCell::Getd2AdgammadyForSimpleShearAlongXAxis(Vertex* V)
 {
-	return LY * Getd2AdLxdy(V);
+	unsigned long int targetvertexid = (*V).id;
+	bool id_match;
+	int ycrossingEdges = 0;
+	vector<Vect> edgeVects;
+	double d2AdLxdy = 0;
+	Vertex* v1, * v2;
+	Edge* e1;
+	vector<Edge*> clockwiseEdges;
+	vector<Vertex*> clockwiseVertex = (*this).GetClockWiseVertices();
+	int vertexNum = clockwiseVertex.size();
+	double vectDiff;
+	int firstEdgeContribution = 0;
+	int secondEdgeContribution = 0;
+	int totalContribution = 0;
+	double x1 = 0;
+	double x2 = 0;
+	clockwiseVertex.push_back(clockwiseVertex[0]);
+
+	for (int i = 0; i < vertexNum; i++)
+	{
+		v1 = clockwiseVertex[i];
+		v2 = clockwiseVertex[i + 1];
+		id_match = ((v1->id) == targetvertexid) || ((v2->id) == targetvertexid);
+		e1 = (*v1).GetEdgeBetween(v2);
+		clockwiseEdges.push_back(e1);
+		edgeVects.push_back((*e1).GetVectorDifference(v1, v2));
+		if (((*e1).yflag)) // ADD AN IF ID_MATCH
+
+		{
+			if (ycrossingEdges < 1)
+			{
+				x1 = (*e1).GetCenter().x;
+				ycrossingEdges++;
+				if (id_match)
+				{
+					firstEdgeContribution = 1;
+				}
+			}
+			else
+			{
+				x2 = (*e1).GetCenter().x;
+				// alternatively, (*e1).getCenter().y can do the same thing 
+				i = vertexNum;
+				if (id_match)
+				{
+					secondEdgeContribution = 1;
+				}
+			}
+		}
+
+		// if dAdLxdy works, then this should work
+		if (x1 > x2)
+		{
+			totalContribution = secondEdgeContribution - firstEdgeContribution;
+		}
+		else
+		{
+			totalContribution = firstEdgeContribution - secondEdgeContribution;
+		}
+	}
+	return 0.5 * LY * totalContribution; // 4/12/24 ORDERING SHOULD BE RIGHT - POTENTIAL WORRIES ABOUT CORNER CELLS (KEEP IN MIND IF BUGS COME UP
 }
 /*
 * double GetCellStressXX();

@@ -25,9 +25,12 @@ using namespace std;
 // AGCell = developed for anisotropically growing models.
 class AGPerimCell : public AGCell{
 public:
+	AGPerimCell() {};
+	virtual ~AGPerimCell() {};
 	//***************************************************************************************************************
 	//********** Additional Data ************************************************************************************
 	//***************************************************************************************************************
+
 	double P0; // preferred perimeter
 	
 	// additional functions
