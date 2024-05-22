@@ -1,0 +1,4 @@
+Polydispersity 	Third Area Moment 	Quadratic Error 
+0.123921	104.639	26.3127
+
+

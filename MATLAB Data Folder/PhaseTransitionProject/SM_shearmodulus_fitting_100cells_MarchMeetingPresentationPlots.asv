@@ -1,0 +1,375 @@
+K = 50 / sqrt(1250);
+%% First shear modulus plot, just to demonstrate the phase transition 
+xlabelfont = 24;
+ylabelfont = 20;
+xtickfont = 20;
+ytickfont = 20;
+legendfontsize=20;
+plot_width = 600;
+plot_height = 400;
+hF = gcf;
+hF.Position(1:4) = [0 0 plot_width plot_height];
+
+load('T2ss_dE/smdata7.mat')
+errorbar(p0sm(:,1), 1*p0sm(:,2) / K, 1*SMvar / K, 'o', 'MarkerSize', 10, 'MarkerEdgeColor', 'blue', 'Color', 'blue', 'MarkerFaceColor', 'blue' )
+ax=gca;
+ax.XAxis.FontSize = xtickfont;
+ax.YAxis.FontSize = ytickfont;
+ylabel({'$\textbf{Dimensionless}$'; '$\textbf{Shear Modulus}$'}, 'Interpreter', 'Latex', 'FontSize', ylabelfont, 'FontName', 'Times New Roman');
+xlabel('$ \mathbf{\frac{P_0}{\sqrt{A_{0} }}}$', 'Interpreter', 'latex', 'FontSize', xlabelfont, 'FontName','Times New Roman');
+
+ylim([-0.5 2.6]);
+yticks(-0.5:0.5:2.6);
+xlim([3.75 3.903]);
+yticklabels({'-0.5','0', '0.5', '1.0', '1.5', '2.0', '2.5'});
+xticks(3.75:0.03:3.9);
+
+grid on;
+savefig('marchmeeting_simple_shearmoduli_plot.fig')
+exportgraphics(gcf, 'marchmeeting_simple_shearmoduli_plot.pdf', 'ContentType', 'vector')
+hold off;
+
+%% This will plot all the Tiss, low polydispersity plots 
+%------------------------------------------------------------------
+subgplotlabelindex_x = 3.73;
+subgplotlabelindex_y = 3.7;
+subgplotlabelfontsize = 20;
+plot_width = 600;
+plot_height = 400;
+horizontal_title_x = 3.715;
+horizontal_title_y = 0.5;
+quadratic_title_y_offset = 0.1;
+log_title_y_offset = -0.1;
+exp_title_y_offset = -0.1;
+title_font = 18;
+legend_font = 20;
+markersize = 10;
+markersize_red = 8;
+xlabelfont = 24;
+ylabelfont = 20;
+xtickfont = 20;
+ytickfont = 20;
+%subplot(3,2,1) % first low polydispersity Tiss case
+
+hF = gcf;
+hF.Position(1:4) = [0 0 plot_width plot_height];
+ 
+load('L2Ts_dE/smdataL2Ts.mat')
+errorbar(p0smL2Ts(:,1), 1*p0smL2Ts(:,2)/ K, 1*SMvarL2Ts/ K, 'o', 'MarkerSize', markersize, 'MarkerEdgeColor', 'black', 'Color', 'black', 'MarkerFaceColor', 'black')
+ax=gca;
+ax.XAxis.FontSize = xtickfont;
+ax.YAxis.FontSize = ytickfont;
+ylabel({'$\textbf{Dimensionless}$'; '$\textbf{Shear Modulus}$'}, 'Interpreter', 'Latex', 'FontSize', ylabelfont, 'FontName', 'Times New Roman');
+xlabel('$ \mathbf{\frac{P_0}{\sqrt{A_{avg} }}}$', 'Interpreter', 'latex', 'FontSize', xlabelfont, 'FontName','Times New Roman');
+
+hold on;
+grid on;
+load('M2Ts_dE/smdataM2Ts.mat')
+errorbar(p0smM2Ts(:,1), 1*p0smM2Ts(:,2)/ K, 1*SMvarM2Ts/ K, 'square', 'MarkerSize', markersize, 'MarkerEdgeColor', 'blue', 'Color', 'blue', 'MarkerFaceColor', 'blue')
+
+load('T2ss_dE/smdata7.mat')
+errorbar(p0sm(:,1), 1*p0sm(:,2)/ K, 1*SMvar/ K, 'diamond', 'MarkerSize', markersize_red , 'MarkerEdgeColor', 'red', 'Color', 'red', 'MarkerFaceColor', 'red')
+%title('Shear Modulus v Shape Index (Quadratic)');
+
+legend('$A_0 = 0.5A_{avg}$','$A_0 = 2A_{avg}$ ', '$A_0 = A_{avg}$' , 'Interpreter', 'latex' ,'FontSize', legend_font)
+ylim([-0.5 2.6]);
+yticks(-0.5:0.5:2.6);
+xlim([3.75 3.903]);
+yticklabels({'-0.5','0', '0.5', '1.0', '1.5', '2.0', '2.5'});
+xticks(3.75:0.03:3.9);
+
+%title('$\textbf{Low Polydispersity}$', 'Interpreter', 'latex' ,'FontSize', title_font, 'FontName','Times New Roman');
+%subtitle('$\textbf{Quadratic } \mathbf{E^A}$', 'Interpreter', 'latex' ,'FontSize', 14, 'FontName','Times New Roman');
+savefig('marchmeeting_simple_independence_of_A0_plot.fig')
+exportgraphics(gcf, 'marchmeeting_simple_independence_of_A0_plot.pdf', 'ContentType', 'vector')
+%% This will plot all the Tiss, low polydispersity plots - 1/3 to start
+%------------------------------------------------------------------
+subgplotlabelindex_x = 3.73;
+subgplotlabelindex_y = 3.7;
+subgplotlabelfontsize = 20;
+plot_width = 600;
+plot_height = 400;
+horizontal_title_x = 3.715;
+horizontal_title_y = 0.5;
+quadratic_title_y_offset = 0.1;
+log_title_y_offset = -0.1;
+exp_title_y_offset = -0.1;
+title_font = 18;
+legend_font = 20;
+markersize = 10;
+markersize_red = 8;
+xlabelfont = 24;
+ylabelfont = 20;
+xtickfont = 20;
+ytickfont = 20;
+%subplot(3,2,1) % first low polydispersity Tiss case
+
+hF = gcf;
+hF.Position(1:4) = [0 0 plot_width plot_height];
+load('L2Ts_dE/smdataL2Ts.mat')
+errorbar(p0smL2Ts(:,1), 1*p0smL2Ts(:,2)/ K, 1*SMvarL2Ts/ K, 'o', 'MarkerSize', markersize, 'MarkerEdgeColor', 'black', 'Color', 'black', 'MarkerFaceColor', 'black')
+ax=gca;
+ax.XAxis.FontSize = xtickfont;
+ax.YAxis.FontSize = ytickfont;
+ylabel({'$\textbf{Dimensionless}$'; '$\textbf{Shear Modulus}$'}, 'Interpreter', 'Latex', 'FontSize', ylabelfont, 'FontName', 'Times New Roman');
+xlabel('$ \mathbf{\frac{P_0}{\sqrt{A_{avg} }}}$', 'Interpreter', 'latex', 'FontSize', xlabelfont, 'FontName','Times New Roman');
+
+hold on;
+grid on;
+%load('M2Ts_dE/smdataM2Ts.mat')
+%errorbar(p0smM2Ts(:,1), 1*p0smM2Ts(:,2)/ K, 1*SMvarM2Ts/ K, 'square', 'MarkerSize', markersize, 'MarkerEdgeColor', 'blue', 'Color', 'blue')
+
+%load('T2ss_dE/smdata7.mat')
+%errorbar(p0sm(:,1), 1*p0sm(:,2)/ K, 1*SMvar/ K, 'diamond', 'MarkerSize', markersize, 'MarkerEdgeColor', 'red', 'Color', 'red')
+%title('Shear Modulus v Shape Index (Quadratic)');
+
+legend('$A_0 = 0.5A_{avg}$', 'Interpreter', 'latex' ,'FontSize', legend_font)
+ylim([-0.5 2.6]);
+yticks(-0.5:0.5:2.6);
+xlim([3.75 3.903]);
+yticklabels({'-0.5','0', '0.5', '1.0', '1.5', '2.0', '2.5'});
+xticks(3.75:0.03:3.9);
+
+%title('$\textbf{Low Polydispersity}$', 'Interpreter', 'latex' ,'FontSize', title_font, 'FontName','Times New Roman');
+%subtitle('$\textbf{Quadratic } \mathbf{E^A}$', 'Interpreter', 'latex' ,'FontSize', 14, 'FontName','Times New Roman');
+savefig('marchmeeting_simple_independence_of_A0_plot_ONEOUTOFTHREE.fig')
+exportgraphics(gcf, 'marchmeeting_simple_independence_of_A0_plot_ONEOUTOFTHREE.pdf', 'ContentType', 'vector')
+%% This will plot all the Tiss, low polydispersity plots - 2/3 to start
+%------------------------------------------------------------------
+subgplotlabelindex_x = 3.73;
+subgplotlabelindex_y = 3.7;
+subgplotlabelfontsize = 20;
+plot_width = 600;
+plot_height = 400;
+horizontal_title_x = 3.715;
+horizontal_title_y = 0.5;
+quadratic_title_y_offset = 0.1;
+log_title_y_offset = -0.1;
+exp_title_y_offset = -0.1;
+title_font = 18;
+legend_font = 20;
+markersize = 10;
+xlabelfont = 24;
+ylabelfont = 20;
+xtickfont = 20;
+ytickfont = 20;
+%subplot(3,2,1) % first low polydispersity Tiss case
+
+hF = gcf;
+hF.Position(1:4) = [0 0 plot_width plot_height];
+ 
+load('L2Ts_dE/smdataL2Ts.mat')
+errorbar(p0smL2Ts(:,1), 1*p0smL2Ts(:,2)/ K, 1*SMvarL2Ts/ K, 'o', 'MarkerSize', markersize, 'MarkerEdgeColor', 'black', 'Color', 'black', 'MarkerFaceColor', 'black')
+ax=gca;
+ax.XAxis.FontSize = xtickfont;
+ax.YAxis.FontSize = ytickfont;
+ylabel({'$\textbf{Dimensionless}$'; '$\textbf{Shear Modulus}$'}, 'Interpreter', 'Latex', 'FontSize', ylabelfont, 'FontName', 'Times New Roman');
+xlabel('$ \mathbf{\frac{P_0}{\sqrt{A_{avg} }}}$', 'Interpreter', 'latex', 'FontSize', xlabelfont, 'FontName','Times New Roman');
+
+hold on;
+grid on;
+load('M2Ts_dE/smdataM2Ts.mat')
+errorbar(p0smM2Ts(:,1), 1*p0smM2Ts(:,2)/ K, 1*SMvarM2Ts/ K, 'square', 'MarkerSize', markersize, 'MarkerEdgeColor', 'blue', 'Color', 'blue', 'MarkerFaceColor', 'blue')
+
+%load('T2ss_dE/smdata7.mat')
+%errorbar(p0sm(:,1), 1*p0sm(:,2)/ K, 1*SMvar/ K, 'diamond', 'MarkerSize', markersize, 'MarkerEdgeColor', 'red', 'Color', 'red')
+%title('Shear Modulus v Shape Index (Quadratic)');
+
+legend('$A_0 = 0.5A_{avg}$','$A_0 = 2A_{avg}$ ', 'Interpreter', 'latex' ,'FontSize', legend_font)
+ylim([-0.5 2.6]);
+yticks(-0.5:0.5:2.6);
+xlim([3.75 3.903]);
+yticklabels({'-0.5','0', '0.5', '1.0', '1.5', '2.0', '2.5'});
+xticks(3.75:0.03:3.9);
+
+%title('$\textbf{Low Polydispersity}$', 'Interpreter', 'latex' ,'FontSize', title_font, 'FontName','Times New Roman');
+%subtitle('$\textbf{Quadratic } \mathbf{E^A}$', 'Interpreter', 'latex' ,'FontSize', 14, 'FontName','Times New Roman');
+savefig('marchmeeting_simple_independence_of_A0_plot_TWOOUTOFTHREE.fig')
+exportgraphics(gcf, 'marchmeeting_simple_independence_of_A0_plot_TWOOUTOFTHREE.pdf', 'ContentType', 'vector')
+%% 
+
+
+%%
+%% This combines the plots for the exponential and the logarithmic potential 
+
+
+%a=subplot('Position',[.1 .3 .3 .3])
+%set(a,'YTick',[],'XTick',[]);
+%hold on
+%b=subplot('Position',[.1 .6 .3 .3])
+%set(b,'YTick',[],'XTick',[]);
+
+subgplotlabelindex_x = 3.73;
+subgplotlabelindex_y = 3.7;
+plot_width = 1200;
+plot_height = 360;
+markersize = 6;
+fontsize = 18;
+titlefontsize = 20;
+plot_width = 1200;
+plot_height = 500;
+h1 = gcf;
+h1.Position(1:4) = [0 0 plot_width plot_height];
+xpos = 0.1;
+xwidth=0.36;
+ypos = 0.3;
+ywidth=0.6;
+%subplot(1,2,1); 
+a = subplot('Position', [xpos ypos xwidth ywidth]);
+
+load('L2Ex_dE/smdataL2Ex.mat')
+
+errorbar(p0smL2Ex(:,1), 1*p0smL2Ex(:,2)/ K, 1*SMvarL2Ex/ K, 'o', 'MarkerSize', 8, 'MarkerEdgeColor', 'black', 'Color', 'black','MarkerFaceColor', 'black')
+ax=gca;
+ax.XAxis.FontSize = xtickfont;
+ax.YAxis.FontSize = ytickfont;
+ylabel({'$\textbf{Dimensionless}$'; '$\textbf{Shear Modulus}$'}, 'Interpreter', 'Latex', 'FontSize', ylabelfont, 'FontName', 'Times New Roman');
+xlabel('$ \mathbf{\frac{P_0}{\sqrt{A_{avg} }}}$', 'Interpreter', 'latex', 'FontSize', xlabelfont, 'FontName','Times New Roman');
+hold on;
+
+load('M2Ex_dE/smdataM2Ex.mat')
+errorbar(p0smM2Ex(:,1), 1*p0smM2Ex(:,2)/ K, 1*SMvarM2Ex/ K, 'square', 'MarkerSize', 8, 'MarkerEdgeColor', 'blue', 'Color', 'blue', 'MarkerFaceColor', 'blue')
+
+load('ExTs_dE/smdataExTs.mat')
+errorbar(p0smExTs(:,1), 1*p0smExTs(:,2)/ K, 1*SMvarExTs/ K, 'diamond', 'MarkerSize', 6, 'MarkerEdgeColor', 'red', 'Color', 'red','MarkerFaceColor', 'red')
+
+legend('$A_0 = 0.5A_{avg}$','$A_0 = 2A_{avg}$ ', '$A_0 = A_{avg}$' , 'Interpreter', 'latex' ,'FontSize', legendfontsize)
+title('Exponential', 'FontSize', titlefontsize);
+ylim([-0.5 2.6]);
+yticks(-0.5:0.5:2.6);
+xlim([3.75 3.903]);
+yticklabels({'-0.5','0', '0.5', '1.0', '1.5', '2.0', '2.5'});
+xticks(3.75:0.03:3.9);
+grid on;
+%------------------------------------------------------------------
+
+b = subplot('Position', [xpos+1.15*xwidth ypos xwidth ywidth]);
+set(b, 'YTickLabel', []);
+%h2.Position(1:4) = [.55 .2465 0.35 0.6];
+errorbar(p0smL2Lo(:,1), 1*p0smL2Lo(:,2) / K, 1*SMvarL2Lo / K, 'o', 'MarkerSize', 8, 'MarkerEdgeColor', 'black', 'Color', 'black', 'MarkerFaceColor', 'black')
+ax=gca;
+ax.XAxis.FontSize = xtickfont;
+ax.YAxis.FontSize = ytickfont;
+%ylabel({'$\textbf{Dimensionless}$'; '$\textbf{Shear Modulus}$'}, 'Interpreter', 'Latex', 'FontSize', ylabelfont, 'FontName', 'Times New Roman');
+xlabel('$ \mathbf{\frac{P_0}{\sqrt{A_{avg} }}}$', 'Interpreter', 'latex', 'FontSize', xlabelfont, 'FontName','Times New Roman');
+hold on;
+%grid on;
+
+load('M2Lo_dE/smdataM2Lo.mat')
+errorbar(p0smM2Lo(:,1), 1*p0smM2Lo(:,2) / K, 1*SMvarM2Lo / K, 'square', 'MarkerSize', 8, 'MarkerEdgeColor', 'blue', 'Color', 'blue', 'MarkerFaceColor', 'blue')
+
+load('dE_LoTs/smdataLoTs.mat')
+errorbar(p0smLoTs(:,1) , 1*p0smLoTs(:,2)/ K, 1*SMvarLoTs/ K, 'diamond', 'MarkerSize', 6, 'MarkerEdgeColor', 'red', 'Color', 'red','MarkerFaceColor', 'red')
+
+legend('$A_0 = 0.5A_{avg}$','$A_0 = 2A_{avg}$ ', '$A_0 = A_{avg}$' , 'Interpreter', 'latex' ,'FontSize', legendfontsize);
+title('Logarithmic', 'FontSize', titlefontsize);
+ylim([-0.5 2.6]);
+yticks(-0.5:0.5:2.6);
+xlim([3.75 3.903]);
+%yticklabels({'-0.5','0', '0.5', '1.0', '1.5', '2.0', '2.5'});
+xticks(3.75:0.03:3.9);
+
+grid on;
+savefig('marchmeeting_log_exp_overlay.fig')
+exportgraphics(gcf, 'marchmeeting_log_exp_overlay.pdf', 'ContentType', 'vector')
+hold off;
+
+%% Sweeping Abox plot, March Meeting 
+subgplotlabelindex_x = 3.73;
+subgplotlabelindex_y = 3.7;
+subgplotlabelfontsize = 20;
+plot_width = 750;
+plot_height = 550;
+horizontal_title_x = 3.715;
+horizontal_title_y = 0.5;
+quadratic_title_y_offset = 0.1;
+log_title_y_offset = -0.1;
+exp_title_y_offset = -0.1;
+title_font = 18;
+legend_font = 20;
+markersize = 10;
+xlabelfont = 24;
+ylabelfont = 20;
+xtickfont = 20;
+ytickfont = 20;
+%subplot(3,2,1) % first low polydispersity Tiss case
+color = [0 0.35 0];
+hF = gcf;
+hF.Position(1:4) = [0 0 plot_width plot_height];
+
+K = 50 / sqrt(1250);
+t = tiledlayout(1,1);
+load('SWAB_dE/smdataSWAB.mat');
+
+ax1 = axes(t);
+errorbar(ax1, p0smSWAB(:,1), 1*p0smSWAB(:,2)/ K, 1*SMvarSWAB/ K, 'o', 'MarkerSize', markersize, 'MarkerEdgeColor',color, 'Color',color, 'MarkerFaceColor', color );
+
+
+ylim(ax1, [-0.5 2.6])
+yticks(ax1, -0.5:0.5:2.5)
+%yticklabels(ax1, {'-0.5','0', '0.5', '1.0', '1.5', '2.0', '2.5', '3.0'})
+xticks(ax1, 3.75:0.03:3.9)
+grid on;
+ax1.XAxis.FontSize = xtickfont;
+ax1.YAxis.FontSize = ytickfont;
+
+ax2 = axes(t);
+ax2.XAxis.FontSize = xtickfont-2;
+ax2.XAxisLocation = 'top';
+set(ax2, 'color', 'none');
+set(ax2, 'ytick', []);
+ax2.XDir = 'reverse';
+S0 = 3.75:0.03:3.90;
+
+P0 = 135;
+Abox = P0^2 ./ S0.^2;
+xlim(ax2, [1198 1296])
+xticks(ax2, 1198:(1296-1198)/5:1296);
+%xticklabels(ax2, {'1296', '1276', '1256', '1236', '1217', '1198'})
+
+ylabel(ax1, {'$\textbf{Dimensionless}$'; '$\textbf{Shear Modulus}$'}, 'Interpreter', 'Latex', 'FontSize', ylabelfont, 'FontName', 'Times New Roman');
+xlabel(ax1, '$ \mathbf{\frac{P_0}{\sqrt{A_{avg} }}}$', 'Interpreter', 'latex', 'FontSize', xlabelfont, 'FontName','Times New Roman');
+xlabel(ax2, '$ \mathbf{A_{box}}$ (pixels)', 'Interpreter', 'latex', 'FontSize', xlabelfont-2, 'FontName', 'Times New Roman');
+title('$\Longrightarrow$ decreasing $ \mathbf{A_{box }} $ (Compression) $ \Longrightarrow$ ', 'Interpreter', 'latex', 'FontSize', xlabelfont, 'FontName', 'Times New Roman');
+savefig('marchmeeting_SWAB.fig')
+exportgraphics(gcf, 'marchmeeting_SWAB.pdf', 'ContentType', 'vector')
+%%
+
+%% Phase transition poster presentation 
+xlabelfont = 24;
+ylabelfont = 20;
+xtickfont = 20;
+ytickfont = 20;
+legendfontsize=20;
+plot_width = 600;
+plot_height = 400;
+hF = gcf;
+hF.Position(1:4) = [0 0 plot_width plot_height];
+color = [0 0.95 0.05];
+color2 = [1 0.6471 0];
+%figure 
+ax=gca;
+rectangle(Position=[3.81,-0.5,0.10,3.1], FaceColor=color, EdgeColor=color)
+hold on;
+set(ax, "Layer", "top");
+rectangle(Position=[3.75,-0.5,0.06,3.1], FaceColor=color2, EdgeColor=color2)
+load('T2ss_dE/smdata7.mat')
+set(ax, "Layer", "top");
+errorbar(p0sm(:,1), 1*p0sm(:,2) / K, 1*SMvar / K, 'o', 'MarkerSize', 10, 'MarkerEdgeColor', 'blue', 'Color', 'blue', 'MarkerFaceColor', 'blue' )
+annotation("textbox')
+
+ax.XAxis.FontSize = xtickfont;
+ax.YAxis.FontSize = ytickfont;
+ylabel({'$\textbf{Shear Modulus}$'}, 'Interpreter', 'Latex', 'FontSize', ylabelfont, 'FontName', 'Times New Roman');
+xlabel('Shape Index', 'Interpreter', 'latex', 'FontSize', xlabelfont, 'FontName','Times New Roman');
+
+ylim([-0.5 2.6]);
+yticks(-0.5:0.5:2.6);
+xlim([3.75 3.903]);
+yticklabels({'-0.5','0', '0.5', '1.0', '1.5', '2.0', '2.5'});
+xticks(3.75:0.03:3.9);
+
+grid on;
+%savefig('marchmeeting_simple_shearmoduli_plot.fig')
+%exportgraphics(gcf, 'marchmeeting_simple_shearmoduli_plot.pdf', 'ContentType', 'vector')
+hold off;

@@ -1,0 +1,6 @@
+
+dirs = ls('*dE');
+for i=1:size(dirs, 1)
+    dir) = dirs(i)
+
+end
