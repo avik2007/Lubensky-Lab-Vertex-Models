@@ -26,8 +26,8 @@ using namespace std;
 // AGStiffCell -> allows for cells to have varying stiffnesses
 class AGStiffCell : public AGPerimCell {
 public:
-	//AGStiffCell() {};
-	//virtual ~AGStiffCell() {};
+	AGStiffCell() {};
+	virtual ~AGStiffCell() {};
 	//***************************************************************************************************************
 	//********** Additional Data ************************************************************************************
 	//***************************************************************************************************************

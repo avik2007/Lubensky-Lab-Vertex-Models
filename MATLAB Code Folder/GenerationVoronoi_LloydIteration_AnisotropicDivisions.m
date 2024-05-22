@@ -29,17 +29,17 @@ Mesh = sqrt(A0 * NbPoints);
 
 %Global parameters
 SEED = 48269; %originally 48263
-TIMEINTERVAL =	0.1;
+TIMEINTERVAL =	2;
 MINAREA = 0.1;
 MINLENGTH =	1.0;
 NEWEDGELENGTH =	2.0;
 
-TOTALTIME = 20000.0;
+TOTALTIME = 200.0;
 CURRENTTIME = 0.0;  
 INITIALSTEPSIZE = t0 / 1000;
 error_tolerance_absolute_mechanical =	0.001;
 ALPHAM = GAMMA * ( t0 / sqrt(A0));
-TISSUE_ALPHA = 100 * ALPHAM;
+TISSUE_ALPHA = 10 * ALPHAM;
 % this tunes the "stiffness" of the box - make very large if you don't want
 % box to move
 TISSUE_EXT_STRESS_X = 0;
@@ -50,17 +50,17 @@ LAMBDA = 0; %in meryl's model, strength of (p - p0)^2 term
 % trying a new thing with P0 where I use the theory from Manning paper ("a
 % density independent rigidity transition in biological tissues")
 
-if (LAMBDA ~= 0)
-    P0 = -1 * GAMMA / (2 * LAMBDA); %THIS IS VERY NONTRIVIAL, LOOK AT NOTES FOR THIS
-else
-    P0 = 0;
-end
+%if (LAMBDA ~= 0)
+%    P0 = -1 * GAMMA / (2 * LAMBDA); %THIS IS VERY NONTRIVIAL, LOOK AT NOTES FOR THIS
+%else
+%    P0 = 0;
+%end
 
 potential = pot; % DESCRIBED FOR INDIVIDUAL CELLS - - IF YOU WANT DIFFERENT CELLS TO HAVE DIFFERENT 
 % POTENTIALS, YOU'LL HAVE TO DO YOUR OWN SPECIAL STUFF! (see a few sections
 % below)
 CELLPRESSURETYPE = cpt;
-TCJSTRENGTH = 50;
+TCJSTRENGTH = 100;
 
 THETAAN =3.14 / 2.0 ;    %direction of anisotropy
 

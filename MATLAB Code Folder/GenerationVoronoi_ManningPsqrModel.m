@@ -18,7 +18,7 @@ A0 = 1250;%1250;
 GAMMA =	 10;%10;%strength of line tension coefficient
 t0 = 1; %time units
 %K = 5 * GAMMA /( sqrt(A0) );  %"young's modulus", strength of area term - using equation given in Meryl's thesis
-K = 6 * GAMMA /( sqrt(A0) );  %THIS IS FOR DIVIDING CELLS DON'T USE OTHERWISE
+K = 5 * GAMMA /( sqrt(A0) );  %THIS IS FOR DIVIDING CELLS DON'T USE OTHERWISE
 %this K is written in units of pressure (because Meryl wrote the pressure
 %weird in the simulation)
     

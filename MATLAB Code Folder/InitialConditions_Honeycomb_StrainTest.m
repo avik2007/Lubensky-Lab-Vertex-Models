@@ -13,27 +13,27 @@ clear
 
 %% Inputs needed
 INITIALSTEPSIZE = 0.0001;    %Initial stepsize for the numberic integrator 
-nomfichier=strcat('mytissue_backtrack_fix','.txt');  %the file name
-n=10;                       %1/2 of the Cells per row
-m=10;                       %Cells per collumn 
+nomfichier=strcat('my_tissue_backtrack_fix_stifftest','.txt');  %the file name
+n=3;                       %1/2 of the Cells per row
+m=2;                       %Cells per collumn 
 r=89542;                    %Seed for the random number generators
 
 %% Global Parameters 
 GAMMA =10;                  %Tension on an edge
-l= sqrt(2) * 25;            %Average edge length
+l= sqrt(2) * 25;            %Average edge length    
 t0 = 1;                     %Standard unit of time 
 RLXLY = 1;                  %Ratio of LX to LY (used to make rectangular boxes) 
 Ratio = 0.3;                %ratio of pressure to tension forces (standard value 0.3)
-Ralpha=100;                   %Ralpha=10 means the box evolves 10 times slower then the vertices
+Ralpha=1000000000000000000000000000;                   %Ralpha=10 means the box evolves 10 times slower then the vertices
 TOTALTIME =	80;             %How long to run the simulation 
 CURRENTTIME = 0.0;          %The initial time
 TIMEINTERVAL =	0.1;        %How often to output the current configuration of the tissue
 %INITIALSTEPSIZE = 0.002;    %Initial stepsize for the numberic integrator 
 error_tolerance_absolute_mechanical = 0.01;  %Error tolerence for use with the adaptive stepsize integrators 
-LX=n*3*l+1;
+LX=n*3*l +1;
 LY=m*sqrt(3)*l+1; 
 NCells=n*m*2;
-A0 = 4033.1139     ;                    %LX*LY/NCells;                   %Cells want to have area A0
+A0 = 4033.1139     ;                    %LX*LY/NCells;                   %Cells want to have area A0 if box size can change
 %Here, I'm making a strain test for the hexagonal lattice by calculating
 %what the preferred area should be for the initial area of all the cells to
 % the equilibrium area.
@@ -43,19 +43,22 @@ NEWEDGELENGTH =	l/20;                %Length of a new edge created in the T1 pro
 % K = Ratio * GAMMA / l^3 ;           %for pressure=K(A-A0)
 K = Ratio * 10 * GAMMA / l;          %for pressure=K(1-A/A0)
 Alpha_M = GAMMA*t0/l;                % Drag coefficent
-TISSUE_ALPHA = 1000 * Alpha_M;%10000000*Ralpha*Alpha_M;       % How fast the box size updates relative to the vertex motion
+TISSUE_ALPHA = 10000000000000000000000000000000 * Alpha_M;%10000000*Ralpha*Alpha_M;       % How fast the box size updates relative to the vertex motion
 TISSUE_EXT_STRESS_Y = 0;             % External Stress on the tissue (positive values expancile) 
 TISSUE_EXT_STRESS_X = 0;
 P0 = 3.722 * sqrt(A0);
 LAMBDA = K / 0.05; % mimics Manning Model 
+VERBOSEON = 1; %boolean, tells code to output extra data for cells and edges when true
+equilibriumtolerance = 0.000000000000000000001;
+
 %% Create the Hexagonal tillining 
 SEED = r;
 rng(SEED); 
 f2=figure();
-offset=0.01*l; 
+offset=0;%0.01*l; 
 Points1=zeros(NCells,2); 
 k=1; 
-strainx = .5;
+strainx = 0 ;%.5;
 
 %Grid One
 for i=0:n-1
@@ -142,12 +145,14 @@ fprintf(fid, 'LAMBDA\t%f\n', LAMBDA);
 fprintf(fid, 'P0\t%f\n', P0);
 fprintf(fid, 'TOTALTIME\t%f\n', TOTALTIME);
 fprintf(fid, 'CURRENTTIME\t%f\n', CURRENTTIME);
+fprintf(fid, 'VERBOSEON\t%d\n', VERBOSEON);
 fprintf(fid, 'INITIALSTEPSIZE\t%f\n', INITIALSTEPSIZE);
 fprintf(fid, 'error_tolerance_absolute_mechanical\t%f\n', error_tolerance_absolute_mechanical);
 fprintf(fid, 'TISSUE_ALPHA\t%f\n', TISSUE_ALPHA);
 fprintf(fid, 'ALPHAM\t%f\n', Alpha_M);
 fprintf(fid, 'TISSUE_EXT_STRESS_X\t%f\n', TISSUE_EXT_STRESS_X);
 fprintf(fid, 'TISSUE_EXT_STRESS_Y\t%f\n', TISSUE_EXT_STRESS_Y);
+fprintf(fid, 'equilibriumtolerance\t%d\n', equilibriumtolerance);
 
 fprintf(fid, 'endGlobal\n'); 
 fprintf(fid, 'Vertices\n');
@@ -156,6 +161,9 @@ fprintf(fid, 'id\tx\ty\n');
 NbVertex=0;
 CentralVertices=zeros(length(v),2);
 for i = 2:length(v)   % v(1) is always a point at infinity, so skip (NOTED ADDED BY DKL 7/5/10)
+    % the vertices don't necessarily have to be in order because the code
+    % will skip over vertices that are outside of the window of interest
+    % (NOTE ADDED BY ABM 10/14/23
    if(v(i,1)>0&&v(i,1)<LX&&v(i,2)>0&&v(i,2)<LY)
        fprintf(fid,'%d',i); 
        fprintf(fid,'\t %2.4f',v(i,1));
@@ -197,7 +205,7 @@ for i = 2:length(v)
    end
 
 end
-
+ 
 fprintf(fid, 'Edges\n');
 fprintf(fid, 'id\tvertex1\tvertex2\txflag\tyflag\n');
 NbEdgeMax=3*NbVertex;
@@ -213,7 +221,7 @@ for i = 1:length(c) %For each vertex
    if INGLOBAL %If it is in the reigon of intrest
        ListVertex=c{i}; %list of edges in each cell in the reigon 
        for j=1:length(ListVertex) %for each edge in the cell
-           testdejainscrit=0;
+           testdejainscrit=0;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
            % if we look at the current edge is in the list
            for k=1:EdgeIncrement
                if ((EqVertex((ListVertex(j)))==Edges.Vertices(k,1)...

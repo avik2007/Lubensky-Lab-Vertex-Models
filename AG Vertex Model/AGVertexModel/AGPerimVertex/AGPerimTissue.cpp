@@ -1041,10 +1041,14 @@ double AGPerimTissue::CalculateExpPressureEnergy()
 */
 double AGPerimTissue::HelperResolveVertices_CheckStability(Vertex* vert, Edge* edge1, Edge* edge2, Edge* edge3, Edge* edge4, Cell* cell1, Cell* cell2, Cell* cell3, Cell* cell4, Vect* Force){
 	//First make new objects which are coppies of the objects in the linked lists we will minipulate these objecs and they will be destroyed when the function ends
-	Cell c1 = (*cell1);
-	Cell c2 = (*cell2);
-	Cell c3 = (*cell3);
-	Cell c4 = (*cell4);
+	AGPerimCell* ac1 = dynamic_cast<AGPerimCell*>(cell1);
+	AGPerimCell c1 = (*ac1);
+	AGPerimCell* ac2 = dynamic_cast<AGPerimCell*>(cell2);
+	AGPerimCell c2 = (*ac2);
+	AGPerimCell* ac3 = dynamic_cast<AGPerimCell*>(cell3);
+	AGPerimCell c3 = (*ac3);
+	AGPerimCell* ac4 = dynamic_cast<AGPerimCell*>(cell4);
+	AGPerimCell c4 = (*ac4);
 	AGPerimEdge* age1 = dynamic_cast<AGPerimEdge*>(edge1);
 	AGPerimEdge e1 = (*age1);
 	AGPerimEdge* age2 = dynamic_cast<AGPerimEdge*>(edge2);

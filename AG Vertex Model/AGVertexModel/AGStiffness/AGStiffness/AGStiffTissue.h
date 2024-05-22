@@ -32,7 +32,7 @@ class Vect;
 #include "AGTissue.h"
 #include "AGPerimConstants.h"
 
-//using namespace Eigen;
+using namespace Eigen;
 using namespace std;
 
 class AGStiffTissue : public AGPerimTissue {
@@ -43,12 +43,14 @@ class AGStiffTissue : public AGPerimTissue {
 public:
 	//CONSTRUCTOR
 	AGStiffTissue() {};
-
+	
 	//DESTRUCTOR
 	virtual ~AGStiffTissue() {};
 
 	//DATA
-	
+	bool constantK;
+	double meanK;
+	double Kstd;
 	//ADDITIONAL FUNCTIONS
 	// Updates read input function to accept new global variables 
 	virtual void HelperReadInputData_SetGlobalValues(ifstream* datafile);
@@ -65,10 +67,21 @@ public:
 	//calculates the area energy of a packing
 	virtual double CalculatePressureEnergy();
 
-	//sets the spatially varying area modulus (KAM) for each cells
-	virtual void AssignAreaModuli();
+	virtual bool ReadInputData(string InputFileName);
 
-	
+	//sets the spatially varying area modulus (KAM) for each cells
+	virtual void AssignAreaModuli(bool constantK, double meanK, double Kstd);
+
+	//! Called by HelperResolveVertices_ResolveFourfoldVertex to check the stability of one configuration
+	//! Splits vertices so edges (e1,e2) and (e3,e4) are paired and cells c2 and c4 are neighbors
+	//! returns the magnutude of Force-Forcenewedge and changes the value of Force
+	virtual double HelperResolveVertices_CheckStability(Vertex* v, Edge* e1, Edge* e2, Edge* e3, Edge* e4, Cell* c1, Cell* c2, Cell* c3, Cell* c4, Vect* Force);
+
+	//! Calculates the force on every vertex and stores the result in vertex.
+	virtual void ForceFunction(ofstream* errorfile);
+
+	//! Sets the preferred area of A0 to a constant value for all the cells
+	virtual void AssignPreferredAreas(double A0);
 };
 
 #endif

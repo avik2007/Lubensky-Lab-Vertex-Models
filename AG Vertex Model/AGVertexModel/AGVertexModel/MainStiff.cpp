@@ -109,7 +109,7 @@ AGStiffTissue tissue;
 int main(){
 
 	//Path to the folder that your initial files are in 
-	string PathName = "C:\\Users\\abmondal\\Desktop\\Code Folder\\"; // CHANGE THIS TO MATCH YOUR FOLDER
+	string PathName = "C:\\Users\\abmondal\\Documents\\Lubensky-Lab-Vertex-Models\\MATLAB Data Folder\\"; // CHANGE THIS TO MATCH YOUR FOLDER
 
 	cout << "Enter name of imput file: ";
 	cin >> InputFileName;
@@ -134,7 +134,7 @@ int main(){
 	string filename = InputFileName.substr(0, InputFileName.size() - 4);
 	OutputFileName1 = filename + "_out.txt";
 	string OutputFileName3 = filename + "_error.txt";
-	ofstream datafile, infofile, errorfile, digraphfile;
+	ofstream datafile, errorfile, eqfile, a0file;
 	datafile.open(OutputFileName1);
 	errorfile.open(OutputFileName3);
 	cout << "I made output files!" << endl;
@@ -155,16 +155,58 @@ int main(){
 	cout << "Evolving with step size" << INITIALSTEPSIZE << endl;
 	cout << "*******************************************************************************" << endl;
 
+	double initialEnergy = tissue.CalculateFreeEnergy();
 	tissue.WriteOutputDataAppend(&datafile);
-	while (CURRENTTIME < TOTALTIME){
-		cout << "CURRENTTIME" << CURRENTTIME << endl;
-		tissue.Evolve(TIMEINTERVAL, &stepSize, &errorfile);
-		cout << "exited evolve" << endl;
+	double currA0 = 10;
+	tissue.AssignPreferredAreas(currA0);
+	tissue.constantK = false;
+	tissue.meanK = K;
+	tissue.Kstd = 2 * K * (tissue.cells.size()) / (LX * LY);
+	tissue.AssignAreaModuli(tissue.constantK, tissue.meanK, tissue.Kstd);
+	INTEGRATORNAME = "RK4_Adaptive";
+	//while (currA0 > 0)
+	//{
+		while (!(tissue.IsEquilibrated()))
+		{
+			cout << "CURRENTTIME" << CURRENTTIME << endl;
+			tissue.Evolve(TIMEINTERVAL, &stepSize, &errorfile);
+			cout << "exited evolve" << endl;
+			tissue.WriteOutputDataAppend(&datafile);
+			cout << "CURRENTTIME" << CURRENTTIME << endl;
+		}
+		double finalEnergy = tissue.CalculateFreeEnergy();
 		tissue.WriteOutputDataAppend(&datafile);
-		cout << "CURRENTTIME" << CURRENTTIME << endl;
+		datafile << "------------------------------------------------------------\n \n";
+		//currA0 = currA0 - tissue.A0 * .001;
+		//tissue.AssignPreferredAreas(currA0);
+		//tissue.Evolve(TIMEINTERVAL, &stepSize, &errorfile);
+	//}
+	string OutputFileName4 = filename + "_EQ.txt";
+	eqfile.open(OutputFileName3);
+	tissue.WriteOutputDataAppend(&eqfile);
+	
+	/*
+	while (tissue.Kstd < .5)
+	{
+		tissue.constantK = false;
+		tissue.meanK = K;
+		tissue.Kstd = tissue.Kstd * 1.1;
+		//eqfile << "initialEnergy: " << initialEnergy << "\t final Energy: " << finalEnergy << endl;
+		tissue.equilibrated = false;
+		CURRENTTIME = 0;
+		while (!(tissue.IsEquilibrated()))
+		{
+			cout << "CURRENTTIME" << CURRENTTIME << endl;
+			tissue.Evolve(TIMEINTERVAL, &stepSize, &errorfile);
+			cout << "exited evolve" << endl;
+			tissue.WriteOutputDataAppend(&datafile);
+			cout << "CURRENTTIME" << CURRENTTIME << endl;
+		}
 	}
-	tissue.WriteOutputDataAppend(&datafile);
+	*/
 
+
+	
 	///////******************************End***********************************************************************
 	///////**********************************************************************************************************
 	endtime = std::chrono::system_clock::now();

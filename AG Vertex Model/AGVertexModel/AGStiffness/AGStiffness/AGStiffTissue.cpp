@@ -107,22 +107,47 @@ double AGStiffTissue::CalculatePressureEnergy()
 /*
 * void AssignAreaModuli()
 *
-* Sets the values of KAM for the cells in the tissue
+* Sets the values of KAM for the cells in the tissue - this iteration sets the K to a spatially varying version
 */
-void AGStiffTissue::AssignAreaModuli()
+void AGStiffTissue::AssignAreaModuli(bool constantK, double meanK, double Kstd)
 {
 	
-	double xcom = 0;
+	Vect xcom;
 	double stifffunc = 0;
 	for (list<Cell*>::iterator cit = cells.begin(); cit != cells.end(); cit++)
 	{
 		AGStiffCell* agit = dynamic_cast<AGStiffCell*>(*cit);
-		xcom = (*agit).GetCenter().x;
-		
-		stifffunc = K + 0.2 * K * sin(xcom * PI / LX); // FOR NOW, THIS IS THE CHOSEN STIFFNESS PATTERN
-		(*agit).SetAreaModulus(stifffunc);
+		xcom = (*(*cit)).GetCenter();
+		if (constantK)
+		{
+			(*agit).SetAreaModulus(meanK);
+		}
+		else
+		{
+			stifffunc = meanK + Kstd * sin(xcom.x * PI / LX); // FOR NOW, THIS IS THE CHOSEN STIFFNESS PATTERN
+			(*agit).SetAreaModulus(stifffunc);
+		}
+			
 
 	}
+
+}
+
+/*
+* void AssignPreferredAreas()
+*
+* Sets the values of KAM for the cells in the tissue
+*/
+void AGStiffTissue::AssignPreferredAreas(double A0)
+{
+
+	for (list<Cell*>::iterator cit = cells.begin(); cit != cells.end(); cit++)
+	{
+		AGStiffCell* agit = dynamic_cast<AGStiffCell*>(*cit);
+		(*agit).A0 = A0;
+
+	}
+
 }
 
 /*
@@ -491,7 +516,7 @@ void AGStiffTissue::HelperReadInputData_CreateObjects(ifstream* datafile) {
 		(*this).A0 = A0;
 		(*this).P0 = P0;
 		(*cptr).pressureType = cellpressuretype;
-		(*this).AssignAreaModuli();
+
 		if (tcjstrength != 0)
 		{
 			(*cptr).TCJSTRENGTH = tcjstrength;
@@ -536,6 +561,8 @@ void AGStiffTissue::HelperReadInputData_CreateObjects(ifstream* datafile) {
 	}
 	(*this).currentFreeEnergy = A0 * A0 * A0 * (K * A0 + LAMBDA * P0 * P0) * cells.size(); // this just needs to start out as a bigger number than the actual tissue energy
 	(*this).pastFreeEnergy = (*this).currentFreeEnergy;
+
+	
 }
 
 /*
@@ -721,4 +748,209 @@ void AGStiffTissue::HelperWriteOutputData_Write2File(ofstream* datafile, bool in
 	}
 
 	*datafile << "End" << endl << endl;
+}
+
+// Called by HelperResolveVertices_ResolveFourfoldVertex to check the stability of one configuration.Splits vertices so edges(e1, e2) and(e3, e4) are paired and cells c2 and c4 are neighbors retruns false if the vertex is unstable in that topology
+/**
+* HelperResolveVertices_CheckStability( see Meryl's thesis to see what all goes into here/ check out Tissue class )
+*
+* An updated stability checker for 4-fold vertices in the perimeter squared model
+*
+*/
+double AGStiffTissue::HelperResolveVertices_CheckStability(Vertex* vert, Edge* edge1, Edge* edge2, Edge* edge3, Edge* edge4, Cell* cell1, Cell* cell2, Cell* cell3, Cell* cell4, Vect* Force) {
+	//First make new objects which are coppies of the objects in the linked lists we will minipulate these objecs and they will be destroyed when the function ends
+	AGStiffCell* ac1 = dynamic_cast<AGStiffCell*>(cell1);
+	AGStiffCell c1 = (*ac1);
+	AGStiffCell* ac2 = dynamic_cast<AGStiffCell*>(cell2);
+	AGStiffCell c2 = (*ac2);
+	AGStiffCell* ac3 = dynamic_cast<AGStiffCell*>(cell3);
+	AGStiffCell c3 = (*ac3);
+	AGStiffCell* ac4 = dynamic_cast<AGStiffCell*>(cell4);
+	AGStiffCell c4 = (*ac4);
+	AGPerimEdge* age1 = dynamic_cast<AGPerimEdge*>(edge1);
+	AGPerimEdge e1 = (*age1);
+	AGPerimEdge* age2 = dynamic_cast<AGPerimEdge*>(edge2);
+	AGPerimEdge e2 = (*age2);
+	AGPerimEdge* age3 = dynamic_cast<AGPerimEdge*>(edge3);
+	AGPerimEdge e3 = (*age3);
+	AGPerimEdge* age4 = dynamic_cast<AGPerimEdge*>(edge4);
+	AGPerimEdge e4 = (*age4);
+	double stability;
+	double a1, a2, a3, a4;
+
+	//Make the new edge and vertices resulting from the split into 2 3fold vertices
+	Edge enew;
+	Vertex v12; //the vertex on edges 1 and 2
+	Vertex v34; //the vertex on edges 3 and 4
+
+	//Now update the info on the coppies of the objects so they are 2 3fold vertices
+
+	//For the new vertices
+	v12.r = (*vert).r;							//put the two new verts where the olf 4ourfold was
+	v12.edges.push_back(&e1);
+	v12.edges.push_back(&e2);
+	v12.edges.push_back(&enew);
+	v34.r = (*vert).r;							//put the two new verts where the olf 4ourfold was
+	v34.edges.push_back(&e3);
+	v34.edges.push_back(&e4);
+	v34.edges.push_back(&enew);
+
+	//For the new edge
+	enew.yflag = 0;		//the new edge has no length and therefor cann not have a flag
+	enew.xflag = 0;
+	enew.vertex1 = &v12;
+	enew.vertex2 = &v34;
+	enew.cell1 = &c4;
+	enew.cell2 = &c2;
+
+	//For the old edges
+	e1.UpdateVertex(vert, &v12);
+	e2.UpdateVertex(vert, &v12);
+	e3.UpdateVertex(vert, &v34);
+	e4.UpdateVertex(vert, &v34);
+
+	//Now we have at the position of the fourfold vertex two threefold vertices in which everyone knows all of their neighbors correclty, we can now calculate the forces based on what the tensiions and pressures are in this configuration
+
+	//pressure differences across cells
+	a1 = c1.GetArea();
+	a2 = c2.GetArea();
+	a3 = c3.GetArea();
+	a4 = c4.GetArea();
+	double p2 = (c2.GetPressure(a2) - c1.GetPressure(a1)); //pressure difference acorss edge2 between cell 1 and cell 2 taken CCW
+	double p3 = (c3.GetPressure(a3) - c2.GetPressure(a2));
+	double p4 = (c4.GetPressure(a4) - c3.GetPressure(a3));
+	double p1 = (c1.GetPressure(a1) - c4.GetPressure(a4));
+
+	//getting z X edge (both the diredction and magnitude are correctHelperResolveVertices_ResolveFourfoldVertex
+	Vect zXe1 = (e1).GetVectorDifference(&v12, v12.GetOtherVertex(&e1)).Rotate(PI / 2.0);
+	Vect zXe2 = (e2).GetVectorDifference(&v12, v12.GetOtherVertex(&e2)).Rotate(PI / 2.0);
+	Vect zXe3 = (e3).GetVectorDifference(&v34, v34.GetOtherVertex(&e3)).Rotate(PI / 2.0);
+	Vect zXe4 = (e4).GetVectorDifference(&v34, v34.GetOtherVertex(&e4)).Rotate(PI / 2.0);
+
+	//Get the forces (tension first)
+	Vect ForceT1 = (e1).GetTension_ForceOnVertex(&v12);
+	Vect ForceT2 = (e2).GetTension_ForceOnVertex(&v12);
+	Vect ForceT3 = (e3).GetTension_ForceOnVertex(&v34);
+	Vect ForceT4 = (e4).GetTension_ForceOnVertex(&v34);
+	//Generate unit vectors corresponding to edges
+	//Vect l1 = ForceT1 / ForceT1.Magnitude();
+	//Vect l2 = ForceT2 / ForceT2.Magnitude();
+	//Vect l3 = ForceT3 / ForceT3.Magnitude();
+	//Vect l4 = ForceT4 / ForceT4.Magnitude();
+
+	//Get the forces (due to pressure)
+	Vect ForceP1 = zXe1 * (p1 * 0.5);
+	Vect ForceP2 = zXe2 * (p2 * 0.5);
+	Vect ForceP3 = zXe3 * (p3 * 0.5);
+	Vect ForceP4 = zXe4 * (p4 * 0.5);
+	*Force = ((ForceT1 + ForceT2 + ForceP1 + ForceP2) - (ForceT3 + ForceT4 + ForceP3 + ForceP4)) * 0.5;
+
+
+
+	//Calculate the tension on the new edge
+	Vect ForceNewEdge_zerolength = enew.GetTension_ForceOnVertex(&v12);
+
+
+	//Check the stability
+	stability = (*Force).Magnitude() - ForceNewEdge_zerolength.Magnitude();
+	// You changed the location of the factors of two that were in the previous verions of this code
+	// Consider putting them back if necessary
+	return stability;
+}
+
+// Reads and constructs simulation from file. The file must be formatted like InputTemplate.txt. This function parses the input file then initializes all the objects and pointers.
+bool AGStiffTissue::ReadInputData(string InputFileName) {
+	cout << "Entered RedInputData" << endl;
+	ifstream datafile;
+	datafile.open(InputFileName);											//open file
+	if (!datafile.is_open()) {											//check if open file successful
+		cout << "ERROR cannot open file: " << InputFileName << endl;
+		return false;
+	}
+	cout << InputFileName << " file opened sucessfully" << endl;
+	(*this).HelperReadInputData_SetGlobalValues(&datafile);
+	cout << "Global values Set" << endl;
+	(*this).HelperReadInputData_CreateObjects(&datafile);
+	(*this).HelperReadInputData_CreatePointers();
+	(*this).AssignAreaModuli(false, 10, 0); // this set's the initial stiffnesses
+	datafile.close();
+	return true;
+}
+
+///WARNING!!! This function assumes that cell.SavedInfoForEvolve_CWVerts has been updated correctly
+//Calculates the force on every vertex and stores the result in vertex.Tissue subclasses have their own implementation
+
+void AGStiffTissue::ForceFunction(ofstream* errorfile) {
+	uniform_real_distribution<double> distribution(0.0, 1.0);
+	double area, deltaP;
+	vector<vector<int>> cwflags;
+	vector<Vertex*> cwverts;
+	int i, cellnumber;
+	Edge* eptr;
+	double Pmag, angle;
+	Vect FT;
+	//Declare and initialize pointers.
+	Vertex* v1 = 0;
+	Vertex* v2 = 0;
+	Cell* c1;
+	Vect zerovec(0.0, 0.0);
+	(*this).AssignAreaModuli((*this).constantK, (*this).meanK, (*this).Kstd);
+	//First loop through all the cells and find the pressure WARNING!! cell.SavedInfoForEvolve_CWVerts must already be correctly assigned
+	for (list<Cell*>::iterator cit = cells.begin(); cit != cells.end(); cit++)
+	{
+		cwverts = (*(*cit)).SavedInfoForEvolve_CWVerts;							//Get the cw vertices in the cell from the preassigned list 
+		area = (*(*cit)).GetArea(cwverts);										//Get the area quickly using the pre assigned cw vertices
+		(*(*cit)).SavedInfoForEvolve_Pressure = (*(*cit)).GetPressure(area);	//Get the pressure
+	}
+
+	//Calculate the force on each vertex from the pressure and tension
+	for (list<Vertex*>::iterator vit = vertices.begin(); vit != vertices.end(); vit++) {
+		(*(*vit)).SavedInfoForEvolve_MechForce = zerovec; //first set the force to zero 
+		//For each edge
+		for (i = 0; i < (*(*vit)).edges.size(); i++) {
+			eptr = &(*(*(*vit)).edges[i]);
+			//Get the force from the tension on the edge
+			FT = (*eptr).GetTension_ForceOnVertex((*vit));
+			//Get the force from the pressure difference across the edge
+			v1 = (*eptr).GetOtherVertex((*vit));
+			c1 = &(*(*eptr).cell1);
+			v2 = (*c1).GetNextCWVert(*vit, (*c1).SavedInfoForEvolve_CWVerts);
+			//Gets the CW ordering of cells 1 and 2 across eptr
+			if ((*v1).id == (*v2).id)
+			{
+				deltaP = (*(*eptr).cell2).SavedInfoForEvolve_Pressure - (*(*eptr).cell1).SavedInfoForEvolve_Pressure;
+			}
+			else
+			{
+				deltaP = (*(*eptr).cell1).SavedInfoForEvolve_Pressure - (*(*eptr).cell2).SavedInfoForEvolve_Pressure;
+			}
+			Pmag = -0.5 * deltaP * (*eptr).GetLength();   		//magnitude of the force due to the pressure difference
+			angle = (*eptr).GetAngle((*vit)) + PI / 2;	 	//get the angle zXl
+			Vect FP(zerovec, angle, Pmag);
+			//Add the forces on this edge to the vertex
+			(*(*vit)).SavedInfoForEvolve_MechForce = (*(*vit)).SavedInfoForEvolve_MechForce + FT + FP;
+		}
+	}
+
+	//Calculate the tissue stress
+	double GammaX = 0;
+	double GammaY = 0;
+	// calculateexternalstress_linear(TAU_STRESS); 
+
+	double cutlineX = distribution(generator) * LX; //Continue to generate random numbers until you cut no concave cells
+	GammaX = TISSUE_EXT_STRESS_X + (*this).CalculateTissueStressX(cutlineX, errorfile);
+
+	double cutlineY = distribution(generator) * LY; //Continue to generate random numbers until you cut no concave cells
+	GammaY = TISSUE_EXT_STRESS_Y + (*this).CalculateTissueStressY(cutlineY, errorfile);
+
+
+	//Add the force from the tissue stress to every vertex
+	for (list<Vertex*>::iterator vit = vertices.begin(); vit != vertices.end(); vit++) {
+		(*(*vit)).SavedInfoForEvolve_TotalForce.x = (*(*vit)).SavedInfoForEvolve_MechForce.x + (alphaM / TISSUE_ALPHA) * (*(*vit)).r.x * GammaX;
+		(*(*vit)).SavedInfoForEvolve_TotalForce.y = (*(*vit)).SavedInfoForEvolve_MechForce.y + (alphaM / TISSUE_ALPHA) * (*(*vit)).r.y * GammaY;
+	}
+
+	//Update LY and LX
+	ForceLX = LX * GammaX;
+	ForceLY = LY * GammaY;
 }
