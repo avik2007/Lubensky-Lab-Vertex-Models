@@ -1945,7 +1945,7 @@ MatrixXf AGPerimTissue::calculateHessian(ofstream* errorfile)
 		// We effectively have 4 terms we need in the Hessian.
 
 		// the pressure
-		cell_pressure = (*(*cit)).GetPressure(area) * a0; // I want pressure to be PRESSURE = K (A - A0)
+		cell_pressure = (*(*cit)).GetPressure(area); // I want pressure to be PRESSURE = K (A - A0)
 		// tension magnitude should be simple enough
 		tension_magnitude =  LAMBDA * (perimeter - p0);
 
@@ -2051,10 +2051,10 @@ MatrixXf AGPerimTissue::calculateHessian(ofstream* errorfile)
 				cellincidence(2 * j_id + 1, 2 * i_id) += 1;
 
 				// the dAdri * dAdrj portion
-				dAdridAdrj_percell(2 * j_id, 2 * i_id) += K * dAdr[j].x * dAdr[i].x;
-				dAdridAdrj_percell(2 * j_id, 2 * i_id + 1) += K * dAdr[j].x * dAdr[i].y;
-				dAdridAdrj_percell(2 * j_id + 1, 2 * i_id + 1) += K * dAdr[j].y * dAdr[i].y;
-				dAdridAdrj_percell(2 * j_id + 1, 2 * i_id) += K * dAdr[j].y * dAdr[i].x;
+				dAdridAdrj_percell(2 * j_id, 2 * i_id) += (K / a0) * dAdr[j].x * dAdr[i].x;
+				dAdridAdrj_percell(2 * j_id, 2 * i_id + 1) += (K / a0) * dAdr[j].x * dAdr[i].y;
+				dAdridAdrj_percell(2 * j_id + 1, 2 * i_id + 1) += (K / a0) * dAdr[j].y * dAdr[i].y;
+				dAdridAdrj_percell(2 * j_id + 1, 2 * i_id) += (K / a0) * dAdr[j].y * dAdr[i].x;
 
 				// the dPdri * dPdrj portion
 				dPdridPdrj_percell(2 * j_id, 2 * i_id) += LAMBDA * dPdr[j].x * dPdr[i].x;
@@ -2212,7 +2212,7 @@ double AGPerimTissue::calculateShearModulusWithEigenDecomposition(ofstream* erro
 		//LAMBDA = 1; // this is for debugging, just as in the Hessian calculation
 
 		// the pressure
-		cell_pressure = -1*(*(*cit)).GetPressure(area) * a0; // I want pressure to be PRESSURE = K (A - A0), but since PRESSURE = - dE/dA, we need the minus sign
+		cell_pressure = -1 * (*(*cit)).GetPressure(area); // I want pressure to be PRESSURE = K (A - A0), but since PRESSURE = - dE/dA, we need the minus sign
 		// tension magnitude should be simple enough
 		tension_magnitude = LAMBDA * (perimeter - p0);
 
@@ -2222,7 +2222,7 @@ double AGPerimTissue::calculateShearModulusWithEigenDecomposition(ofstream* erro
 		dpdpdgdgcheck = (*agit).Getd2Pdgamma2ForSimpleShearAlongXAxis();
 		// let's do d2Edgamma2 first:
 		
-		dadgterm = K * dadgcheck * dadgcheck;
+		dadgterm = (K / a0) * dadgcheck * dadgcheck;
 		dpdgterm = LAMBDA * dpdgcheck * dpdgcheck;
 		dpdpdgdgterm = tension_magnitude * dpdpdgdgcheck;
 		d2Edgamma2 += dadgterm;
@@ -2239,8 +2239,8 @@ double AGPerimTissue::calculateShearModulusWithEigenDecomposition(ofstream* erro
 			BoundaryVector(2 * vmapid, 0) += tension_magnitude * d2Pdrdgamma.x;
 			BoundaryVector(2 * vmapid + 1, 0) += tension_magnitude * d2Pdrdgamma.y;
 			dAdv = (*agit).GetdAdv((*vit));
-			BoundaryVector(2 * vmapid, 0) += K * dadgcheck * dAdv.x; // double check dAdv
-			BoundaryVector(2 * vmapid + 1, 0) += K * dadgcheck * dAdv.y; // double check dAdv
+			BoundaryVector(2 * vmapid, 0) += (K / a0) * dadgcheck * dAdv.x; // double check dAdv
+			BoundaryVector(2 * vmapid + 1, 0) += (K / a0) * dadgcheck * dAdv.y; // double check dAdv
 			dPdv = (*agit).GetdPdv((*vit));
 			BoundaryVector(2 * vmapid, 0) += LAMBDA * dpdgcheck * dPdv.x; // double check dPdv
 			BoundaryVector(2 * vmapid + 1, 0) += LAMBDA * dpdgcheck * dPdv.y; // double check dPdv
@@ -2292,7 +2292,7 @@ double AGPerimTissue::calculateShearModulusWithEigenDecomposition(ofstream* erro
 	//*errorfile << "Eigenvalues " << hessianeigenvalues << endl;
 	*errorfile << "d2Edgamma2 = " << d2Edgamma2 << endl;
 	*errorfile << "nonaffine_shear = " << nonaffine_shearportion << endl;
-	shearmodulus = 1 / (K * A0 * A0 * numofcells * LX * LY) * (d2Edgamma2 - nonaffine_shearportion);//numofcells / (K * pow((LX * LY),2)) * (d2Edgamma2 - nonaffine_shearportion);
+	shearmodulus = 1 / ((K / a0) * a0 * a0 * numofcells * LX * LY) * (d2Edgamma2 - nonaffine_shearportion);//numofcells / (K * pow((LX * LY),2)) * (d2Edgamma2 - nonaffine_shearportion);
 	//shearmodulus = 1 / (K * A0 * LX * LY) * (d2Edgamma2 - nonaffine_shearportion);
 	return shearmodulus;
 

@@ -157,11 +157,11 @@ int main(){
 
 	double initialEnergy = tissue.CalculateFreeEnergy();
 	tissue.WriteOutputDataAppend(&datafile);
-	double currA0 = 10;
+	double currA0 = 1;
 	tissue.AssignPreferredAreas(currA0);
 	tissue.constantK = false;
 	tissue.meanK = K;
-	tissue.Kstd = 2 * K * (tissue.cells.size()) / (LX * LY);
+	tissue.Kstd = 0.25 * K;
 	tissue.AssignAreaModuli(tissue.constantK, tissue.meanK, tissue.Kstd);
 	INTEGRATORNAME = "RK4_Adaptive";
 	//while (currA0 > 0)

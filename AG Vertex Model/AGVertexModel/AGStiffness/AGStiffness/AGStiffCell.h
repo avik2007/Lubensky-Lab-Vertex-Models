@@ -23,7 +23,7 @@ class Edge;
 
 
 using namespace std;
-// AGStiffCell -> allows for cells to have varying stiffnesses
+// AGStiffCell -> allows for cells to have varying stiffnesses, I'M CHANGING UNITS OF K
 class AGStiffCell : public AGPerimCell {
 public:
 	AGStiffCell() {};

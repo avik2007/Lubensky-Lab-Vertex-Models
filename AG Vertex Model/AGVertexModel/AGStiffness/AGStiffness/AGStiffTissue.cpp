@@ -63,7 +63,7 @@ double AGStiffTissue::CalculateFreeEnergy()
 		p0 = (*agit).P0;
 		a0 = ((*agit)).A0;
 		
-		pressure_portion += (*agit).KAM * a0 * a0 * pow(carea / a0 - 1, 2);
+		pressure_portion += (*agit).KAM * pow(carea - a0, 2);
 	
 		perim_difference_sqr += pow(cperim - p0, 2);
 
@@ -96,7 +96,7 @@ double AGStiffTissue::CalculatePressureEnergy()
 		carea = (*agit).GetArea();
 		a0 = (*agit).A0;
 		
-		pressure_portion += (*agit).KAM * a0 * a0 * pow(carea / a0 - 1, 2);
+		pressure_portion += (*agit).KAM * pow(carea - a0, 2);
 			// where the energy would look like Ep = 1/2 K A0^2 (A/A0 - 1)^2 ([K] = pressure)
 		
 	}

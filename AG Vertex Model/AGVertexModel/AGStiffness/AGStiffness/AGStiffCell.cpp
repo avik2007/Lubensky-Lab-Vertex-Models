@@ -47,7 +47,7 @@ void AGStiffCell::SetAreaModulus(double K)
 */
 double AGStiffCell::GetPressure(double area)
 {
-	double pressure = (*this).KAM * (1 - area / (*this).A0);
+	double pressure = (*this).KAM * ((*this).A0 - area);
 	return pressure;
 }
 
@@ -58,6 +58,6 @@ double AGStiffCell::GetPressure(double area)
 */
 double AGStiffCell::GetEnergy()
 {
-	double energy = 0.5 * ((*this).KAM * pow((*this).GetArea() - (*this).A0, 2) / (*this).A0 + LAMBDA * pow((*this).GetPerimeter() - P0, 2));
+	double energy = 0.5 * ((*this).KAM * pow((*this).GetArea() - (*this).A0, 2)  + LAMBDA * pow((*this).GetPerimeter() - P0, 2));
 	return energy;
 }
