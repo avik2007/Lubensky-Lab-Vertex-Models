@@ -653,17 +653,17 @@ void AGPerimTissue::Evolve(double interval, double *stepsize, ofstream* errorfil
 			if (energyDidIncrease)
 			{
 				//if (*stepsize < 0.0000001) // this could be turned into a parameter, the minumum stepsize
-				if (*stepsize <   0.000000000001)
+				if (*stepsize <   0.00000000000001)
 				{
 					breakVar = true;
-					//*errorfile << "Stepsize got too small. Break" << endl;
+					*errorfile << "Stepsize got too small. Break" << endl;
 					break;
 					// This is a step I take so that the adaptive time stepper doesn't keep pushing the stepsize all the way down the machine precision 
 				}
 				//*errorfile << "Current FE \t Stepsize\t Energy Change \t Polydispersity \n";
 				//*errorfile << std::setprecision(outputPrecision) << currentFreeEnergy  << "\t" << *stepsize << "\t" << currentFreeEnergy - pastFreeEnergy << "\t" << (*this).calculatePolydispersity() << endl;
 				//*errorfile << "Energy Increase - change timestep and redo step\n";
-				*errorfile << "\n";
+				//*errorfile << "\n";
 				//*errorfile << "--------------------------------------------------------------------------\n";
 				
 				//*errorfile << "--------------------------------------------------------------------------\n";
@@ -706,7 +706,7 @@ void AGPerimTissue::Evolve(double interval, double *stepsize, ofstream* errorfil
 		perimEnergy = (*this).CalculatePerimeterEnergy();
 		//energy_wo_quartic = perimEnergy + quadraticPressureEnergy;
 		
-		//*errorfile << std::setprecision(outputPrecision) << CURRENTTIME << "\t" << currentFreeEnergy << "\t" << energySlope << "\t"<< (*this).calculatePolydispersity() << endl;
+		*errorfile << std::setprecision(outputPrecision) << CURRENTTIME << "\t" << currentFreeEnergy << "\t" << energySlope << "\t"<< (*this).calculatePolydispersity() << endl;
 
 		//if ((abs((currentFreeEnergy - pastFreeEnergy) / ((CURRENTTIME - previoustime)*(cells.size() * K * A0))) < equilibriumtolerance) && currentFreeEnergy - pastFreeEnergy < 0)
 
@@ -764,7 +764,9 @@ void AGPerimTissue::Evolve(double interval, double *stepsize, ofstream* errorfil
 			timeList.pop_front();
 		}
 
-		energyList.push_back(currentFreeEnergy / (cells.size() * K * A0));
+		double avgCellSize = LX*LY / cells.size();
+
+		energyList.push_back(currentFreeEnergy / (cells.size() * K * avgCellSize));
 		timeList.push_back(CURRENTTIME);
 
 		
@@ -1902,8 +1904,11 @@ MatrixXf AGPerimTissue::calculateHessian(ofstream* errorfile)
 	MatrixXf incidenceMatrix(2 * numofvertices, 2 * numofvertices);
 	incidenceMatrix.setZero(2 * numofvertices, 2 * numofvertices);
 
-	MatrixXf cellincidence(2 * numofvertices, 2 * numofvertices);
-	cellincidence.setZero(2 * numofvertices, 2 * numofvertices);
+	MatrixXf pressureforceMatrix(2 * numofvertices, 1);
+	pressureforceMatrix.setZero(2 * numofvertices, 1);
+
+	//MatrixXf cellincidence(2 * numofvertices, 2 * numofvertices);
+	//cellincidence.setZero(2 * numofvertices, 2 * numofvertices);
 
 	vector<Vertex*> cwverts;
 	//vector<Edge*> cwedgesp1, cwedgesm1;
@@ -1918,6 +1923,7 @@ MatrixXf AGPerimTissue::calculateHessian(ofstream* errorfile)
 	double a0, p0;
 	Vect CWvec_pos, vec_pos, CCWvec_pos, CWedgevec, CCWedgevec, CWedgevec_UV, CCWedgevec_UV, dAdrvec, dPdrvec;
 	double CWmag, CCWmag;
+	double total_d2Adridrj = 0;
 
 	// I need to reindex the vertex indices. apparently they're not just 1-N in ascending order for some reason. 
 	unordered_map<int, int> vertex_index_map;
@@ -2005,7 +2011,7 @@ MatrixXf AGPerimTissue::calculateHessian(ofstream* errorfile)
 
 			//CWvec_pos - vec_pos;
 			//vec_pos - CCWvec_pos;
-
+			
 			CWmag = cwedge->GetLength();
 			CCWmag = ccwedge->GetLength();
 
@@ -2027,7 +2033,7 @@ MatrixXf AGPerimTissue::calculateHessian(ofstream* errorfile)
 
 
 		// DEBUGGING LINE TO SEE IF THE TRAVERSAL IS MAKING SENSE
-		cellincidence.setZero(2 * numofvertices, 2 * numofvertices);
+		//cellincidence.setZero(2 * numofvertices, 2 * numofvertices);
 		d2Pdridrj_percell.setZero(2 * numofvertices, 2 * numofvertices);
 		dPdridPdrj_percell.setZero(2 * numofvertices, 2 * numofvertices);
 		d2Adridrj_percell.setZero(2 * numofvertices, 2 * numofvertices);
@@ -2039,16 +2045,19 @@ MatrixXf AGPerimTissue::calculateHessian(ofstream* errorfile)
 			jp1_id = vertIDp1[j];
 			jm1_id = vertIDm1[j];
 
+			pressureforceMatrix(2 * j_id, 0) += (K / a0) * dAdr[j].x;
+			pressureforceMatrix(2 * j_id + 1, 0) += (K / a0) * dAdr[j].y;
+
 			for (int i = 0; i < vnum; i++)
 			{
 
 				//*errorfile << "incidence = \n" << incidenceMatrix << "\n" << "\n" << endl;
 				i_id = vertID[i];
 
-				cellincidence(2 * j_id, 2 * i_id) += 1;
-				cellincidence(2 * j_id, 2 * i_id + 1) += 1;
-				cellincidence(2 * j_id + 1, 2 * i_id + 1) += 1;
-				cellincidence(2 * j_id + 1, 2 * i_id) += 1;
+				//cellincidence(2 * j_id, 2 * i_id) += 1;
+				//cellincidence(2 * j_id, 2 * i_id + 1) += 1;
+				//cellincidence(2 * j_id + 1, 2 * i_id + 1) += 1;
+				//cellincidence(2 * j_id + 1, 2 * i_id) += 1;
 
 				// the dAdri * dAdrj portion
 				dAdridAdrj_percell(2 * j_id, 2 * i_id) += (K / a0) * dAdr[j].x * dAdr[i].x;
@@ -2073,6 +2082,8 @@ MatrixXf AGPerimTissue::calculateHessian(ofstream* errorfile)
 			d2Adridrj_percell(2 * jm1_id + 1, 2 * j_id) += 0.5 * cell_pressure;
 			d2Adridrj_percell(2 * jp1_id, 2 * j_id + 1) += 0.5 * cell_pressure;
 			d2Adridrj_percell(2 * jp1_id + 1, 2 * j_id ) -= 0.5 * cell_pressure;
+			//total_d2Adridrj += 
+
 
 			// perimeter portion - where i = j
 			d2Pdridrj_percell(2 * j_id, 2 * j_id) += tension_magnitude * (1 / em1vec[j].Magnitude() + 1 / ep1vec[j].Magnitude() - pow(em1vec[j].x, 2) / pow(em1vec[j].Magnitude(), 3) - pow(ep1vec[j].x, 2) / pow(ep1vec[j].Magnitude(), 3));
@@ -2115,9 +2126,13 @@ MatrixXf AGPerimTissue::calculateHessian(ofstream* errorfile)
 	Hessian = d2Adridrj + d2Pdridrj + dAdridAdrj + dPdridPdrj;
 	//*errorfile << std::setprecision(3) << "H = \n" << Hessian << "\n" << "\n" << endl;
 
-	*errorfile << std::setprecision(6) << "incidence at the end  = \n" << incidenceMatrix << "\n" << "\n" << endl;
+	*errorfile << std::setprecision(6) << "incidence at the end  = \n" << incidenceMatrix << "\n \n \n \n" << endl;
+
+	*errorfile << std::setprecision(6) << "pressureForceVector = \n" << pressureforceMatrix << "\n \n \n \n" << endl;
 
 	*errorfile << std::setprecision(6) << "d2Adridrj = \n" << d2Adridrj << "\n" << "\n" << endl;
+
+	*errorfile << std::setprecision(6) << "sym(d2Adridrj) = \n" << 0.5*(d2Adridrj + d2Adridrj.transpose()) << "\n" << "\n" << endl;
 
 	*errorfile << std::setprecision(6) << "d2Pdridrj = \n" << d2Pdridrj << "\n" << "\n" << endl;
 

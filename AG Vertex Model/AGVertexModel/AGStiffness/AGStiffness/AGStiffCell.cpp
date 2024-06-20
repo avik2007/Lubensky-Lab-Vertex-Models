@@ -28,6 +28,7 @@
 #include "VectClass.h"
 #include "AGStiffCell.h"
 #include "AGStiffTissue.h"
+#include "AGStiffConstants.h"
 
 
 /*
@@ -38,6 +39,26 @@
 void AGStiffCell::SetAreaModulus(double K)
 {
 	(*this).KAM = K;
+}
+
+/*
+* void SetPreferredArea(double PA)
+*
+* designed to be used by the tissue to set the preferred area of the AGStiffCells
+*/
+void AGStiffCell::SetPreferredArea(double PA)
+{
+	(*this).A0 = PA;
+}
+
+/*
+* void SetPreferredArea(double PM)
+*
+* designed to be used by the tissue to set the perimeter modulus of the AGStiffCells
+*/
+void AGStiffCell::SetPM(double PM)
+{
+	(*this).PM = PM;
 }
 
 /*

@@ -782,10 +782,9 @@ double AGCell::Getd2AdLxdy(Vertex* V)
 double AGCell::GetdAdgammaForSimpleShearAlongXAxis()
 {
 	int ycrossingEdges = 0;
-	vector<Vect> edgeVects;
 	double dAdLy = 0;
 	Vertex* v1, * v2;
-	Edge* e1, * e2;
+	Edge* e1;
 	vector<Edge*> clockwiseEdges;
 	vector<Vertex*> clockwiseVertex = (*this).GetClockWiseVertices();
 	int vertexNum = clockwiseVertex.size();
@@ -795,7 +794,16 @@ double AGCell::GetdAdgammaForSimpleShearAlongXAxis()
 	double x1 = 0;
 	double x2 = 0;
 	double finalVal = 0;
+	Vect ev;
+	bool evxflag = false;
 	clockwiseVertex.push_back(clockwiseVertex[0]);
+	if ((*this).GetYFlag())
+	{
+		if ((*this).GetXFlag())
+		{
+			finalVal = 0;
+		}
+	}
 
 	for (int i = 0; i < vertexNum; i++)
 	{
@@ -803,20 +811,20 @@ double AGCell::GetdAdgammaForSimpleShearAlongXAxis()
 		v2 = clockwiseVertex[i + 1];
 		e1 = (*v1).GetEdgeBetween(v2);
 		clockwiseEdges.push_back(e1);
-		edgeVects.push_back((*e1).GetVectorDifference(v1, v2));
-
+		ev = (*e1).GetVectorDifference(v1, v2);
+		evxflag = (*e1).xflag;
 		if (((*e1).yflag))
 		{
 			if (ycrossingEdges < 1)
 			{
-				y1 = (*e1).GetCenter().y;
-				x1 = (*e1).GetCenter().x;
+				y1 = (*v1).r.y + 0.5 * ev.y;//(*e1).GetCenter().y;
+				x1 = (*v1).r.x + 0.5 * ev.x;//(*e1).GetCenter().x;
 				ycrossingEdges++;
 			}
 			else
 			{
-				y2 = (*e1).GetCenter().y;
-				x2 = (*e1).GetCenter().x;
+				y2 = (*v2).r.y - 0.5 * ev.y;//(*e1).GetCenter().y;
+				x2 = (*v2).r.x - 0.5 * ev.x;//(*e1).GetCenter().x;
 				// alternatively, (*e1).getCenter().y can do the same thing 
 				i = vertexNum;
 			}
@@ -824,13 +832,31 @@ double AGCell::GetdAdgammaForSimpleShearAlongXAxis()
 		}// if dAdLxdy works, then this should work
 
 	}
+	 
+	// account for boundary conditions
+	
 	if (x2 > x1)
 	{
-		finalVal = y1 - y2;
+		if (evxflag)
+		{ 
+			finalVal = y1 - y2;
+		} 
+		else
+		{
+			finalVal = y2 - y1;
+		}
 	} 
-	else 
+	else
 	{
-		finalVal = y2 - y1;
+		if (evxflag)
+		{
+			finalVal = y2 - y1;
+		}
+		else
+		{
+			finalVal = y1 - y2;
+		}
+		
 	}
 	return LY * finalVal; // 4/12/24 ORDERING SHOULD BE RIGHT - POTENTIAL WORRIES ABOUT CORNER CELLS (KEEP IN MIND IF BUGS COME UP)
 }
@@ -843,7 +869,7 @@ double AGCell::Getd2AdgammadyForSimpleShearAlongXAxis(Vertex* V)
 	unsigned long int targetvertexid = (*V).id;
 	bool id_match;
 	int ycrossingEdges = 0;
-	vector<Vect> edgeVects;
+	Vect edgeVect;
 	double d2AdLxdy = 0;
 	Vertex* v1, * v2;
 	Edge* e1;
@@ -856,6 +882,7 @@ double AGCell::Getd2AdgammadyForSimpleShearAlongXAxis(Vertex* V)
 	int totalContribution = 0;
 	double x1 = 0;
 	double x2 = 0;
+	bool evxflag = false; 
 	clockwiseVertex.push_back(clockwiseVertex[0]);
 
 	for (int i = 0; i < vertexNum; i++)
@@ -865,13 +892,13 @@ double AGCell::Getd2AdgammadyForSimpleShearAlongXAxis(Vertex* V)
 		id_match = ((v1->id) == targetvertexid) || ((v2->id) == targetvertexid);
 		e1 = (*v1).GetEdgeBetween(v2);
 		clockwiseEdges.push_back(e1);
-		edgeVects.push_back((*e1).GetVectorDifference(v1, v2));
+		edgeVect =(*e1).GetVectorDifference(v1, v2);
+		evxflag = (*e1).xflag;
 		if (((*e1).yflag)) // ADD AN IF ID_MATCH
-
 		{
 			if (ycrossingEdges < 1)
 			{
-				x1 = (*e1).GetCenter().x;
+				x1 = (*v1).r.x + 0.5 * edgeVect.x;
 				ycrossingEdges++;
 				if (id_match)
 				{
@@ -880,7 +907,7 @@ double AGCell::Getd2AdgammadyForSimpleShearAlongXAxis(Vertex* V)
 			}
 			else
 			{
-				x2 = (*e1).GetCenter().x;
+				x2 = (*v1).r.x - 0.5 * edgeVect.x;
 				// alternatively, (*e1).getCenter().y can do the same thing 
 				i = vertexNum;
 				if (id_match)
@@ -890,15 +917,30 @@ double AGCell::Getd2AdgammadyForSimpleShearAlongXAxis(Vertex* V)
 			}
 		}
 
-		// if dAdLxdy works, then this should work
-		if (x1 > x2)
+		if (x2 > x1)
 		{
-			totalContribution = secondEdgeContribution - firstEdgeContribution;
+			if (evxflag)
+			{
+				totalContribution = firstEdgeContribution - secondEdgeContribution;
+			}
+			else
+			{
+				totalContribution = secondEdgeContribution - firstEdgeContribution;
+			}
 		}
 		else
 		{
-			totalContribution = firstEdgeContribution - secondEdgeContribution;
+			if (evxflag)
+			{
+				totalContribution = secondEdgeContribution - firstEdgeContribution;
+			}
+			else
+			{
+				totalContribution = firstEdgeContribution - secondEdgeContribution;
+			}
+
 		}
+		// if dAdLxdy works, then this should work
 	}
 	return 0.5 * LY * totalContribution; // 4/12/24 ORDERING SHOULD BE RIGHT - POTENTIAL WORRIES ABOUT CORNER CELLS (KEEP IN MIND IF BUGS COME UP
 }

@@ -35,13 +35,15 @@
 #include "AGCell.h"
 #include "AGStiffTissue.h"
 #include "AGStiffCell.h"
+#include "AGStiffConstants.h"
+#include "AGStiffEdge.h"
 
 
 using namespace std;
 
 //Defult settings of the constants if the file does not specify. Constants given a null or zero value must be specified in the file If they are not declared with a default value their will be a unresolved external error
 string InputFileName = "NULL";
-string INTEGRATORNAME = "Euiler";
+string INTEGRATORNAME = "RK4_Adaptive";
 double LX = 0;
 double LY = 0;
 double MINAREA = 0;
@@ -84,7 +86,9 @@ double C4 = 0;
 double LAMBDA = 10;
 double TCJSTRENGTH = 10;
 double THETAAN = 0;
-
+double Kstdratio = 0;
+double A0stdratio = 0;
+double LAMBDAstdratio = 0;
 
 
 //This is the generator for random numbers to use call "distribution(generator)" 
@@ -109,7 +113,7 @@ AGStiffTissue tissue;
 int main(){
 
 	//Path to the folder that your initial files are in 
-	string PathName = "C:\\Users\\abmondal\\Documents\\Lubensky-Lab-Vertex-Models\\MATLAB Data Folder\\"; // CHANGE THIS TO MATCH YOUR FOLDER
+	string PathName = "C:\\Users\\abmondal\\Documents\\Lubensky-Lab-Vertex-Models\\MATLAB Data Folder\\StiffnessModelGammaSweep\\"; // CHANGE THIS TO MATCH YOUR FOLDER
 
 	cout << "Enter name of imput file: ";
 	cin >> InputFileName;
@@ -134,9 +138,8 @@ int main(){
 	string filename = InputFileName.substr(0, InputFileName.size() - 4);
 	OutputFileName1 = filename + "_out.txt";
 	string OutputFileName3 = filename + "_error.txt";
-	ofstream datafile, errorfile, eqfile, a0file;
+	ofstream datafile, eqfile;
 	datafile.open(OutputFileName1);
-	errorfile.open(OutputFileName3);
 	cout << "I made output files!" << endl;
 
 	//******************************INITIAlIZE***********************************************************************
@@ -155,55 +158,109 @@ int main(){
 	cout << "Evolving with step size" << INITIALSTEPSIZE << endl;
 	cout << "*******************************************************************************" << endl;
 
+
+	ofstream errorfile;
+	errorfile.open(OutputFileName3);
+	errorfile << "Entering equilibration stage.\n";
+	cout << "Entering equilibration stage.\n";
 	double initialEnergy = tissue.CalculateFreeEnergy();
 	tissue.WriteOutputDataAppend(&datafile);
-	double currA0 = 1;
-	tissue.AssignPreferredAreas(currA0);
+	errorfile << "Updating parameters to vary A0 and/or K. \n";
+	double currA0 = 0;
+	tissue.A0 = currA0;
+	tissue.A0std = tissue.A0stdratio * (LX * LY / tissue.cells.size());
+	tissue.constantA0 = false;
+	tissue.AssignPreferredAreas(tissue.constantA0, tissue.A0, tissue.A0std);
 	tissue.constantK = false;
-	tissue.meanK = K;
-	tissue.Kstd = 0.25 * K;
-	tissue.AssignAreaModuli(tissue.constantK, tissue.meanK, tissue.Kstd);
-	INTEGRATORNAME = "RK4_Adaptive";
-	//while (currA0 > 0)
-	//{
-		while (!(tissue.IsEquilibrated()))
-		{
-			cout << "CURRENTTIME" << CURRENTTIME << endl;
-			tissue.Evolve(TIMEINTERVAL, &stepSize, &errorfile);
-			cout << "exited evolve" << endl;
-			tissue.WriteOutputDataAppend(&datafile);
-			cout << "CURRENTTIME" << CURRENTTIME << endl;
-		}
-		double finalEnergy = tissue.CalculateFreeEnergy();
-		tissue.WriteOutputDataAppend(&datafile);
-		datafile << "------------------------------------------------------------\n \n";
-		//currA0 = currA0 - tissue.A0 * .001;
-		//tissue.AssignPreferredAreas(currA0);
-		//tissue.Evolve(TIMEINTERVAL, &stepSize, &errorfile);
-	//}
-	string OutputFileName4 = filename + "_EQ.txt";
-	eqfile.open(OutputFileName3);
-	tissue.WriteOutputDataAppend(&eqfile);
 	
-	/*
-	while (tissue.Kstd < .5)
+	tissue.constantLAMBDA = false;
+	
+	tissue.meanK = K;
+	tissue.Kstd = tissue.Kstdratio * K;
+	tissue.AssignAreaModuli(tissue.constantK, tissue.meanK, tissue.Kstd);
+	tissue.meanLAMBDA = LAMBDA; 
+	tissue.LAMBDAstd = tissue.LAMBDAstdratio * LAMBDA;
+	tissue.AssignPerimeterModuli(tissue.constantLAMBDA, tissue.meanLAMBDA, tissue.LAMBDAstd);
+	INTEGRATORNAME = "RK4_Adaptive";
+	CURRENTTIME = 0;
+	cout << "Initial Polydispersity = " << tissue.calculatePolydispersity() << endl;
+	
+	cout << "CURRENTTIME" << CURRENTTIME << endl;
+	tissue.equilibriumtolerance = 1e-7;
+	while (!(tissue.IsEquilibrated()))
 	{
-		tissue.constantK = false;
-		tissue.meanK = K;
-		tissue.Kstd = tissue.Kstd * 1.1;
-		//eqfile << "initialEnergy: " << initialEnergy << "\t final Energy: " << finalEnergy << endl;
-		tissue.equilibrated = false;
-		CURRENTTIME = 0;
-		while (!(tissue.IsEquilibrated()))
-		{
-			cout << "CURRENTTIME" << CURRENTTIME << endl;
-			tissue.Evolve(TIMEINTERVAL, &stepSize, &errorfile);
-			cout << "exited evolve" << endl;
-			tissue.WriteOutputDataAppend(&datafile);
-			cout << "CURRENTTIME" << CURRENTTIME << endl;
-		}
+		cout << "CURRENTTIME" << CURRENTTIME << endl;
+		tissue.Evolve(TIMEINTERVAL, &stepSize, &errorfile);
+		cout << "exited evolve" << endl;
+		tissue.WriteOutputDataAppend(&datafile);
+		cout << "CURRENTTIME" << CURRENTTIME << endl;
 	}
-	*/
+	errorfile << "Left evolve loop.\n";
+	errorfile << "Reporting max and min A0 and K's now\n" << endl;
+	vector<Vertex*> cwverts;
+	double area, stifffunc, pm;
+	double maxa = 0;
+	double mina = 1000000000000;
+	double maxs = 0;
+	double mins = 1000000000000;
+	double maxp = 0;
+	double minp = 1000000000000;
+	double areaavg = 0;
+	for (list<Cell*>::iterator cit = tissue.cells.begin(); cit != tissue.cells.end(); cit++)
+	{
+		AGStiffCell* agit = dynamic_cast<AGStiffCell*>(*cit);
+		cwverts = (*(*cit)).SavedInfoForEvolve_CWVerts;							//Get the cw vertices in the cell from the preassigned list 
+		area = (*(*cit)).GetArea(cwverts);
+		areaavg += area / tissue.cells.size();
+		if (maxa < area)
+		{
+			maxa = area;
+		}
+		if (mina > area)
+		{
+			mina = area;
+		}
+		stifffunc = (*agit).KAM;
+		if (stifffunc < mins)
+		{
+			mins = stifffunc;
+		}
+		if (stifffunc > maxs)
+		{
+			maxs = stifffunc;
+		}
+		pm = (*agit).PM;
+		if (pm < minp)
+		{
+			minp = pm;
+		}
+		if (pm > maxp)
+		{
+			maxp = pm;
+		}
+
+	}
+
+
+	double finalEnergy = tissue.CalculateFreeEnergy();
+	tissue.WriteOutputDataAppend(&datafile);
+	datafile << "------------------------------------------------------------\n \n";
+	string OutputFileName4 = filename + "_EQ.txt";
+	eqfile.open(OutputFileName4);
+	tissue.WriteOutputDataAppend(&eqfile);
+	cout << "Final Polydispersity = " << tissue.calculatePolydispersity() << endl;
+
+
+
+	errorfile << "Stiffness ratio = " << maxs / mins << endl;
+	errorfile << "Max K = " << maxs << endl;
+	errorfile << "Min K = " << mins << endl;
+	errorfile << "Area ratio = " << maxa / mina << endl;
+	errorfile << "Max area = " << maxa << endl;
+	errorfile << "Min area = " << mina << endl;
+	errorfile << "Max lambda = " << maxp << endl;
+	errorfile << "Min lambda = " << minp << endl;
+	errorfile << "lambda/kabar ratio = " << tissue.meanLAMBDA / (tissue.meanK * areaavg);
 
 
 	

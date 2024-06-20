@@ -1,4 +1,3 @@
-#pragma once
 // guard
 #ifndef __AGSTIFFTISSUE_H_INCLUDED__
 #define __AGSTIFFTISSUE_H_INCLUDED__
@@ -27,10 +26,15 @@ class Vect;
 #include "EdgeClass.h"
 #include "CellClass.h"
 #include "AGCell.h"
+#include "AGPerimCell.h"
 #include "VertexClass.h"
 #include "TissueClass.h"
 #include "AGTissue.h"
 #include "AGPerimConstants.h"
+#include "AGStiffConstants.h"
+#include "AGPerimTissue.h"
+#include "AGPerimEdge.h"
+#include "AGStiffEdge.h"
 
 using namespace Eigen;
 using namespace std;
@@ -49,8 +53,16 @@ public:
 
 	//DATA
 	bool constantK;
+	bool constantA0;
+	bool constantLAMBDA;
 	double meanK;
 	double Kstd;
+	double Kstdratio;
+	double A0stdratio;
+	double A0std;
+	double LAMBDAstdratio;
+	double meanLAMBDA;
+	double LAMBDAstd;
 	//ADDITIONAL FUNCTIONS
 	// Updates read input function to accept new global variables 
 	virtual void HelperReadInputData_SetGlobalValues(ifstream* datafile);
@@ -80,8 +92,11 @@ public:
 	//! Calculates the force on every vertex and stores the result in vertex.
 	virtual void ForceFunction(ofstream* errorfile);
 
-	//! Sets the preferred area of A0 to a constant value for all the cells
-	virtual void AssignPreferredAreas(double A0);
+	//! Sets the preferred area of A0 for all the cells
+	virtual void AssignPreferredAreas(bool constantA0, double A0, double A0std);
+
+	//! Sets the perimeter modulus for all the cells
+	virtual void AssignPerimeterModuli(bool constantPM, double PM, double PMstd);
 };
 
 #endif

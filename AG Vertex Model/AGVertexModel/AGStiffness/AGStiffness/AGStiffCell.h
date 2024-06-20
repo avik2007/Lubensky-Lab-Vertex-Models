@@ -1,4 +1,3 @@
-#pragma once
 // define guard
 #ifndef __AGSTIFFCELL_H_INCLUDED__
 #define __AGSTIFFCELL_H_INCLUDED__
@@ -19,6 +18,7 @@ class Edge;
 #include <random>
 
 #include "AGPerimCell.h"
+#include "AGCell.h"
 #include "VectClass.h"
 
 
@@ -33,7 +33,13 @@ public:
 	//***************************************************************************************************************
 	double KAM; // (K, Area Modulus; varies per cell now)
 
+	double PM; //( LAMBDA, "Perimeter Modulus"; varies per cell now
+
 	virtual void SetAreaModulus(double K);
+
+	virtual void SetPreferredArea(double PA);
+
+	virtual void SetPM(double PM);
 
 	virtual double GetPressure(double Area);
 

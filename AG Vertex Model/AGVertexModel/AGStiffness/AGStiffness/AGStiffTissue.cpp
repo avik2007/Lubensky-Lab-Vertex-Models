@@ -32,7 +32,8 @@
 #include "VectClass.h"
 #include "AGStiffCell.h"
 #include "AGStiffTissue.h"
-
+#include "AGStiffConstants.h"
+#include "AGStiffEdge.h"
 using namespace Eigen;
 using namespace std;
 
@@ -116,7 +117,7 @@ void AGStiffTissue::AssignAreaModuli(bool constantK, double meanK, double Kstd)
 	double stifffunc = 0;
 	for (list<Cell*>::iterator cit = cells.begin(); cit != cells.end(); cit++)
 	{
-		AGStiffCell* agit = dynamic_cast<AGStiffCell*>(*cit);
+		AGStiffCell * agit = dynamic_cast<AGStiffCell*>(*cit);
 		xcom = (*(*cit)).GetCenter();
 		if (constantK)
 		{
@@ -124,28 +125,66 @@ void AGStiffTissue::AssignAreaModuli(bool constantK, double meanK, double Kstd)
 		}
 		else
 		{
-			stifffunc = meanK + Kstd * sin(xcom.x * PI / LX); // FOR NOW, THIS IS THE CHOSEN STIFFNESS PATTERN
+			stifffunc = meanK + Kstd * sin(xcom.x * PI /(LX)) * sin(xcom.y * PI / (LY)); // FOR NOW, THIS IS THE CHOSEN STIFFNESS PATTERN
 			(*agit).SetAreaModulus(stifffunc);
 		}
 			
+
+	}
+}
+
+/*
+* void AssignPreferredAreas(bool constantA0, double A0, double A0std)
+*
+* Sets the values of A0 for the cells in the tissue, with options for constant A0 or a distribution
+*/
+void AGStiffTissue::AssignPreferredAreas(bool constA0, double A0, double A0std)
+{
+	Vect xcom;
+	double a0func = 0;
+	
+	for (list<Cell*>::iterator cit = cells.begin(); cit != cells.end(); cit++)
+	{
+		AGStiffCell* agit = dynamic_cast<AGStiffCell*>(*cit);
+		xcom = (*(*cit)).GetCenter();
+		if (constA0)
+		{ 
+			(*agit).A0 = A0;
+		}
+		else
+		{
+			a0func = A0 + A0std * sin(xcom.x * PI / (LX)) * sin(xcom.y * PI / (LY));
+			(*agit).A0 = a0func;
+		}
+		
+
 
 	}
 
 }
 
 /*
-* void AssignPreferredAreas()
+* void AssignPerimeterModuli(bool constantA0, double A0, double A0std)
 *
-* Sets the values of KAM for the cells in the tissue
+* Sets the values of the perimeter moduli (LAMBDA) for the cells in the tissue, with options for constant LAMBDA or a distribution
 */
-void AGStiffTissue::AssignPreferredAreas(double A0)
+void AGStiffTissue::AssignPerimeterModuli(bool constPM, double PM, double PMstd)
 {
-
+	Vect xcom;
+	double Lfunc = 0;
 	for (list<Cell*>::iterator cit = cells.begin(); cit != cells.end(); cit++)
 	{
 		AGStiffCell* agit = dynamic_cast<AGStiffCell*>(*cit);
-		(*agit).A0 = A0;
-
+		xcom = (*(*cit)).GetCenter();
+		if (constPM)
+		{
+			(*agit).SetPM(PM);
+		}
+		else
+		{
+			Lfunc = PM + PMstd * sin(xcom.x * PI / (LX)) * sin(xcom.y * PI / (LY));
+			(*agit).SetPM(Lfunc);
+		}
 	}
 
 }
@@ -307,6 +346,18 @@ void AGStiffTissue::HelperReadInputData_SetGlobalValues(ifstream* datafile) {
 	if (globals.count("C4") == 1) { C4 = atof(globals["C4"].c_str()); }
 	else if (globals.count("C4") == 0) { cout << "WARNING: C4 is not given in input file, used default value " << C4 << endl; }
 	else { cout << "ERROR: Global variable C4 has multiple definition in input file, used default value C4 = " << C4 << endl; }
+
+	if (globals.count("Kstdratio") == 1) { Kstdratio = atof(globals["Kstdratio"].c_str()); }
+	else if (globals.count("Kstdratio") == 0) { cout << "WARNING: Kstdratio is not given in input file, used default value " << Kstdratio << endl; }
+	else { cout << "ERROR: Global variable Kstdratio has multiple definition in input file, used default value Kstdratio = " << Kstdratio << endl; }
+
+	if (globals.count("A0stdratio") == 1) { A0stdratio = atof(globals["A0stdratio"].c_str()); }
+	else if (globals.count("A0stdratio") == 0) { cout << "WARNING: A0stdratio is not given in input file, used default value " << A0stdratio << endl; }
+	else { cout << "ERROR: Global variable A0stdratio has multiple definition in input file, used default value A0stdratio = " << A0stdratio << endl; }
+
+	if (globals.count("LAMBDAstdratio") == 1) { LAMBDAstdratio = atof(globals["LAMBDAstdratio"].c_str()); }
+	else if (globals.count("LAMBDAstdratio") == 0) { cout << "WARNING: LAMBDAstdratio is not given in input file, used default value " << LAMBDAstdratio << endl; }
+	else { cout << "ERROR: Global variable LAMBDAstdratio has multiple definition in input file, used default value LAMBDAstdratio = " << LAMBDAstdratio << endl; }
 	//******ADD MORE GLOBAL VARIABLES HERE ALSO ADD THEM TO THE CONSTANTS.H FILE AND GIVE THEM A DEFAULT VALUE IN MAIN*********************//
 	int i = 1;
 	if (energyListSize < 3) { energyListSize = 3; } // minimal size for this has to be 2, I'm setting it to 3 here since if it is equal to 2 there would be no coarse grained slope analysis
@@ -414,7 +465,7 @@ void AGStiffTissue::HelperReadInputData_CreateObjects(ifstream* datafile) {
 		v2 = atoi(objectInfo["vertex2"].c_str());
 		xf = atoi(objectInfo["xflag"].c_str());
 		yf = atoi(objectInfo["yflag"].c_str());
-		AGPerimEdge* eptr = new AGPerimEdge;
+		AGStiffEdge* eptr = new AGStiffEdge;
 		(*eptr).id = newid;
 		(*eptr).IOVertexID[0] = v1;
 		(*eptr).IOVertexID[1] = v2;
@@ -516,6 +567,8 @@ void AGStiffTissue::HelperReadInputData_CreateObjects(ifstream* datafile) {
 		(*this).A0 = A0;
 		(*this).P0 = P0;
 		(*cptr).pressureType = cellpressuretype;
+		(*cptr).KAM = K;
+		(*cptr).PM = LAMBDA;
 
 		if (tcjstrength != 0)
 		{
@@ -559,7 +612,8 @@ void AGStiffTissue::HelperReadInputData_CreateObjects(ifstream* datafile) {
 		//*************************************************************************//
 
 	}
-	(*this).currentFreeEnergy = A0 * A0 * A0 * (K * A0 + LAMBDA * P0 * P0) * cells.size(); // this just needs to start out as a bigger number than the actual tissue energy
+	double avgCellSize = LX * LY / cells.size();
+	(*this).currentFreeEnergy = pow(avgCellSize,3) * (K * avgCellSize + LAMBDA * P0 * P0) * cells.size(); // this just needs to start out as a bigger number than the actual tissue energy
 	(*this).pastFreeEnergy = (*this).currentFreeEnergy;
 
 	
@@ -611,6 +665,9 @@ void AGStiffTissue::HelperWriteOutputData_Write2File(ofstream* datafile, bool in
 	*datafile << "C4\t" << C4 << endl;
 	*datafile << std::setprecision(outputPrecision) << "equilibriumtolerance\t" << equilibriumtolerance << endl;
 	*datafile << std::setprecision(outputPrecision) << "P0\t" << P0 << endl;
+	*datafile << std::setprecision(outputPrecision) << "Kstdratio\t" << (*this).Kstdratio << endl;
+	*datafile << std::setprecision(outputPrecision) << "A0stdratio\t" << (*this).A0stdratio << endl;
+	*datafile << std::setprecision(outputPrecision) << "LAMBDAstdratio\t" << (*this).LAMBDAstdratio << endl;
 	//******ADD NEW OUTPUT HERE******//
 	*datafile << "endGlobal" << endl;
 
@@ -723,7 +780,7 @@ void AGStiffTissue::HelperWriteOutputData_Write2File(ofstream* datafile, bool in
 		*/
 		// FOR DEBUGGING Manning model
 
-		* datafile << std::setprecision(outputPrecision) << "id\tA0\tK\tEdgeNumb\tType\txflag\tyflag\tArea\tPerimeter\tPressure\tCenterx\tCentery\tEdgeList\tCWVertices\tCellPressureType" << endl;
+		* datafile << std::setprecision(outputPrecision) << "id\tA0\tK\tGamma\tEdgeNumb\tType\txflag\tyflag\tArea\tPerimeter\tPressure\tCenterx\tCentery\tEdgeList\tCWVertices\tCellPressureType" << endl;
 		for (list<Cell*>::iterator cit = cells.begin(); cit != cells.end(); cit++)
 		{			//loop through all of the cells in the tissue
 			stringstream ssEdgeList;
@@ -742,7 +799,7 @@ void AGStiffTissue::HelperWriteOutputData_Write2File(ofstream* datafile, bool in
 			}
 			Vect centroid = (*(*cit)).GetCenter();
 			AGStiffCell* agit = dynamic_cast<AGStiffCell*>(*cit);
-			*datafile << std::setprecision(outputPrecision) << (*(*cit)).id << "\t" << (*agit).A0 << "\t" << (*agit).KAM << "\t" << (*(*cit)).edges.size() << "\t" << (*(*cit)).type << "\t" << (*(*cit)).GetXFlag() << "\t" << (*(*cit)).GetYFlag() << "\t"
+			*datafile << std::setprecision(outputPrecision) << (*(*cit)).id << "\t" << (*agit).A0 << "\t" << (*agit).KAM << "\t" <<(*agit).PM << "\t" << (*(*cit)).edges.size() << "\t" << (*(*cit)).type << "\t" << (*(*cit)).GetXFlag() << "\t" << (*(*cit)).GetYFlag() << "\t"
 				<< (*agit).GetArea() << "\t" << (*agit).GetPerimeter() << "\t" << (*agit).GetPressure((*(*cit)).GetArea()) << "\t" << centroid.x << "\t" << centroid.y << "\t" << ssEdgeList.str() << "\t" << ssCWVertices.str() << "\t" << (*agit).pressureType << endl;
 		}
 	}
@@ -767,14 +824,14 @@ double AGStiffTissue::HelperResolveVertices_CheckStability(Vertex* vert, Edge* e
 	AGStiffCell c3 = (*ac3);
 	AGStiffCell* ac4 = dynamic_cast<AGStiffCell*>(cell4);
 	AGStiffCell c4 = (*ac4);
-	AGPerimEdge* age1 = dynamic_cast<AGPerimEdge*>(edge1);
-	AGPerimEdge e1 = (*age1);
-	AGPerimEdge* age2 = dynamic_cast<AGPerimEdge*>(edge2);
-	AGPerimEdge e2 = (*age2);
-	AGPerimEdge* age3 = dynamic_cast<AGPerimEdge*>(edge3);
-	AGPerimEdge e3 = (*age3);
-	AGPerimEdge* age4 = dynamic_cast<AGPerimEdge*>(edge4);
-	AGPerimEdge e4 = (*age4);
+	AGStiffEdge* age1 = dynamic_cast<AGStiffEdge*>(edge1);
+	AGStiffEdge e1 = (*age1);
+	AGStiffEdge* age2 = dynamic_cast<AGStiffEdge*>(edge2);
+	AGStiffEdge e2 = (*age2);
+	AGStiffEdge* age3 = dynamic_cast<AGStiffEdge*>(edge3);
+	AGStiffEdge e3 = (*age3);
+	AGStiffEdge* age4 = dynamic_cast<AGStiffEdge*>(edge4);
+	AGStiffEdge e4 = (*age4);
 	double stability;
 	double a1, a2, a3, a4;
 
@@ -872,7 +929,7 @@ bool AGStiffTissue::ReadInputData(string InputFileName) {
 	cout << "Global values Set" << endl;
 	(*this).HelperReadInputData_CreateObjects(&datafile);
 	(*this).HelperReadInputData_CreatePointers();
-	(*this).AssignAreaModuli(false, 10, 0); // this set's the initial stiffnesses
+	//(*this).AssignAreaModuli(true, 10, 0); // this set's the initial stiffnesses
 	datafile.close();
 	return true;
 }
@@ -894,7 +951,19 @@ void AGStiffTissue::ForceFunction(ofstream* errorfile) {
 	Vertex* v2 = 0;
 	Cell* c1;
 	Vect zerovec(0.0, 0.0);
-	(*this).AssignAreaModuli((*this).constantK, (*this).meanK, (*this).Kstd);
+	if ((*this).constantK)
+	{
+		(*this).AssignAreaModuli((*this).constantK, (*this).meanK, (*this).Kstd);
+	}
+	if ((*this).constantA0)
+	{ 
+		(*this).AssignPreferredAreas((*this).constantA0, (*this).A0, (*this).A0std);
+	}
+	if ((*this).constantLAMBDA)
+	{ 
+		(*this).AssignPerimeterModuli((*this).constantLAMBDA, (*this).meanLAMBDA, (*this).LAMBDAstd);
+	}
+	
 	//First loop through all the cells and find the pressure WARNING!! cell.SavedInfoForEvolve_CWVerts must already be correctly assigned
 	for (list<Cell*>::iterator cit = cells.begin(); cit != cells.end(); cit++)
 	{
