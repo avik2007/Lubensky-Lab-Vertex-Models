@@ -158,12 +158,6 @@ int main(){
 
 	double initialEnergy = tissue.CalculateFreeEnergy();
 	tissue.WriteOutputDataAppend(&datafile);
-	double currA0 = 0;
-	tissue.AssignPreferredAreas(currA0);
-	tissue.constantK = false;
-	tissue.meanK = K;
-	tissue.Kstd = tissue.Kstdratio * K;
-	tissue.AssignAreaModuli(tissue.constantK, tissue.meanK, tissue.Kstd);
 	INTEGRATORNAME = "RK4_Adaptive";
 	cout << "Initial Polydispersity = " << tissue.calculatePolydispersity() << endl;
 	ofstream errorfile;
@@ -176,54 +170,7 @@ int main(){
 		tissue.WriteOutputDataAppend(&datafile);
 		cout << "CURRENTTIME" << CURRENTTIME << endl;
 	}
-	vector<Vertex*> cwverts;
-	double area, stifffunc;
-	double maxa = 0;
-	double mina = 1000000000000;
-	double maxs = 0;
-	double mins = 1000000000000;
-	for (list<Cell*>::iterator cit = tissue.cells.begin(); cit != tissue.cells.end(); cit++)
-	{
-		AGStiffCell* agit = dynamic_cast<AGStiffCell*>(*cit);
-		cwverts = (*(*cit)).SavedInfoForEvolve_CWVerts;							//Get the cw vertices in the cell from the preassigned list 
-		area = (*(*cit)).GetArea(cwverts);
-		if (maxa < area)
-		{
-			maxa = area;
-		}
-		if (mina > area)
-		{
-			mina = area;
-		}
-		stifffunc = (*agit).KAM;
-		if (stifffunc < mins)
-		{
-			mins = stifffunc;
-		}
-		if (stifffunc > maxs)
-		{
-			maxs = stifffunc;
-		}
-	}
-
-
-	double finalEnergy = tissue.CalculateFreeEnergy();
-	tissue.WriteOutputDataAppend(&datafile);
-	datafile << "------------------------------------------------------------\n \n";
-	string OutputFileName4 = filename + "_EQ.txt";
-	eqfile.open(OutputFileName4);
-	tissue.WriteOutputDataAppend(&eqfile);
-	cout << "Final Polydispersity = " << tissue.calculatePolydispersity() << endl;
-
-
-
-	errorfile << "Stiffness ratio = " << maxs / mins << endl;
-	errorfile << "Max K = " << maxs << endl;
-	errorfile << "Min K = " << mins << endl;
-	errorfile << "Area ratio = " << maxa / mina << endl;
-	errorfile << "Max area = " << maxa << endl;
-	errorfile << "Min area = " << mina << endl;
-	errorfile << "lambda/ka0 ratio = " << LAMBDA / (tissue.meanK * tissue.A0);
+	
 
 	
 	///////******************************End***********************************************************************

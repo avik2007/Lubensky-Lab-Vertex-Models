@@ -82,3 +82,52 @@ double AGStiffCell::GetEnergy()
 	double energy = 0.5 * ((*this).KAM * pow((*this).GetArea() - (*this).A0, 2)  + LAMBDA * pow((*this).GetPerimeter() - P0, 2));
 	return energy;
 }
+/*
+* double GetPressureNormalStress();
+*
+* Calculates the normal stress due to pressure in the model
+*/
+double AGStiffCell::GetPressureNormalStress()
+
+{
+	vector<Vertex*> clockwiseVertex = (*this).GetClockWiseVertices();
+	int vertexNum = clockwiseVertex.size();
+	// clockwiseVertex.push_back(clockwiseVertex[0]);
+	Vertex* v1, * v2;
+	double F1, F2;
+	double x1, x2;
+	double stressxx = 0;
+	for (int i = 0; i < vertexNum; i++)
+	{
+		v1 = clockwiseVertex[i];
+		// v2 = clockwiseVertex[i + 1];
+		x1 = (*v1).r.x;
+		F1 = (*v1).SavedInfoForEvolve_TotalForce.x;
+		// F2 = (*v1).SavedInfoForEvolve_TotalForce.x;
+		stressxx += (F1 * x1);
+	}
+	return stressxx / (*this).GetArea();
+}
+
+/*
+* double GetTensionNormalStress();
+*
+* Calculates the normal stress due to tension in the model
+*/
+double AGStiffCell::GetTensionNormalStress()
+{
+	vector<Vertex*> clockwiseVertex = (*this).GetClockWiseVertices();
+	int vertexNum = clockwiseVertex.size();
+	Vertex* v1, * v2;
+	double F1, F2;
+	double y1, y2;
+	double stressyy = 0;
+	for (int i = 0; i < vertexNum; i++)
+	{
+		v1 = clockwiseVertex[i];
+		y1 = (*v1).r.y;
+		F1 = (*v1).SavedInfoForEvolve_TotalForce.y;
+		stressyy += (F1 * y1);
+	}
+	return stressyy / (*this).GetArea();
+}

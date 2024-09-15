@@ -166,11 +166,11 @@ int main(){
 	double initialEnergy = tissue.CalculateFreeEnergy();
 	tissue.WriteOutputDataAppend(&datafile);
 	errorfile << "Updating parameters to vary A0 and/or K. \n";
-	double currA0 = 0;
-	tissue.A0 = currA0;
-	tissue.A0std = tissue.A0stdratio * (LX * LY / tissue.cells.size());
+	//double currA0 = 0;
+	//tissue.A0 = currA0;
+	tissue.A0std = tissue.A0stdratio * (LX * LY / 100);
 	tissue.constantA0 = false;
-	tissue.AssignPreferredAreas(tissue.constantA0, tissue.A0, tissue.A0std);
+	tissue.AssignPreferredAreas(tissue.constantA0, A0, tissue.A0std);
 	tissue.constantK = false;
 	
 	tissue.constantLAMBDA = false;

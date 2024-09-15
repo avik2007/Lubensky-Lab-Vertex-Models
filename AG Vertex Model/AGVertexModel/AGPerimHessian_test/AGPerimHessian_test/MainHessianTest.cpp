@@ -88,7 +88,7 @@ double P0 = 0;
 double LAMBDA = 0.1;
 double DEFORM_NUM = 0.001;
 double C4 = 1;
-int energyListSize = 50;
+int energyListSize = 2;
 double equilibriumtolerance = 0.00000000001;
 
 //This is the generator for random numbers to use call "distribution(generator)" 
@@ -174,7 +174,7 @@ int main()
 	errorfile << "Polydispersity initial = " << polydispersity << endl;
 
 	// above time variables allow us to pick how often we write to the appendfile
-	while ((CURRENTTIME < TOTALTIME) && !(tissue.equilibrated))
+	while (!(tissue.equilibrated))
 	{
 		cout << "CURRENTTIME " << CURRENTTIME << endl;
 		tissue.Evolve(TIMEINTERVAL, &stepSize, &errorfile);
@@ -195,86 +195,48 @@ int main()
 	int currID;
 	Vertex* currVertex;
 
- 
-	//MatrixXf H = tissue.calculateHessian(&errorfile);
+	if (tissue.equilibrated)
+	{ 
+		//MatrixXf H = tissue.calculateHessian(&errorfile);
 	//double currentFreeEnergy = tissue.CalculateFreeEnergy();
-	for (list<Cell*>::iterator cit = tissue.cells.begin(); cit != tissue.cells.end(); cit++)
-	{
-		AGPerimCell* agit = dynamic_cast<AGPerimCell*>(*cit);
-		/*
-		errorfile << "Cell " << (*(*cit)).id << endl;
-		errorfile << "dA / dLx = " << (*agit).GetdAdLx()  << "\n" << endl;
-		errorfile << "dP / dLx = " << (*agit).GetdPdLx() << "\n" << endl;
-		errorfile << "dA / dLy = " << (*agit).GetdAdLy() << "\n" << endl;
-		errorfile << "dP / dLy = " << (*agit).GetdPdLy() << "\n" << endl;
-		errorfile << " d2P / dLx2 = " << (*agit).Getd2PdLx2() << "\n" << endl;
-		errorfile << " d2P / dLy2 = " << (*agit).Getd2PdLy2() << "\n" << endl;
-		*/
-		verts = (*agit).GetClockWiseVertices();
-		int vertexNum = verts.size();
-		errorfile << "dP/dgamma = " << (*agit).GetdPdgammaForSimpleShearAlongXAxis() << ", Cell id = " << (*agit).id << endl;
-		errorfile << "dA/dgamma = " << (*agit).GetdAdgammaForSimpleShearAlongXAxis() << ", Cell id = " << (*agit).id << endl;
-		for (int i = 0; i < vertexNum; i++)
+		for (list<Cell*>::iterator cit = tissue.cells.begin(); cit != tissue.cells.end(); cit++)
 		{
-			currVertex = (verts[i]);
-			currID = currVertex->id;
-			
-			errorfile << "d2P / dLydv = (" << (*agit).Getd2PdgammadvForSimpleShearAlongXAxis(currVertex).x << ", " << (*agit).Getd2PdgammadvForSimpleShearAlongXAxis(currVertex).y << "), Vertex id = " << (*verts[i]).id << ", Cell id = " << (*agit).id << endl;
-			errorfile << "d2A / dLydy = (" << (*agit).Getd2AdgammadyForSimpleShearAlongXAxis(currVertex)  << "), Vertex id = " << (*verts[i]).id << ", Cell id = "<< (*agit).id << endl;
-			
+			AGPerimCell* agit = dynamic_cast<AGPerimCell*>(*cit);
+			/*
+			errorfile << "Cell " << (*(*cit)).id << endl;
+			errorfile << "dA / dLx = " << (*agit).GetdAdLx()  << "\n" << endl;
+			errorfile << "dP / dLx = " << (*agit).GetdPdLx() << "\n" << endl;
+			errorfile << "dA / dLy = " << (*agit).GetdAdLy() << "\n" << endl;
+			errorfile << "dP / dLy = " << (*agit).GetdPdLy() << "\n" << endl;
+			errorfile << " d2P / dLx2 = " << (*agit).Getd2PdLx2() << "\n" << endl;
+			errorfile << " d2P / dLy2 = " << (*agit).Getd2PdLy2() << "\n" << endl;
+			*/
+			verts = (*agit).GetClockWiseVertices();
+			int vertexNum = verts.size();
+			errorfile << "dP/dgamma = " << (*agit).GetdPdgammaForSimpleShearAlongXAxis() << ", Cell id = " << (*agit).id << endl;
+			errorfile << "dA/dgamma = " << (*agit).GetdAdgammaForSimpleShearAlongXAxis() << ", Cell id = " << (*agit).id << endl;
+			for (int i = 0; i < vertexNum; i++)
+			{
+				currVertex = (verts[i]);
+				currID = currVertex->id;
+
+				errorfile << "d2P / dLydv = (" << (*agit).Getd2PdgammadvForSimpleShearAlongXAxis(currVertex).x << ", " << (*agit).Getd2PdgammadvForSimpleShearAlongXAxis(currVertex).y << "), Vertex id = " << (*verts[i]).id << ", Cell id = " << (*agit).id << endl;
+				errorfile << "d2A / dLydy = (" << (*agit).Getd2AdgammadyForSimpleShearAlongXAxis(currVertex) << "), Vertex id = " << (*verts[i]).id << ", Cell id = " << (*agit).id << endl;
+
+			}
+
 		}
-		
+		//errorfile << tissue.currentFreeEnergy << endl;
+		MatrixXf hessian(2 * tissue.cells.size(), 2 * tissue.cells.size());
+		MatrixXf hessian_check(2 * tissue.cells.size(), 2 * tissue.cells.size());
+		hessian = tissue.calculateHessian(&eqfile);
+		hessian_check = hessian - hessian.transpose();
+
+		eqfile << "hessian = " << (hessian) << "\n \n \n \n ";
+		eqfile << "hessian symmetry check = " << hessian_check << "\n \n \n \n ";
+		eqfile << "shear modulus = " << (tissue).calculateShearModulusWithEigenDecomposition(&errorfile) << endl;;
 	}
-	//errorfile << tissue.currentFreeEnergy << endl;
-	MatrixXf hessian(2 * tissue.cells.size(), 2 * tissue.cells.size());
-	MatrixXf hessian_check(2 * tissue.cells.size(), 2 * tissue.cells.size());
-	hessian = tissue.calculateHessian(&eqfile);
-	hessian_check = hessian - hessian.transpose();
-
-	eqfile << "hessian = " << (hessian) << "\n \n \n \n ";
-	eqfile << "hessian symmetry check = " << hessian_check << "\n \n \n \n ";
-	eqfile << "shear modulus = " << (tissue).calculateShearModulusWithEigenDecomposition(&errorfile) << endl;;
-	/*
-	MatrixXf a(5,5);
-	a.setZero(5,5);
-	a(0, 0) = 1;
-	a(0, 1) = 1;
-	a(0, 2) = 1;
-	a(0, 3) = 1;
-	a(0, 4) = 1;
-	a(1, 1) = 2;
-	a(1, 2) = 1;
-	a(2, 1) = 1;
-	a(2, 2) = 3;
-	a(3, 1) = 1;
-	a(3, 3) = 4;
-	a(4, 4) = 5;
-	a(4, 2) = 10;
-
-	EigenSolver<MatrixXf> eigensolver(a);
-	if (eigensolver.info() != Success) abort();
-	errorfile << a << endl;
-	errorfile << "The eigenvalues of A are:\n" << eigensolver.eigenvalues() << "\n \n \n \n \n \n " << endl;
-
-	errorfile << "Eigenvalue 0 = " << real(eigensolver.eigenvalues()[0]) << "\n \n \n \n \n \n \n ";
-	errorfile << "There are " << eigensolver.eigenvalues().size() << " eigenvalues." << endl;
-	errorfile << "Here's a matrix whose columns are eigenvectors of A \n"
-		<< "corresponding to these eigenvalues:\n"
-		<< eigensolver.eigenvectors()  << endl;
-	errorfile << a.inverse() << "\n \n \n " << endl;
-	errorfile << a * a.inverse() << endl;
-	*/
-	/*
-	MatrixXd ones = MatrixXd::Random(3, 3);
-	EigenSolver<MatrixXd> es(ones);
-	errorfile << ones << "\n \n \n ";
-	errorfile << "The first eigenvector of the 3x3 matrix of ones is:"
-		<< endl << es.eigenvectors().col(0) << endl;
-	errorfile << "Eigenvectors = " << es.eigenvectors() << endl;
-	errorfile << "Eigenvalues  = " << es.eigenvalues() << endl;
-	*/
-	///////******************************End***********************************************************************
-	///////**********************************************************************************************************
+		
 	endtime = std::chrono::system_clock::now();
 	std::chrono::duration<double> elapsed_seconds = endtime - starttime;
 	cout << "ELAPSED TIME: " << elapsed_seconds.count() / 60.0 << "  min\n";

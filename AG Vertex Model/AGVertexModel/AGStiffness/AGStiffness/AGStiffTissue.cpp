@@ -115,6 +115,7 @@ void AGStiffTissue::AssignAreaModuli(bool constantK, double meanK, double Kstd)
 	
 	Vect xcom;
 	double stifffunc = 0;
+	double sinefactor = 0;
 	for (list<Cell*>::iterator cit = cells.begin(); cit != cells.end(); cit++)
 	{
 		AGStiffCell * agit = dynamic_cast<AGStiffCell*>(*cit);
@@ -125,7 +126,8 @@ void AGStiffTissue::AssignAreaModuli(bool constantK, double meanK, double Kstd)
 		}
 		else
 		{
-			stifffunc = meanK + Kstd * sin(xcom.x * PI /(LX)) * sin(xcom.y * PI / (LY)); // FOR NOW, THIS IS THE CHOSEN STIFFNESS PATTERN
+			sinefactor = sin(2 * xcom.x * PI / ( LX)) * sin(2*xcom.y * PI / (LY));
+			stifffunc = meanK - Kstd * sinefactor; // FOR NOW, THIS IS THE CHOSEN STIFFNESS PATTERN
 			(*agit).SetAreaModulus(stifffunc);
 		}
 			
@@ -153,7 +155,7 @@ void AGStiffTissue::AssignPreferredAreas(bool constA0, double A0, double A0std)
 		}
 		else
 		{
-			a0func = A0 + A0std * sin(xcom.x * PI / (LX)) * sin(xcom.y * PI / (LY));
+			a0func = A0 + A0std * sin(2*xcom.x * PI / (LX)) * sin(2*xcom.y * PI / (LY));
 			(*agit).A0 = a0func;
 		}
 		
@@ -182,7 +184,7 @@ void AGStiffTissue::AssignPerimeterModuli(bool constPM, double PM, double PMstd)
 		}
 		else
 		{
-			Lfunc = PM + PMstd * sin(xcom.x * PI / (LX)) * sin(xcom.y * PI / (LY));
+			Lfunc = PM - PMstd * sin(2 * xcom.x * PI / (LX)) * sin(2 * xcom.y * PI / ( LY));
 			(*agit).SetPM(Lfunc);
 		}
 	}
@@ -323,16 +325,16 @@ void AGStiffTissue::HelperReadInputData_SetGlobalValues(ifstream* datafile) {
 	else if (globals.count("EQUILIBRIUMMITOSIS") == 0) { cout << "WARNING: EQUILIBRIUMMITOSIS is not given in input file, used default value " << EQUILIBRIUMMITOSIS << endl; }
 	else { cout << "ERROR: Global variable EQUILIBRIUMMITOSIS has multiple definition in input file, used default value EQUILIBRIUMMITOSIS = " << EQUILIBRIUMMITOSIS << endl; }
 
-	if (globals.count("P0") == 1) { P0 = (atof(globals["P0"].c_str())); }
-	else if (globals.count("P0") == 0) { cout << "WARNING: P0 is not given in input file, used default value " << P0 << endl; }
+	if (globals.count("P0") == 1) { (*this).P0 = (atof(globals["P0"].c_str())); (*this).P0globalset = true; }
+	else if (globals.count("P0") == 0) { cout << "WARNING: P0 is not given in input file, used default value " << P0 << endl; (*this).P0globalset = true;}
 	else { cout << "ERROR: Global variable P0 has multiple definition in input file, used default value P0 = " << P0 << endl; }
 
 	if (globals.count("LAMBDA") == 1) { LAMBDA = (atof(globals["LAMBDA"].c_str())); }
 	else if (globals.count("LAMBDA") == 0) { cout << "WARNING: LAMBDA is not given in input file, used default value " << LAMBDA << endl; }
 	else { cout << "ERROR: Global variable LAMBDA has multiple definition in input file, used default value LAMBDA = " << LAMBDA << endl; }
 
-	if (globals.count("A0") == 1) { A0 = (atof(globals["A0"].c_str())); }
-	else if (globals.count("A0") == 0) { cout << "WARNING: A0 is not given in input file, used default value " << A0 << endl; }
+	if (globals.count("A0") == 1) { (*this).A0 = (atof(globals["A0"].c_str())); (*this).A0globalset = true; }
+	else if (globals.count("A0") == 0) { cout << "WARNING: A0 is not given in input file, used default value " << A0 << endl; (*this).A0globalset = false;}
 	else { cout << "ERROR: Global variable A0 has multiple definition in input file, used default value A0 = " << A0 << endl; }
 
 	if (globals.count("energyListSize") == 1) { energyListSize = (atof(globals["energyListSize"].c_str())); }
@@ -379,6 +381,12 @@ void AGStiffTissue::HelperReadInputData_SetGlobalValues(ifstream* datafile) {
 */
 void AGStiffTissue::HelperReadInputData_CreateObjects(ifstream* datafile) {
 
+	string aline, aword, akey, avalue;		//temporary variables to store lines and words 
+	//string atype;						//what type of file is it (in case latter versions need to do slightly different things based on type)
+	stringstream bssline;				//ssline is a string stream so we can comvert strings to stringstreams
+	map <string, string> globals;
+	
+
 	string line, key, value, edg;			//temporary variables to store lines and words 
 	string type;							//what type of file is it (in case latter versions need to do slightly different things based on type)
 	stringstream ssline, ssedges;			//ssline is a string stream so we can comvert strings to stringstreams
@@ -389,7 +397,7 @@ void AGStiffTissue::HelperReadInputData_CreateObjects(ifstream* datafile) {
 	int newid, v1, v2, enumb, typenumb;					//temp varables to store the object info
 	double x, y;
 	bool xf, yf;
-	double A0;
+	double A0, Kc, Lc;
 	string potential, cellpressuretype;
 	double tcjstrength = 0;
 	double thetaan = 0;
@@ -509,8 +517,36 @@ void AGStiffTissue::HelperReadInputData_CreateObjects(ifstream* datafile) {
 			typenumb = atoi(objectInfo["Type"].c_str());
 		}
 		else { typenumb = 0; }
-		if (objectInfo.count("A0")) {
-			A0 = atof(objectInfo["A0"].c_str());
+		if (!(*this).A0globalset)
+		{
+			if (objectInfo.count("A0")) {
+				A0 = atof(objectInfo["A0"].c_str());
+			}
+		}
+		if (objectInfo.count("K"))
+		{
+			Kc = atof(objectInfo["K"].c_str());
+		}
+		else
+		{
+			Kc = K;
+		}
+		// THIS WAS A TYPO. I CALLED THE VARIABLE "LAMBDA", "GAMMA" IN THE CODE. SO THE VARIABLE "LAMBDA" IS MISTAKENLY CALLED "GAMMA"
+		if (objectInfo.count("Gamma") || objectInfo.count("Lambda"))
+		{
+			if (objectInfo.count("Gamma"))
+			{
+				Lc = atof(objectInfo["Gamma"].c_str());
+			} 
+			else if (objectInfo.count("Lambda"))
+			{
+				Lc = atof(objectInfo["Lambda"].c_str());
+			}
+			
+		}
+		else
+		{
+			Lc = LAMBDA;
 		}
 		// you only want atoi if you have a number you want to store as a string. but we should probably have a string
 
@@ -558,17 +594,31 @@ void AGStiffTissue::HelperReadInputData_CreateObjects(ifstream* datafile) {
 		AGStiffCell* cptr = new AGStiffCell;
 		(*cptr).id = newid;
 		(*cptr).type = typenumb;
-		(*cptr).A0 = A0;
+		if ((*this).A0globalset)
+		{
+			(*cptr).A0 = (*this).A0;
+		} 
+		else
+		{
+			(*cptr).A0 = A0;
+		}
+
 		(*cptr).IOEdgeID = listedges;
 		(*cptr).DIVISIONPOTENTIAL = potential;
-		(*cptr).P0 = P0;
+		if ((*this).P0globalset)
+		{
+			(*cptr).P0 = (*this).P0;
+		}
+		else
+		{
+			(*cptr).P0 = P0;
+		}
+		
 		(*cptr).currentEnergy = 0;
 		(*cptr).pastEnergy = 0;
-		(*this).A0 = A0;
-		(*this).P0 = P0;
 		(*cptr).pressureType = cellpressuretype;
-		(*cptr).KAM = K;
-		(*cptr).PM = LAMBDA;
+		(*cptr).KAM = Kc;
+		(*cptr).PM = Lc;
 
 		if (tcjstrength != 0)
 		{
@@ -780,7 +830,7 @@ void AGStiffTissue::HelperWriteOutputData_Write2File(ofstream* datafile, bool in
 		*/
 		// FOR DEBUGGING Manning model
 
-		* datafile << std::setprecision(outputPrecision) << "id\tA0\tK\tGamma\tEdgeNumb\tType\txflag\tyflag\tArea\tPerimeter\tPressure\tCenterx\tCentery\tEdgeList\tCWVertices\tCellPressureType" << endl;
+		* datafile << std::setprecision(outputPrecision) << "id\tA0\tK\tLambda\tEdgeNumb\tType\txflag\tyflag\tArea\tPerimeter\tPressure\tCenterx\tCentery\tEdgeList\tCWVertices\tCellPressureType" << endl;
 		for (list<Cell*>::iterator cit = cells.begin(); cit != cells.end(); cit++)
 		{			//loop through all of the cells in the tissue
 			stringstream ssEdgeList;
@@ -919,6 +969,7 @@ double AGStiffTissue::HelperResolveVertices_CheckStability(Vertex* vert, Edge* e
 bool AGStiffTissue::ReadInputData(string InputFileName) {
 	cout << "Entered RedInputData" << endl;
 	ifstream datafile;
+
 	datafile.open(InputFileName);											//open file
 	if (!datafile.is_open()) {											//check if open file successful
 		cout << "ERROR cannot open file: " << InputFileName << endl;

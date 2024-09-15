@@ -35,6 +35,10 @@ public:
 
 	double PM; //( LAMBDA, "Perimeter Modulus"; varies per cell now
 
+	virtual double GetPressureNormalStress();
+
+	virtual double GetTensionNormalStress();
+
 	virtual void SetAreaModulus(double K);
 
 	virtual void SetPreferredArea(double PA);

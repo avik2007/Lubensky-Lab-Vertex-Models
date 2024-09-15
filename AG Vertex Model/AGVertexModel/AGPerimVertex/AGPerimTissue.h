@@ -58,6 +58,8 @@ public:
 	int energyListSize;
 	bool equilibrated; //defines whether the tissue is considered equilibrated
 	double outputPrecision = 32;
+	bool A0globalset;
+	bool P0globalset;
 	//CONSTRUCTOR
 	//AGPerimTissue(){};
 

@@ -88,6 +88,7 @@ double AGPerimCell::GetdPdLx()
 /*
 * double Getd2PdLx2()
 *
+* (7/9/24): DOUBLE CHECK THIS PLEASE!!!!
 * Gets the derivative of a cell's perimeter with respect to the position of the right box wall
 */
 double AGPerimCell::Getd2PdLx2()
@@ -134,6 +135,7 @@ double AGPerimCell::Getd2PdLx2()
 /*
 * double GetdPdLy()
 *
+* * (7/9/24): DOUBLE CHECK THIS PLEASE!!!!
 * Gets the derivative of a cell's perimeter with respect to the position of the upper box wall
 */
 double AGPerimCell::GetdPdLy()
@@ -180,6 +182,7 @@ if (((*e1).yflag))
 /*
 * double Getd2PdLy2()
 *
+* * (7/9/24): DOUBLE CHECK THIS PLEASE!!!!
 * Gets the derivative of a cell's perimeter with respect to the position of the right box wall
 */
 double AGPerimCell::Getd2PdLy2()
@@ -230,7 +233,8 @@ double AGPerimCell::Getd2PdLy2()
 * *
 * *
 * *
-*  MAKE SURE YOU RECHECK THIS ONE
+*  MAKE SURE YOU RECHECK THIS ONE * (7/9/24): DOUBLE CHECK THIS PLEASE!!!!
+*  THIS DOESN'T ACCOUNT FOR THE POTENTIAL FOR SHEARING
 */
 Vect AGPerimCell::Getd2PdLxdv(Vertex* V)
 {
@@ -271,8 +275,11 @@ Vect AGPerimCell::Getd2PdLxdv(Vertex* V)
 
 			if (((*e1).xflag))
 			{
-				directioncos = abs(v.x); // these absolute values are part of a convention needed to get this derivative right I believe
-				directionsin = abs(v.y);
+				// directioncos = abs(v.x); // these absolute values are part of a convention needed to get this derivative right I believe
+				// directionsin = abs(v.y);
+				// (07/09/2024 update: I think the abs() needs to be removed, we commit to perimeter being calculated by traversing edges CCW (add a minus sign to everything))
+				directioncos = -1 * v.x; 
+				directionsin = -1 * v.y;
 				d2PdLxdy += 1 / (*e1).GetLength() * (-1* directioncos * directionsin );
 				d2PdLxdx += 1 / (*e1).GetLength() * (directioncos * directioncos); //(1 - directionsin * directionsin ) ;
 				if (xcrossingEdges < 1)
@@ -281,7 +288,7 @@ Vect AGPerimCell::Getd2PdLxdv(Vertex* V)
 				}
 				else
 				{
-					i = vertexNum;
+					i = vertexNum-1;
 				}
 
 			}
@@ -295,11 +302,12 @@ Vect AGPerimCell::Getd2PdLxdv(Vertex* V)
 * double GetdPdgamma()
 *
 * derivative of perimeter of a cell with respect to gamma, where gamma is the shear parameter for Lee Edwards Boundary conditions (see Merkel Manning 2018). We shear the unit cells in the x-direction
+* * (7/9/24): DOUBLE CHECK THIS PLEASE!!!!
 */
 double AGPerimCell::GetdPdgammaForSimpleShearAlongXAxis()
 {
 	int ycrossingEdges = 0;
-	vector<Vect> edgeVects;
+	Vect edgeVect;
 	double dPdgamma = 0;
 	Vertex* v1, * v2;
 	Edge* e1, * e2;
@@ -317,20 +325,29 @@ double AGPerimCell::GetdPdgammaForSimpleShearAlongXAxis()
 		v2 = clockwiseVertex[i + 1];
 		e1 = (*v1).GetEdgeBetween(v2);
 		clockwiseEdges.push_back(e1);
-		edgeVects.push_back((*e1).GetVectorDifference(v1, v2));
+		edgeVect = (*e1).GetVectorDifference(v1, v2);
 
 		if (((*e1).yflag))
 		{
-			angle = (*e1).GetAngle(v1);
-			directioncos = abs(cos(angle)); // the x-magnitude of the edge scales this derivative, must be positive
-			dPdgamma += LY*directioncos;
+			// if the CCW edge vector is aimed up (y-component positive), we find the angle of that vector w.r.t. x-axis
+			// if the CCW edge vector is aimed down (y-component negative), we find the angle of the vector*-1 w.r.t. x-axis
+			if (edgeVect.y < 0)
+			{
+				directioncos = edgeVect.x / edgeVect.Magnitude();
+			}
+			else
+			{
+				directioncos = -1 * edgeVect.x / edgeVect.Magnitude();
+			}
+			
+			dPdgamma += LY * directioncos;
 			if (ycrossingEdges < 1)
 			{
 				ycrossingEdges++;
 			}
 			else
 			{
-				i = vertexNum;
+				i = vertexNum-1;
 			}
 
 		}
@@ -341,6 +358,7 @@ double AGPerimCell::GetdPdgammaForSimpleShearAlongXAxis()
 * double GetdPdgamma()
 *
 * second derivative of perimeter of a cell with respect to gamma, where gamma is the shear parameter for Lee Edwards Boundary conditions (see Merkel Manning 2018). We shear the unit cells in the x-direction
+* * (7/9/24): DOUBLE CHECK THIS PLEASE!!!!
 */
 double AGPerimCell::Getd2Pdgamma2ForSimpleShearAlongXAxis()
 {
@@ -357,7 +375,7 @@ double AGPerimCell::Getd2Pdgamma2ForSimpleShearAlongXAxis()
 	double directionsin = 0;
 	clockwiseVertex.push_back(clockwiseVertex[0]);
 	double edgelength = 0;
-	for (int i = 0; i < vertexNum; i++)
+	for (int i = 0; i < vertexNum ; i++)
 	{
 		v1 = clockwiseVertex[i];
 		v2 = clockwiseVertex[i + 1];
@@ -369,17 +387,15 @@ double AGPerimCell::Getd2Pdgamma2ForSimpleShearAlongXAxis()
 		{
 			angle = (*e1).GetAngle(v1);
 			edgelength = (*e1).GetLength();
+			// directionsin = abs(sin(angle));
+			// (07/09/2024 update: I think the abs() needs to be removed, we commit to perimeter being calculated by traversing edges CCW (add a minus sign to everything))
 			directionsin = sin(angle); // the x-magnitude of the edge scales this derivative, must be positive
 			d2Pdgamma2 += LY * LY * pow(directionsin,2) / edgelength;
-			if (ycrossingEdges < 1)
+			ycrossingEdges++;
+			if (ycrossingEdges > 1)
 			{
-				ycrossingEdges++;
+				i = vertexNum - 1;
 			}
-			else
-			{
-				i = vertexNum;
-			}
-
 		}
 	}
 	
@@ -401,8 +417,8 @@ Vect AGPerimCell::Getd2PdgammadvForSimpleShearAlongXAxis(Vertex* v)
 	double vectDiff;
 	double directionsin = 0;
 	double directioncos = 0;
-	bool rightvert = false;
-	int rightVertFactor = -1;
+	int updownfactor = -1;
+	int CCWVertFactor = -1;
 	clockwiseVertex.push_back(clockwiseVertex[0]);
 
 	for (int i = 0; i < vertexNum; i++)
@@ -415,39 +431,42 @@ Vect AGPerimCell::Getd2PdgammadvForSimpleShearAlongXAxis(Vertex* v)
 			if ((v1->id) == targetvertexid)
 			{
 				vec = (*e1).MakeUnitVector(v1);
-				if ((*v1).r.x > (*v2).r.x)
-				{
-					rightvert = true;
-				}
+				CCWVertFactor = 1;
 			}
 			else
 			{
 				vec = (*e1).MakeUnitVector(v2);
-				if ((*v2).r.x > (*v1).r.x)
-				{
-					rightvert = true;
-				}
+				
 			}
-			if (rightvert)
-			{
-				rightVertFactor = 1;
-			}
-
 			clockwiseEdges.push_back(e1);
-
+			
 			if (((*e1).yflag))
 			{
-				directioncos = abs(vec.x); // these absolute values are part of a convention needed to get this derivative right I believe
-				directionsin = abs(vec.y);
-				d2PdLydx += LY / (*e1).GetLength() * (rightVertFactor - directioncos * directioncos); //(1 - directionsin * directionsin ) ;
-				d2PdLydy += LY / (*e1).GetLength() * (-1 * directioncos * directionsin);
+				//directioncos = abs(vec.x); // these absolute values are part of a convention needed to get this derivative right I believe
+				//directionsin = abs(vec.y);
+				// (07/09/2024 update: I think the abs() needs to be removed, we commit to perimeter being calculated by traversing edges CCW (add a minus sign to everything))
+				directioncos = vec.x;//-1*vec.x;
+				directionsin = vec.y;//-1*vec.y;
+				if (vec.y < 0)
+				{
+					updownfactor = 1;
+				}
+				else
+				{
+					updownfactor = -1;
+				}
+				// updownfactor is positive if the vector that the edge is on points up (in the plus y hat direction) when we traverse the polygon
+				// 
+				d2PdLydx +=  LY / (*e1).GetLength() * CCWVertFactor * updownfactor * (1 - directioncos * directioncos); //(1 - directionsin * directionsin ) ;
+				d2PdLydy +=  LY / (*e1).GetLength() * CCWVertFactor * updownfactor * (-1 * directioncos * directionsin);
+				
 				if (ycrossingEdges < 1)
 				{
 					ycrossingEdges++;
 				}
 				else
 				{
-					i = vertexNum;
+					i = vertexNum-1;
 				}
 
 			}

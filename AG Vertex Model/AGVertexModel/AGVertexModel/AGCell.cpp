@@ -795,15 +795,9 @@ double AGCell::GetdAdgammaForSimpleShearAlongXAxis()
 	double x2 = 0;
 	double finalVal = 0;
 	Vect ev;
-	bool evxflag = false;
+	Vect crosscellvec(0, 0);
+	bool evecadder = false;
 	clockwiseVertex.push_back(clockwiseVertex[0]);
-	if ((*this).GetYFlag())
-	{
-		if ((*this).GetXFlag())
-		{
-			finalVal = 0;
-		}
-	}
 
 	for (int i = 0; i < vertexNum; i++)
 	{
@@ -812,40 +806,60 @@ double AGCell::GetdAdgammaForSimpleShearAlongXAxis()
 		e1 = (*v1).GetEdgeBetween(v2);
 		clockwiseEdges.push_back(e1);
 		ev = (*e1).GetVectorDifference(v1, v2);
-		evxflag = (*e1).xflag;
+		
 		if (((*e1).yflag))
 		{
 			if (ycrossingEdges < 1)
 			{
-				y1 = (*v1).r.y + 0.5 * ev.y;//(*e1).GetCenter().y;
+				y1 = 0.5 * ((*v2).r.y + (*v1).r.y);// 9/9/2024 fixing this to ignore boundary conditions//0.5 * ev.y;//(*e1).GetCenter().y;
 				x1 = (*v1).r.x + 0.5 * ev.x;//(*e1).GetCenter().x;
 				ycrossingEdges++;
+				evecadder = true;
 			}
 			else
 			{
-				y2 = (*v2).r.y - 0.5 * ev.y;//(*e1).GetCenter().y;
+				y2 = 0.5*( (*v2).r.y + (*v1).r.y );// 9/9/2024 fixing this to ignore boundary conditions// - 0.5 * ev.y;//(*e1).GetCenter().y;
 				x2 = (*v2).r.x - 0.5 * ev.x;//(*e1).GetCenter().x;
 				// alternatively, (*e1).getCenter().y can do the same thing 
 				i = vertexNum;
 			}
+			// the y1, x1 and y2, x2 calculations are done this way to get around boundary condition concerns
+			crosscellvec = crosscellvec + ev;
+			
+		}
+		else
+		{
+			if (evecadder)
+			{
+				crosscellvec = crosscellvec + ev;
+			}
+		}
 
-		}// if dAdLxdy works, then this should work
 
 	}
-	 
-	// account for boundary conditions
-	
+
+	// account for boundary conditions and getting the direction right
+	// 7/11/2024, CHECK THIS CROSSCELLVEC calculation
+	if (crosscellvec.x > 0)
+	{
+		finalVal = y1 - y2;
+	}
+	else
+	{
+		finalVal = y2 - y1;
+	}
+	/*
 	if (x2 > x1)
 	{
 		if (evxflag)
-		{ 
+		{
 			finalVal = y1 - y2;
-		} 
+		}
 		else
 		{
 			finalVal = y2 - y1;
 		}
-	} 
+	}
 	else
 	{
 		if (evxflag)
@@ -856,8 +870,9 @@ double AGCell::GetdAdgammaForSimpleShearAlongXAxis()
 		{
 			finalVal = y1 - y2;
 		}
-		
+
 	}
+	*/
 	return LY * finalVal; // 4/12/24 ORDERING SHOULD BE RIGHT - POTENTIAL WORRIES ABOUT CORNER CELLS (KEEP IN MIND IF BUGS COME UP)
 }
 /*
@@ -866,14 +881,13 @@ double AGCell::GetdAdgammaForSimpleShearAlongXAxis()
 */
 double AGCell::Getd2AdgammadyForSimpleShearAlongXAxis(Vertex* V)
 {
-	unsigned long int targetvertexid = (*V).id;
+	unsigned long int targetvertexid = V->id;
 	bool id_match;
 	int ycrossingEdges = 0;
-	Vect edgeVect;
 	double d2AdLxdy = 0;
 	Vertex* v1, * v2;
 	Edge* e1;
-	vector<Edge*> clockwiseEdges;
+	//vector<Edge*> clockwiseEdges;
 	vector<Vertex*> clockwiseVertex = (*this).GetClockWiseVertices();
 	int vertexNum = clockwiseVertex.size();
 	double vectDiff;
@@ -882,7 +896,9 @@ double AGCell::Getd2AdgammadyForSimpleShearAlongXAxis(Vertex* V)
 	int totalContribution = 0;
 	double x1 = 0;
 	double x2 = 0;
-	bool evxflag = false; 
+	Vect ev;
+	Vect crosscellvec(0, 0);
+	bool evecadder = false;
 	clockwiseVertex.push_back(clockwiseVertex[0]);
 
 	for (int i = 0; i < vertexNum; i++)
@@ -891,56 +907,45 @@ double AGCell::Getd2AdgammadyForSimpleShearAlongXAxis(Vertex* V)
 		v2 = clockwiseVertex[i + 1];
 		id_match = ((v1->id) == targetvertexid) || ((v2->id) == targetvertexid);
 		e1 = (*v1).GetEdgeBetween(v2);
-		clockwiseEdges.push_back(e1);
-		edgeVect =(*e1).GetVectorDifference(v1, v2);
-		evxflag = (*e1).xflag;
+		//clockwiseEdges.push_back(e1);
+		ev =(*e1).GetVectorDifference(v1, v2);
+		if (evecadder)
+		{
+			crosscellvec = crosscellvec + ev;
+		}
 		if (((*e1).yflag)) // ADD AN IF ID_MATCH
 		{
 			if (ycrossingEdges < 1)
 			{
-				x1 = (*v1).r.x + 0.5 * edgeVect.x;
 				ycrossingEdges++;
 				if (id_match)
 				{
 					firstEdgeContribution = 1;
 				}
+				evecadder = true;
 			}
 			else
 			{
-				x2 = (*v1).r.x - 0.5 * edgeVect.x;
 				// alternatively, (*e1).getCenter().y can do the same thing 
 				i = vertexNum;
 				if (id_match)
 				{
 					secondEdgeContribution = 1;
 				}
+				evecadder = false;
 			}
 		}
-
-		if (x2 > x1)
-		{
-			if (evxflag)
-			{
-				totalContribution = firstEdgeContribution - secondEdgeContribution;
-			}
-			else
-			{
-				totalContribution = secondEdgeContribution - firstEdgeContribution;
-			}
-		}
-		else
-		{
-			if (evxflag)
-			{
-				totalContribution = secondEdgeContribution - firstEdgeContribution;
-			}
-			else
-			{
-				totalContribution = firstEdgeContribution - secondEdgeContribution;
-			}
-
-		}
+		
+		
 		// if dAdLxdy works, then this should work
+	}
+	if (crosscellvec.x > 0)
+	{
+		totalContribution = firstEdgeContribution - secondEdgeContribution;
+	}
+	else
+	{
+		totalContribution = secondEdgeContribution - firstEdgeContribution;
 	}
 	return 0.5 * LY * totalContribution; // 4/12/24 ORDERING SHOULD BE RIGHT - POTENTIAL WORRIES ABOUT CORNER CELLS (KEEP IN MIND IF BUGS COME UP
 }
