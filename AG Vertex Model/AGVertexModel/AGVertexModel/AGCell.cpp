@@ -470,7 +470,7 @@ bool AGCell::IsCrossingY()
 Vect AGCell::GetdAdv(Vertex* v)
 {
 	vector<Vertex*> cwverts;
-	int vnum, specvindex,specm1, specp1;
+	int vnum,specm1, specp1;
 	specm1 = 0;
 	specp1 = 0;
 	bool isvertexincell = false;
@@ -485,7 +485,6 @@ Vect AGCell::GetdAdv(Vertex* v)
 	{
 		if ((*cwverts[vindex]).id == (*v).id)
 		{
-			specvindex = vindex;
 			if (vindex == 0)
 			{
 				specm1 = vnum - 1;
@@ -512,7 +511,7 @@ Vect AGCell::GetdAdv(Vertex* v)
 		eminus = (*v).GetEdgeBetween(vminus);
 		vTovplus = (*eplus).GetVectorDifference(v, vplus);
 		vminusTovplus = (*eminus).GetVectorDifference(vminus, v);
-		dAdv =  (vTovplus + vminusTovplus).Rotate(PI / 2) * 0.5;
+		dAdv =  (vTovplus + vminusTovplus).Rotate(PI / 2) * (-1*0.5); //NEGATIVE SIGN IS ATTEMPT TO MAINTAIN CCW convention
 	}
 
 	return dAdv;
@@ -525,7 +524,7 @@ Vect AGCell::GetdAdv(Vertex* v)
 Vect AGCell::GetdPdv(Vertex* v)
 {
 	vector<Vertex*> cwverts;
-	int vnum, specvindex, specm1, specp1;
+	int vnum, specm1, specp1;
 	specm1 = 0;
 	specp1 = 0;
 	bool isvertexincell = false;
@@ -537,11 +536,16 @@ Vect AGCell::GetdPdv(Vertex* v)
 	cwverts = (*this).SavedInfoForEvolve_CWVerts;
 	vnum = cwverts.size();
 
-	for (int vindex = 0; vindex < vnum; vindex++)
+	//for (int vindex = 0; vindex < vnum; vindex++)
+	int vindex = 0;
+
+	// Note: this do while loop is one way to get this done. But dAdv() uses a smart for loop which could be used here.
+	// 
+	do
 	{
-		if ((*cwverts[vindex]).id == (*v).id)
+		isvertexincell = ((*cwverts[vindex]).id == (*v).id);
+		if (isvertexincell)
 		{
-			specvindex = vindex;
 			if (vindex == 0)
 			{
 				specm1 = vnum - 1;
@@ -557,9 +561,11 @@ Vect AGCell::GetdPdv(Vertex* v)
 				specp1 = vindex + 1;
 				specm1 = vindex - 1;
 			}
-			isvertexincell = ((*cwverts[vindex]).id == (*v).id);
+			
 		}
-	}
+		vindex++;
+	} while ((!isvertexincell) && (vindex < vnum));
+
 	vplus = cwverts[specp1];
 	vminus = cwverts[specm1];
 	if (isvertexincell)
@@ -568,7 +574,8 @@ Vect AGCell::GetdPdv(Vertex* v)
 		eminus = (*v).GetEdgeBetween(vminus);
 		vTovplus = (*eplus).GetVectorDifference(v, vplus);
 		vminusTovplus = (*eminus).GetVectorDifference(vminus, v);
-		dPdv = vTovplus / vTovplus.Magnitude()*(-1) + vminusTovplus / vminusTovplus.Magnitude();
+		dPdv = vTovplus / vTovplus.Magnitude() + vminusTovplus / vminusTovplus.Magnitude() * (-1);
+		// SIGN CONVENTION OF dPdv MEANT TO MAINTAIN COUNTERCLOCKWISE CONVENTION, DESPITE THE FACT THAT I'M USING CW CONVETION IN CODE
 	}
 
 	return dPdv;
@@ -805,7 +812,7 @@ double AGCell::GetdAdgammaForSimpleShearAlongXAxis()
 		v2 = clockwiseVertex[i + 1];
 		e1 = (*v1).GetEdgeBetween(v2);
 		clockwiseEdges.push_back(e1);
-		ev = (*e1).GetVectorDifference(v1, v2);
+		ev = (*e1).GetVectorDifference(v1, v2); // 9/29/2024 shouldn't matter that this vector isn't CCW
 		
 		if (((*e1).yflag))
 		{
@@ -899,6 +906,11 @@ double AGCell::Getd2AdgammadyForSimpleShearAlongXAxis(Vertex* V)
 	Vect ev;
 	Vect crosscellvec(0, 0);
 	bool evecadder = false;
+	double edgeslope;
+	double xcw, ycw; // coordinates of vertex 1
+	double xint1 = 0; // the x-coordinates of the point at which edges cross the top of the box
+	double xint2 = 0; // the x-coordinates of the point at which edges cross the top of the box
+	int xcrossings = 0;
 	clockwiseVertex.push_back(clockwiseVertex[0]);
 
 	for (int i = 0; i < vertexNum; i++)
@@ -907,8 +919,103 @@ double AGCell::Getd2AdgammadyForSimpleShearAlongXAxis(Vertex* V)
 		v2 = clockwiseVertex[i + 1];
 		id_match = ((v1->id) == targetvertexid) || ((v2->id) == targetvertexid);
 		e1 = (*v1).GetEdgeBetween(v2);
+		ev = (*e1).GetVectorDifference(v1, v2);
+		xcw = v1->r.x;
+		ycw = v1->r.y;
+
+		// ADJUST BOUNDARY CONDITIONS FOR CROSSING LEFT OR RIGHT BOUNDARY TO GET INTERSECTION RIGHT 
+		if (((*e1)).xflag)
+		{
+			if (ev.x > 0)
+			{
+				xcw = xcw - LX;
+			}
+			else
+			{
+				xcw = LX + xcw;
+			}
+		}
+		// ADJUST BOUNDARY CONDITIONS FOR CROSSING TOP BOUNDARY
+		if ((*e1).yflag)
+		{
+			if (ev.y < 0)
+			{
+				ycw = LY + ycw;
+			}
+		}
+		// THIS IS THE SECTION WHERE INTERSECTIONS ARE CALCULATED
+		if (((*e1)).yflag)
+		{
+			edgeslope = ev.y / ev.x; // SLOPE OF CROSSING EDGE, TO SOLVE FOR WHERE IT CROSSES Y-BOUNDARY
+			if (ycrossingEdges < 1)
+			{
+				if (id_match)
+				{
+					firstEdgeContribution = 1;
+				}
+				//xint1 = xcw + (LY - ycw) / edgeslope;
+				xint1 = xcw + (LY - ycw) / edgeslope; // CALCULATES THE X-COORDINATE OF THE INTERCEPTION OF THE FIRST CROSSING EDGE
+			}
+			else
+			{
+				if (id_match)
+				{
+					secondEdgeContribution = 1;
+				}
+				xint2 = xcw  + (LY - ycw) / edgeslope; // CALCULATES THE X-COORDINATE OF THE INTERCEPTION OF THE SECOND CROSSING EDGE
+			}
+			ycrossingEdges++;
+		}
+		if (((*e1)).xflag)
+		{	
+			if (ycrossingEdges == 1)
+			{
+				if (!((*e1).yflag))
+				{
+					xcrossings++; // MIGHT BE UNNECESSARY
+				}
+				else
+				{
+					if (xint2 > 0)
+					{
+						xcrossings++; //MIGHT BE UNECESSARY
+					}
+				}
+			}
+		}
+	}
+	// xcrossing count might be unnecessary because you got the boundary conditions right before
+	if (ycrossingEdges > 0)
+	{
+		if (xint2 < xint1)
+		{
+			totalContribution = secondEdgeContribution - firstEdgeContribution; 
+		}
+		else
+		{
+			totalContribution = firstEdgeContribution - secondEdgeContribution;
+		}
+		/*
+		if ((xcrossings % 2) == 0)
+		{
+			
+		}
+		else
+		{
+			if (xint2 > xint1)
+			{
+				totalContribution = firstEdgeContribution - secondEdgeContribution;
+			}
+			else
+			{
+				totalContribution = secondEdgeContribution - firstEdgeContribution;
+			}
+		}
+		*/
+	}
+		// END OF NEW CODE FOR FINDING LEFT VS RIGHT EDGE 
 		//clockwiseEdges.push_back(e1);
-		ev =(*e1).GetVectorDifference(v1, v2);
+		/*
 		if (evecadder)
 		{
 			crosscellvec = crosscellvec + ev;
@@ -947,6 +1054,7 @@ double AGCell::Getd2AdgammadyForSimpleShearAlongXAxis(Vertex* V)
 	{
 		totalContribution = secondEdgeContribution - firstEdgeContribution;
 	}
+	*/
 	return 0.5 * LY * totalContribution; // 4/12/24 ORDERING SHOULD BE RIGHT - POTENTIAL WORRIES ABOUT CORNER CELLS (KEEP IN MIND IF BUGS COME UP
 }
 /*
@@ -1033,8 +1141,12 @@ double AGCell::GetCellStressInterpolateXX()
 /*
 * double GetCellStressInterpolateYY();
 *
-* Calculates the yy component of the Cauchy stress tensor for a cell using the
+* Calculates the xx component of the Cauchy stress tensor for a cell using the
 * interpolating equation defined in Lee and Morishita 2017
+*
+* THIS IS INHERENTLY DIFFERENT THAT LEE AND MORISHITA'S STRESS TENSOR BECAUSE
+* YOU OVERCOUNT FORCES - LEE AND MORISHITA THINK ONLY ABOUT FORCES FROM AN INDIVIDUAL
+* CELL, MEANWHILE, YOU COUNTED ALL OF THEM
 */
 double AGCell::GetCellStressInterpolateYY()
 {

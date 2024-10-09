@@ -337,6 +337,10 @@ void AGStiffTissue::HelperReadInputData_SetGlobalValues(ifstream* datafile) {
 	else if (globals.count("A0") == 0) { cout << "WARNING: A0 is not given in input file, used default value " << A0 << endl; (*this).A0globalset = false;}
 	else { cout << "ERROR: Global variable A0 has multiple definition in input file, used default value A0 = " << A0 << endl; }
 
+	if (globals.count("Ac") == 1) { (*this).Ac = (atof(globals["Ac"].c_str())); }
+	else if (globals.count("Ac") == 0) { cout << "WARNING: A0 is not given in input file, used default value " << Ac << endl;}
+	else { cout << "ERROR: Global variable Ac has multiple definition in input file, used default value Ac = " << Ac << endl; }
+
 	if (globals.count("energyListSize") == 1) { energyListSize = (atof(globals["energyListSize"].c_str())); }
 	else if (globals.count("energyListSize") == 0) { cout << "WARNING: energyListSize is not given in input file, used default value " << energyListSize << endl; }
 	else { cout << "ERROR: Global variable energyListSize has multiple definition in input file, used default value energyListSize = " << energyListSize << endl; }
@@ -382,7 +386,7 @@ void AGStiffTissue::HelperReadInputData_SetGlobalValues(ifstream* datafile) {
 void AGStiffTissue::HelperReadInputData_CreateObjects(ifstream* datafile) {
 
 	string aline, aword, akey, avalue;		//temporary variables to store lines and words 
-	//string atype;						//what type of file is it (in case latter versions need to do slightly different things based on type)
+	//string atype;						//what type of fil e is it (in case latter versions need to do slightly different things based on type)
 	stringstream bssline;				//ssline is a string stream so we can comvert strings to stringstreams
 	map <string, string> globals;
 	
@@ -704,6 +708,7 @@ void AGStiffTissue::HelperWriteOutputData_Write2File(ofstream* datafile, bool in
 	*datafile << std::setprecision(outputPrecision) << "TISSUE_EXT_STRESS_Y\t" << TISSUE_EXT_STRESS_Y << endl;
 	*datafile << "N\t" << cells.size() << endl;
 	*datafile << std::setprecision(outputPrecision) << "A0\t" << (*this).A0 << endl;
+	*datafile << std::setprecision(outputPrecision) << "Ac\t" << (*this).Ac << endl;
 	*datafile << "APOPTOSISON\t" << APOPTOSISON << endl;
 	*datafile << "T1ON\t" << T1ON << endl;
 	*datafile << "MITOSISON\t" << MITOSISON << endl;

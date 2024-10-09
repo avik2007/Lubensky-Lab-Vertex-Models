@@ -235,6 +235,8 @@ double AGPerimCell::Getd2PdLy2()
 * *
 *  MAKE SURE YOU RECHECK THIS ONE * (7/9/24): DOUBLE CHECK THIS PLEASE!!!!
 *  THIS DOESN'T ACCOUNT FOR THE POTENTIAL FOR SHEARING
+* *
+* * AS OF 9/29/24 THIS IS ABSOLUTELY WRONG!
 */
 Vect AGPerimCell::Getd2PdLxdv(Vertex* V)
 {
@@ -316,31 +318,36 @@ double AGPerimCell::GetdPdgammaForSimpleShearAlongXAxis()
 	int vertexNum = clockwiseVertex.size();
 	double vectDiff;
 	double angle = 0;
-	double directioncos = 0;
+	double directioncos = 1;
 	clockwiseVertex.push_back(clockwiseVertex[0]);
-
+	int updownfactor = 0;
 	for (int i = 0; i < vertexNum; i++)
 	{
 		v1 = clockwiseVertex[i];
 		v2 = clockwiseVertex[i + 1];
 		e1 = (*v1).GetEdgeBetween(v2);
 		clockwiseEdges.push_back(e1);
-		edgeVect = (*e1).GetVectorDifference(v1, v2);
+		edgeVect = (*e1).GetVectorDifference(v2, v1);
 
 		if (((*e1).yflag))
 		{
-			// if the CCW edge vector is aimed up (y-component positive), we find the angle of that vector w.r.t. x-axis
-			// if the CCW edge vector is aimed down (y-component negative), we find the angle of the vector*-1 w.r.t. x-axis
+			// this calculation requires the designation of the top and bottom vertex. We are considering edges that
+			// cross the top boundary. The "top" vertex is in the unit cell above the primary unit cell (the one we 
+			// visualize). The "bottom" vertex is in the primary unit cell. 
+
+			// if the x coordinate of the top vertex is less than that of the bottom vertex, 
+			directioncos = edgeVect.x / edgeVect.Magnitude();
 			if (edgeVect.y < 0)
 			{
-				directioncos = edgeVect.x / edgeVect.Magnitude();
+				updownfactor = -1;
 			}
 			else
 			{
-				directioncos = -1 * edgeVect.x / edgeVect.Magnitude();
+				updownfactor = 1;
 			}
-			
-			dPdgamma += LY * directioncos;
+		
+			//directioncos = edgeVect.x / edgeVect.Magnitude();
+			dPdgamma += LY * updownfactor * directioncos;
 			if (ycrossingEdges < 1)
 			{
 				ycrossingEdges++;
@@ -349,7 +356,6 @@ double AGPerimCell::GetdPdgammaForSimpleShearAlongXAxis()
 			{
 				i = vertexNum-1;
 			}
-
 		}
 	}
 	return dPdgamma;
@@ -375,21 +381,21 @@ double AGPerimCell::Getd2Pdgamma2ForSimpleShearAlongXAxis()
 	double directionsin = 0;
 	clockwiseVertex.push_back(clockwiseVertex[0]);
 	double edgelength = 0;
+	Vect evec;
 	for (int i = 0; i < vertexNum ; i++)
 	{
 		v1 = clockwiseVertex[i];
 		v2 = clockwiseVertex[i + 1];
 		e1 = (*v1).GetEdgeBetween(v2);
 		clockwiseEdges.push_back(e1);
-		edgeVects.push_back((*e1).GetVectorDifference(v1, v2));
-
+		evec = (*e1).GetVectorDifference(v2, v1);
 		if (((*e1).yflag))
 		{
-			angle = (*e1).GetAngle(v1);
+			//angle = (*e1).GetAngle(v1);
 			edgelength = (*e1).GetLength();
 			// directionsin = abs(sin(angle));
 			// (07/09/2024 update: I think the abs() needs to be removed, we commit to perimeter being calculated by traversing edges CCW (add a minus sign to everything))
-			directionsin = sin(angle); // the x-magnitude of the edge scales this derivative, must be positive
+			directionsin = abs(evec.y) / edgelength; // the x-magnitude of the edge scales this derivative, must be positive
 			d2Pdgamma2 += LY * LY * pow(directionsin,2) / edgelength;
 			ycrossingEdges++;
 			if (ycrossingEdges > 1)
@@ -410,7 +416,7 @@ Vect AGPerimCell::Getd2PdgammadvForSimpleShearAlongXAxis(Vertex* v)
 	double d2PdLydx = 0;
 	Vertex* v1, * v2;
 	Edge* e1, * e2;
-	Vect vec;
+	Vect unitvec;
 	vector<Edge*> clockwiseEdges;
 	vector<Vertex*> clockwiseVertex = (*this).GetClockWiseVertices();
 	int vertexNum = clockwiseVertex.size();
@@ -428,15 +434,15 @@ Vect AGPerimCell::Getd2PdgammadvForSimpleShearAlongXAxis(Vertex* v)
 		if ((v1->id) == targetvertexid || (v2->id) == targetvertexid)
 		{
 			e1 = (*v1).GetEdgeBetween(v2);
+			unitvec = (*e1).MakeUnitVector(v2);
+
 			if ((v1->id) == targetvertexid)
 			{
-				vec = (*e1).MakeUnitVector(v1);
 				CCWVertFactor = 1;
 			}
 			else
 			{
-				vec = (*e1).MakeUnitVector(v2);
-				
+				CCWVertFactor = -1;
 			}
 			clockwiseEdges.push_back(e1);
 			
@@ -445,15 +451,15 @@ Vect AGPerimCell::Getd2PdgammadvForSimpleShearAlongXAxis(Vertex* v)
 				//directioncos = abs(vec.x); // these absolute values are part of a convention needed to get this derivative right I believe
 				//directionsin = abs(vec.y);
 				// (07/09/2024 update: I think the abs() needs to be removed, we commit to perimeter being calculated by traversing edges CCW (add a minus sign to everything))
-				directioncos = vec.x;//-1*vec.x;
-				directionsin = vec.y;//-1*vec.y;
-				if (vec.y < 0)
+				directioncos = unitvec.x;//-1*vec.x;
+				directionsin = unitvec.y;//-1*vec.y;
+				if (unitvec.y < 0)
 				{
-					updownfactor = 1;
+					updownfactor = -1;
 				}
 				else
 				{
-					updownfactor = -1;
+					updownfactor = 1;
 				}
 				// updownfactor is positive if the vector that the edge is on points up (in the plus y hat direction) when we traverse the polygon
 				// 

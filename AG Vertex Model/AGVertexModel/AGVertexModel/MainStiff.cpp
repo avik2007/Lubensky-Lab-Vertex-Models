@@ -89,7 +89,7 @@ double THETAAN = 0;
 double Kstdratio = 0;
 double A0stdratio = 0;
 double LAMBDAstdratio = 0;
-
+double Ac = 0;
 
 //This is the generator for random numbers to use call "distribution(generator)" 
 mt19937_64 generator;
@@ -168,9 +168,9 @@ int main(){
 	errorfile << "Updating parameters to vary A0 and/or K. \n";
 	//double currA0 = 0;
 	//tissue.A0 = currA0;
-	tissue.A0std = tissue.A0stdratio * (LX * LY / 100);
+	tissue.A0std = tissue.A0stdratio * tissue.Ac;
 	tissue.constantA0 = false;
-	tissue.AssignPreferredAreas(tissue.constantA0, A0, tissue.A0std);
+	tissue.AssignPreferredAreas(tissue.constantA0, tissue.A0, tissue.A0std);
 	tissue.constantK = false;
 	
 	tissue.constantLAMBDA = false;

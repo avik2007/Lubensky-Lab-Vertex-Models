@@ -172,7 +172,7 @@ int main()
 
 	double polydispersity = tissue.calculatePolydispersity();
 	errorfile << "Polydispersity initial = " << polydispersity << endl;
-
+	tissue.equilibriumtolerance = 0.00000000000000001;
 	// above time variables allow us to pick how often we write to the appendfile
 	while (!(tissue.equilibrated))
 	{

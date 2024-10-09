@@ -168,12 +168,22 @@ int main()
 	CURRENTTIME = 0;
 	double gammas[10] = { 0.001, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007, 0.008, 0.009, 0.01 };
 	double energies[10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+	//tissue.DeformTissue(1 + gammas[0], 1 / (1 + gammas[0]));
+	//energies[0] = tissue.CalculateFreeEnergy() / (K * pow(LX * LY, 2) / tissue.cells.size());
+	//datafile << gammas[0] << " " << energies[0] << endl;
+	double e1, e2, ec;
 	for (int i = 0; i < 10; i++)
 	{
+		e1 = tissue.CalculateFreeEnergy() / (K * pow(LX * LY, 2) / tissue.cells.size());
 		tissue.DeformTissue(1 + gammas[i], 1 / (1 + gammas[i]));
-		energies[i] = tissue.CalculateFreeEnergy() / (LX * LY);
+		energies[i] = tissue.CalculateFreeEnergy() / (K * pow(LX * LY, 2) / tissue.cells.size());
 		tissue.DeformTissue(1 / (1 + gammas[i]), 1 + gammas[i]);
-		datafile << gammas[i] << " " << energies[i] << endl;
+		e2 = tissue.CalculateFreeEnergy() / (K * pow(LX * LY, 2) / tissue.cells.size());
+		ec = e2 - e1;
+		datafile << gammas[i] << " " << energies[i] << " " << ec << endl;
+		//tissue.DeformTissue(1 + gammas[i]/ (1+gammas[i-1]), (1+gammas[i-1]) / (1 + gammas[i]));
+		//energies[i] = tissue.CalculateFreeEnergy() / (K * pow(LX * LY,2) / tissue.cells.size());
+		//datafile << gammas[i] << " " << energies[i] << endl;
 	}
 	
 	endtime = std::chrono::system_clock::now();

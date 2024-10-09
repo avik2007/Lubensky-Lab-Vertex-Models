@@ -164,7 +164,7 @@ int main(){
 	ofstream errorfile;
 	errorfile.open(OutputFileName3);
 
-	tissue.A0std = tissue.A0stdratio * (LX * LY / tissue.cells.size());
+	tissue.A0std = tissue.A0stdratio * tissue.Ac;
 
 	tissue.constantA0 = true;
 	//tissue.AssignPreferredAreas(tissue.constantA0, tissue.A0, tissue.A0std);
@@ -179,6 +179,8 @@ int main(){
 	tissue.LAMBDAstd = tissue.LAMBDAstdratio * LAMBDA;
 	//tissue.AssignPerimeterModuli(tissue.constantLAMBDA, tissue.meanLAMBDA, tissue.LAMBDAstd);
 	INTEGRATORNAME = "RK4_Adaptive";
+	alphaM = 20 * alphaM;
+	MITOSISON = 0;
 	while (!(tissue.IsEquilibrated()))
 	{
 		cout << "CURRENTTIME" << CURRENTTIME << endl;

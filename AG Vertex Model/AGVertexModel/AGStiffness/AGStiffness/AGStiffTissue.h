@@ -55,6 +55,7 @@ public:
 	bool constantK;
 	bool constantA0;
 	bool constantLAMBDA;
+	double Ac;
 	double meanK;
 	double Kstd;
 	double Kstdratio;

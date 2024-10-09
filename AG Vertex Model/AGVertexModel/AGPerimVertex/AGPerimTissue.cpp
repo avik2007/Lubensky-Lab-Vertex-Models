@@ -653,7 +653,8 @@ void AGPerimTissue::Evolve(double interval, double *stepsize, ofstream* errorfil
 			if (energyDidIncrease)
 			{
 				//if (*stepsize < 0.0000001) // this could be turned into a parameter, the minumum stepsize
-				if (*stepsize <   0.00000000000001)
+				//if (*stepsize <   0.00000000000001)
+				if (*stepsize < 0.00000000000000000000000000000000000000000000000000000000000000001)
 				{
 					breakVar = true;
 					*errorfile << "Stepsize got too small. Break" << endl;
@@ -2006,7 +2007,8 @@ MatrixXf AGPerimTissue::calculateHessian(ofstream* errorfile)
 				CCWedgevec = ccwedge->GetVectorDifference(cwverts[vindex - 1], cwverts[vindex]);
 				vertIDm1.push_back(vertex_index_map [ (*cwverts[vindex - 1]).id ]);
 			}
-			 dAdrvec = (CWedgevec + CCWedgevec).Rotate(PI / 2) * 0.5;
+			 dAdrvec = (CWedgevec + CCWedgevec).Rotate(PI / 2) * (0.5);
+			 // THERE IS A FUNCTION TO DO THIS IN AGCELL
 
 
 			//CWvec_pos - vec_pos;
@@ -2017,10 +2019,10 @@ MatrixXf AGPerimTissue::calculateHessian(ofstream* errorfile)
 
 			CWedgevec_UV = CWedgevec / CWmag;
 			CCWedgevec_UV = CCWedgevec / CCWmag;
-			dPdrvec = (CWedgevec_UV * -1 + CCWedgevec_UV);
-
+			dPdrvec = (CWedgevec_UV* (-1) + CCWedgevec_UV );
+			// THERE IS A FUNCTION TO DO THIS IN AGCELL
 			ep1vec.push_back(CWedgevec);
-			em1vec.push_back(CCWedgevec);
+			em1vec.push_back(CCWedgevec); // m1 goes CW
 			dAdr.push_back(dAdrvec);
 			dPdr.push_back(dPdrvec);
 		}
@@ -2078,10 +2080,10 @@ MatrixXf AGPerimTissue::calculateHessian(ofstream* errorfile)
 			// the second order derivatives section
 			//*errorfile << "indices: " << jm1_id << " " << j_id << " " << jp1_id << endl;
 			// first the area portion - these only act on cases where j is not equal to i and off-diagonal components
-			d2Adridrj_percell(2 * jm1_id, 2 * j_id + 1) -= 0.5 * cell_pressure;
-			d2Adridrj_percell(2 * jm1_id + 1, 2 * j_id) += 0.5 * cell_pressure;
-			d2Adridrj_percell(2 * jp1_id, 2 * j_id + 1) += 0.5 * cell_pressure;
-			d2Adridrj_percell(2 * jp1_id + 1, 2 * j_id ) -= 0.5 * cell_pressure;
+			d2Adridrj_percell(2 * jm1_id, 2 * j_id + 1) += 0.5 * cell_pressure;
+			d2Adridrj_percell(2 * jm1_id + 1, 2 * j_id) -= 0.5 * cell_pressure;
+			d2Adridrj_percell(2 * jp1_id, 2 * j_id + 1) -= 0.5 * cell_pressure;
+			d2Adridrj_percell(2 * jp1_id + 1, 2 * j_id ) += 0.5 * cell_pressure; //SIGNS SET BY CCW CONVENTION
 			
 
 
@@ -2176,8 +2178,8 @@ double AGPerimTissue::calculateShearModulusWithEigenDecomposition(ofstream* erro
 	//MatrixXf hessianeigenvectors(2 * numofvertices, 2 * numofvertices);
 	//hessianeigenvectors = eigensolver.eigenvectors();
 
-	MatrixXf BoundaryVector(2 * numofvertices, 1); // boundary vector is dE/(dgamma dv) where v is a vertex vector
-	BoundaryVector.setZero(2 * numofvertices, 1);
+	MatrixXf FullBoundaryVector(2 * numofvertices, 1); // boundary vector is dE/(dgamma dv) where v is a vertex vector
+	FullBoundaryVector.setZero(2 * numofvertices, 1);
 
 	MatrixXf d2Edgamma2_mat(1, 1);
 	d2Edgamma2_mat.setZero(1, 1);
@@ -2227,6 +2229,9 @@ double AGPerimTissue::calculateShearModulusWithEigenDecomposition(ofstream* erro
 	vector<Cell*> yboundarycrossingcell = (*this).GetYCrossingCellVector();
 	for (vector<Cell*>::iterator cit = yboundarycrossingcell.begin(); cit != yboundarycrossingcell.end(); cit++)
 	{
+		MatrixXf BoundaryVector(2 * numofvertices, 1); // boundary vector is dE/(dgamma dv) where v is a vertex vector
+		BoundaryVector.setZero(2 * numofvertices, 1);
+
 		AGPerimCell* agit = dynamic_cast<AGPerimCell*>(*cit);
 		cellid = (*(*cit)).id;
 		*errorfile << "Cell id: " << cellid << endl;
@@ -2242,7 +2247,7 @@ double AGPerimTissue::calculateShearModulusWithEigenDecomposition(ofstream* erro
 		//LAMBDA = 1; // this is for debugging, just as in the Hessian calculation
 
 		// the pressure
-		cell_pressure = -1 * (*(*cit)).GetPressure(area); // I want pressure to be PRESSURE = K (A - A0), but since PRESSURE = - dE/dA, we need the minus sign
+		cell_pressure = -1 * ((*agit)).GetPressure(area); // I want pressure to be PRESSURE = K (A - A0), but since PRESSURE = - dE/dA, we need the minus sign
 		// tension magnitude should be simple enough
 		*errorfile << "Cell pressure = " << cell_pressure << endl;
 		tension_magnitude = LAMBDA * (perimeter - p0);
@@ -2265,89 +2270,86 @@ double AGPerimTissue::calculateShearModulusWithEigenDecomposition(ofstream* erro
 		d2Edgamma2 += dadgterm;
 		d2Edgamma2 += dpdpdgdgterm;
 		d2Edgamma2 += dpdgterm;
+		*errorfile << "dAdgamma for this cell = " << dadgcheck << endl;
+		*errorfile << "dPdgamma for this cell = " << dpdgcheck << endl;
+		*errorfile << "d2Pdg2 for this cell = " << dpdpdgdgcheck << endl;
 		*errorfile << "d2Edgamma2 for this cell = " << (dadgterm + dpdpdgdgterm + dpdgterm) << endl;
 		*errorfile << "K dAdgamma dAdgamma = " << (dadgterm) << endl;
 		*errorfile << "LAMBDA dPdgamma dPdgamma = " << (dpdgterm) << endl;
 		*errorfile << " LAMBDA (P-P0) dpdpdgdg = " << (dpdpdgdgterm) << endl;
-
+		d2Edgamma2_mat(0, 0) = d2Edgamma2;
 		for (vector<Vertex*>::iterator vit = cwverts.begin(); vit != cwverts.end(); vit++)
 		{
 			relid = (*(*vit)).id;
 			vmapid = vertex_index_map[relid];
 			d2Adrdgamma = (*agit).Getd2AdgammadyForSimpleShearAlongXAxis((*vit));
 			BoundaryVector(2 * vmapid + 1, 0) += cell_pressure * d2Adrdgamma;
-			d2AdrdgammaVEC(2 * vmapid + 1, 0) += cell_pressure * d2Adrdgamma;
+			d2AdrdgammaVEC(2 * vmapid + 1, 0) = cell_pressure * d2Adrdgamma;
 			d2Pdrdgamma = (*agit).Getd2PdgammadvForSimpleShearAlongXAxis((*vit));
 			BoundaryVector(2 * vmapid, 0) += tension_magnitude * d2Pdrdgamma.x;
 			BoundaryVector(2 * vmapid + 1, 0) += tension_magnitude * d2Pdrdgamma.y;
-			d2PdrdgammaVEC(2 * vmapid, 0) += tension_magnitude * d2Pdrdgamma.x;
-			d2PdrdgammaVEC(2 * vmapid + 1, 0) += tension_magnitude * d2Pdrdgamma.y;
+			d2PdrdgammaVEC(2 * vmapid, 0) = tension_magnitude * d2Pdrdgamma.x;
+			d2PdrdgammaVEC(2 * vmapid + 1, 0) = tension_magnitude * d2Pdrdgamma.y;
 			dAdv = (*agit).GetdAdv((*vit));
 			BoundaryVector(2 * vmapid, 0) += (K / a0) * dadgcheck * dAdv.x; // double check dAdv
-			BoundaryVector(2 * vmapid + 1, 0) += (K / a0) * dadgcheck * dAdv.y; // double check dAdv
-			dAdrdAdgammaVEC(2 * vmapid, 0) += (K / a0) * dadgcheck * dAdv.x;
-			dAdrdAdgammaVEC(2 * vmapid + 1, 0) += (K / a0) * dadgcheck * dAdv.y;
+			BoundaryVector(2 * vmapid + 1, 0) += (K / a0) * dadgcheck * dAdv.y ; // double check dAdv
+			dAdrdAdgammaVEC(2 * vmapid, 0) = (K / a0) * dadgcheck * dAdv.x;
+			dAdrdAdgammaVEC(2 * vmapid + 1, 0) = (K / a0) * dadgcheck * dAdv.y;
 			dPdv = (*agit).GetdPdv((*vit));
 			BoundaryVector(2 * vmapid, 0) += LAMBDA * dpdgcheck * dPdv.x; // double check dPdv
 			BoundaryVector(2 * vmapid + 1, 0) += LAMBDA * dpdgcheck * dPdv.y; // double check dPdv
-			dPdrdPdgammaVEC(2 * vmapid, 0) += LAMBDA * dpdgcheck * dPdv.x; // double check dPdv
-			dPdrdPdgammaVEC(2 * vmapid + 1, 0) += LAMBDA * dpdgcheck * dPdv.y; // double check dPdv
+			dPdrdPdgammaVEC(2 * vmapid, 0) = LAMBDA * dpdgcheck * dPdv.x; // double check dPdv
+			dPdrdPdgammaVEC(2 * vmapid + 1, 0) = LAMBDA * dpdgcheck * dPdv.y; // double check dPdv
+			*errorfile << std::setprecision(6) << "Vertex id " << relid << "\t dAdv = " << dAdv.x << "\t dPdv = " << dPdv.x << " \t xBoundary Vector = " << BoundaryVector(2 * vmapid, 0) << "\t d2Adrdgamma 0 \t d2Pdrdgamma " << d2PdrdgammaVEC(2 * vmapid, 0) << "\t dAdrdAdgamma " << dAdrdAdgammaVEC(2 * vmapid, 0) << "\t dPdrdPdgamma " << dPdrdPdgammaVEC(2 * vmapid, 0) << endl;
+			*errorfile << std::setprecision(6) << "Vertex id " << relid << "\t dAdv = " << dAdv.y << "\t dPdv = " << dAdv.y << " \t yBoundary Vector = " << BoundaryVector(2 * vmapid + 1, 0) << "\t d2Adrdgamma " << d2AdrdgammaVEC(2 * vmapid + 1, 0) << "\t d2Pdrdgamma " << d2PdrdgammaVEC(2 * vmapid + 1, 0) << "\t dAdrdAdgamma " << dAdrdAdgammaVEC(2 * vmapid+1, 0) << "\t dPdrdPdgamma " << dPdrdPdgammaVEC(2 * vmapid+1, 0) << endl;
 		}
+		//*errorfile << std::setprecision(6) << "BoundaryVector = \n" << BoundaryVector << "\n" << "\n" << endl;
+		FullBoundaryVector += BoundaryVector;
 	}
-	d2Edgamma2_mat(0, 0) = d2Edgamma2;
+	
 	
 
 	//following code is for calculating the shear modulus with Manning and Merkel's method (drops zero modes)
-	* errorfile << "\n \n \n \n Boundary Vector = \n" << BoundaryVector << "\n \n \n \n " << endl;
+	* errorfile << "\n \n \n \n Boundary Vector = \n" << FullBoundaryVector << "\n \n \n \n " << endl;
 	double nonaffine_shearportion = 0;
 	//double dispx, dispy, rot;
 	*errorfile << "Number of eigenvalues = " << hessianeigen.eigenvalues().size() << "\n \n \n" << endl;
 	for (int index = hessianeigen.eigenvalues().size() - lu_decomp.rank(); index < hessianeigen.eigenvalues().size(); index++)
 	{
 		int jndex = 0;
-		//dispx = 0;
-		//dispy = 0;
-		//rot = 0;
 		currenteigenvalue = real(hessianeigen.eigenvalues()(index, 0));
 		*errorfile << hessianeigen.eigenvalues()(index, 0) << " , eigenvalue " << index << " and the vect : \n";
 		// debug code for eigenvalues
 		for (list<Vertex*>::iterator vit = vertices.begin(); vit != vertices.end(); vit++)
 		{
-			*errorfile << "Vertex " << (*(*vit)).id << "x " << hessianeigen.eigenvectors().col(index)(jndex) << " Bvx " << BoundaryVector(jndex, 0) << " d2Adrdgamma " << d2AdrdgammaVEC(jndex, 0) << " d2Pdrdgamma " << d2PdrdgammaVEC(jndex, 0) << " dAdrdAdgamma " << dAdrdAdgammaVEC(jndex, 0) << " dPdrdPdgamma " << dPdrdPdgammaVEC(jndex, 0) << endl;
+			*errorfile << "Vertex " << (*(*vit)).id << "x " << hessianeigen.eigenvectors().col(index)(jndex) << " Bvx " << FullBoundaryVector(jndex, 0) << " d2Adrdgamma " << d2AdrdgammaVEC(jndex, 0) << " d2Pdrdgamma " << d2PdrdgammaVEC(jndex, 0) << " dAdrdAdgamma " << dAdrdAdgammaVEC(jndex, 0) << " dPdrdPdgamma " << dPdrdPdgammaVEC(jndex, 0) << endl;
 			//dispx += hessianeigen.eigenvectors().col(in	dex)(jndex) / hessianeigen.eigenvalues().size();
 			//rot -= (*(*vit)).r.y * hessianeigen.eigenvectors().col(index)(jndex) / hessianeigen.eigenvalues().size();
 			jndex++; 
-			*errorfile << "Vertex " << (*(*vit)).id << "y " << hessianeigen.eigenvectors().col(index)(jndex) << " Bvy " << BoundaryVector(jndex, 0) << " d2Adrdgamma " << d2AdrdgammaVEC(jndex, 0) << " d2Pdrdgamma " << d2PdrdgammaVEC(jndex, 0) << " dAdrdAdgamma " << dAdrdAdgammaVEC(jndex, 0) << " dPdrdPdgamma " << dPdrdPdgammaVEC(jndex, 0) << endl;
+			*errorfile << "Vertex " << (*(*vit)).id << "y " << hessianeigen.eigenvectors().col(index)(jndex) << " Bvy " << FullBoundaryVector(jndex, 0) << " d2Adrdgamma " << d2AdrdgammaVEC(jndex, 0) << " d2Pdrdgamma " << d2PdrdgammaVEC(jndex, 0) << " dAdrdAdgamma " << dAdrdAdgammaVEC(jndex, 0) << " dPdrdPdgamma " << dPdrdPdgammaVEC(jndex, 0) << endl;
 			//dispx += hessianeigen.eigenvectors().col(in	dex)(jndex) / hessianeigen.eigenvalues().size();
 			//dispy += hessianeigen.eigenvectors().col(index)(jndex) / hessianeigen.eigenvalues().size();
 			//rot += (*(*vit)).r.x * hessianeigen.eigenvectors().col(index)(jndex) / hessianeigen.eigenvalues().size();
 			jndex++;
 		}
-		//errorfile << " \n \n COM displacement =(" << dispx << ", " << dispy << ")      ROTATION = " << rot << "\n \n" << endl;
 		
-		if (hessianeigen.eigenvalues()(index, 0) > 10e-6)//(hessianeigen.eigenvalues()(index, 0) > 10e-14)
-		{
-			nonaffine_shearcontribution = 1 / hessianeigen.eigenvalues()(index, 0) * pow((hessianeigen.eigenvectors().col(index).transpose() * BoundaryVector)(0, 0), 2);
-			*errorfile << "Non affine check " << pow((hessianeigen.eigenvectors().col(index).transpose() * BoundaryVector)(0,0), 2) << endl;
-			*errorfile << "Eigenvalue " << index << " contribution to nonaffine = " << nonaffine_shearcontribution << endl;
-			nonaffine_shearportion += nonaffine_shearcontribution;
-
-			//nonaffine_shearportion = hessianeigenvalues(index, 0);
-		}
+		nonaffine_shearcontribution = 1 / hessianeigen.eigenvalues()(index, 0) * pow((hessianeigen.eigenvectors().col(index).transpose() * FullBoundaryVector)(0, 0), 2);
+		*errorfile << "Non affine check " << pow((hessianeigen.eigenvectors().col(index).transpose() * FullBoundaryVector)(0,0), 2) << endl;
+		*errorfile << "Eigenvalue " << index << " contribution to nonaffine = " << nonaffine_shearcontribution << endl;
+		nonaffine_shearportion += nonaffine_shearcontribution;
 	}
 	*errorfile << "\n \n \n The size of the columns space of the Hessian is the" << " = " << hessianeigen.eigenvalues().size() - lu_decomp.rank() << endl;
 	*errorfile << "Here is a matrix whose columns form a basis of the null-space of A:\n"
 		<< lu_decomp.kernel() <<"\n \n" << endl;
 	
-	dadgtotal += dadgterm;
-	dpdgtotal += dpdgterm;
-	dpdpdgdgtotal += dpdpdgdgterm;
-	*errorfile << "dadg = " << dadgtotal << endl;
-	*errorfile << "dpdg = " << dpdgtotal << endl;
-	*errorfile << "dpdpdgdg = " << dpdpdgdgtotal << endl;
-	*errorfile << "d2Edgamma2 = " << d2Edgamma2 << endl;
-	*errorfile << "nonaffine_shear = " << nonaffine_shearportion << endl;
-	shearmodulus = (*this).cells.size() / (K * pow(LX * LY, 2)) * (d2Edgamma2 - nonaffine_shearportion); // I'm doing this to maintain a convention I had in another code
+
+	double normfactor = (*this).cells.size() / (K * pow(LX * LY, 2));
+	*errorfile << "dadg = " << normfactor * dadgtotal << endl;
+	*errorfile << "dpdg = " << normfactor * dpdgtotal << endl;
+	*errorfile << "dpdpdgdg = " << normfactor * dpdpdgdgtotal << endl;
+	*errorfile << "d2Edgamma2 = " << normfactor * d2Edgamma2 << endl;
+	*errorfile << "nonaffine_shear = " << normfactor * nonaffine_shearportion << endl;
+	shearmodulus = normfactor * (d2Edgamma2_mat(0, 0) - nonaffine_shearportion); // I'm doing this to maintain a convention I had in another code
 	// I'll probably have to do some code fixing to deal with this
 	
 	
