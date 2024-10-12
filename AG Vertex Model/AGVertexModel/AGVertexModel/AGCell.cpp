@@ -788,22 +788,28 @@ double AGCell::Getd2AdLxdy(Vertex* V)
 */
 double AGCell::GetdAdgammaForSimpleShearAlongXAxis()
 {
+	bool id_match;
 	int ycrossingEdges = 0;
-	double dAdLy = 0;
+	double d2AdLxdy = 0;
 	Vertex* v1, * v2;
 	Edge* e1;
-	vector<Edge*> clockwiseEdges;
+	//vector<Edge*> clockwiseEdges;
 	vector<Vertex*> clockwiseVertex = (*this).GetClockWiseVertices();
 	int vertexNum = clockwiseVertex.size();
 	double vectDiff;
-	double y1 = 0;
-	double y2 = 0;
+	int firstEdgeContribution = 0;
+	int secondEdgeContribution = 0;
+	int totalContribution = 0;
 	double x1 = 0;
 	double x2 = 0;
-	double finalVal = 0;
 	Vect ev;
 	Vect crosscellvec(0, 0);
 	bool evecadder = false;
+	double edgeslope;
+	double xcw, ycw; // coordinates of vertex 1
+	double xint1 = 0; // the x-coordinates of the point at which edges cross the top of the box
+	double xint2 = 0; // the x-coordinates of the point at which edges cross the top of the box
+	int xcrossings = 0;
 	clockwiseVertex.push_back(clockwiseVertex[0]);
 
 	for (int i = 0; i < vertexNum; i++)
@@ -811,76 +817,80 @@ double AGCell::GetdAdgammaForSimpleShearAlongXAxis()
 		v1 = clockwiseVertex[i];
 		v2 = clockwiseVertex[i + 1];
 		e1 = (*v1).GetEdgeBetween(v2);
-		clockwiseEdges.push_back(e1);
-		ev = (*e1).GetVectorDifference(v1, v2); // 9/29/2024 shouldn't matter that this vector isn't CCW
-		
-		if (((*e1).yflag))
+		ev = (*e1).GetVectorDifference(v1, v2);
+		xcw = v1->r.x;
+		ycw = v1->r.y;
+
+
+		// ADJUST BOUNDARY CONDITIONS FOR CROSSING LEFT OR RIGHT BOUNDARY TO GET INTERSECTION RIGHT 
+		if (((*e1)).xflag)
 		{
-			if (ycrossingEdges < 1)
+			if (ev.x > 0)
 			{
-				y1 = 0.5 * ((*v2).r.y + (*v1).r.y);// 9/9/2024 fixing this to ignore boundary conditions//0.5 * ev.y;//(*e1).GetCenter().y;
-				x1 = (*v1).r.x + 0.5 * ev.x;//(*e1).GetCenter().x;
-				ycrossingEdges++;
-				evecadder = true;
+				xcw = xcw - LX;
 			}
 			else
 			{
-				y2 = 0.5*( (*v2).r.y + (*v1).r.y );// 9/9/2024 fixing this to ignore boundary conditions// - 0.5 * ev.y;//(*e1).GetCenter().y;
-				x2 = (*v2).r.x - 0.5 * ev.x;//(*e1).GetCenter().x;
-				// alternatively, (*e1).getCenter().y can do the same thing 
-				i = vertexNum;
+				xcw = LX + xcw;
 			}
-			// the y1, x1 and y2, x2 calculations are done this way to get around boundary condition concerns
-			crosscellvec = crosscellvec + ev;
-			
 		}
-		else
+		// ADJUST BOUNDARY CONDITIONS FOR CROSSING TOP BOUNDARY
+		if ((*e1).yflag)
 		{
-			if (evecadder)
+			if (ev.y < 0)
 			{
-				crosscellvec = crosscellvec + ev;
+				ycw = LY + ycw;
 			}
 		}
-
-
-	}
-
-	// account for boundary conditions and getting the direction right
-	// 7/11/2024, CHECK THIS CROSSCELLVEC calculation
-	if (crosscellvec.x > 0)
-	{
-		finalVal = y1 - y2;
-	}
-	else
-	{
-		finalVal = y2 - y1;
-	}
-	/*
-	if (x2 > x1)
-	{
-		if (evxflag)
+		// THIS IS THE SECTION WHERE INTERSECTIONS ARE CALCULATED
+		if (((*e1)).yflag)
 		{
-			finalVal = y1 - y2;
+			edgeslope = ev.y / ev.x; // SLOPE OF CROSSING EDGE, TO SOLVE FOR WHERE IT CROSSES Y-BOUNDARY
+			if (ycrossingEdges < 1)
+			{
+				firstEdgeContribution = ycw + 0.5 * ev.y;
+				xint1 = xcw + (LY - ycw) / edgeslope; // CALCULATES THE X-COORDINATE OF THE INTERCEPTION OF THE FIRST CROSSING EDGE
+			}
+			else
+			{
+				secondEdgeContribution = ycw + 0.5 * ev.y;
+				xint2 = xcw + (LY - ycw) / edgeslope; // CALCULATES THE X-COORDINATE OF THE INTERCEPTION OF THE SECOND CROSSING EDGE
+			}
+			ycrossingEdges++;
+		}
+		/*
+		if (((*e1)).xflag)
+		{
+			if (ycrossingEdges == 1)
+			{
+				if (!((*e1).yflag))
+				{
+					xcrossings++; // MIGHT BE UNNECESSARY
+				}
+				else
+				{
+					if (xint2 > 0)
+					{
+						xcrossings++; //MIGHT BE UNECESSARY
+					}
+				}
+			}
+		}
+		*/
+	}
+	// xcrossing count might be unnecessary because you got the boundary conditions right before
+	if (ycrossingEdges > 0)
+	{
+		if (xint2 < xint1)
+		{
+			totalContribution = secondEdgeContribution - firstEdgeContribution;
 		}
 		else
 		{
-			finalVal = y2 - y1;
+			totalContribution = firstEdgeContribution - secondEdgeContribution;
 		}
 	}
-	else
-	{
-		if (evxflag)
-		{
-			finalVal = y2 - y1;
-		}
-		else
-		{
-			finalVal = y1 - y2;
-		}
-
-	}
-	*/
-	return LY * finalVal; // 4/12/24 ORDERING SHOULD BE RIGHT - POTENTIAL WORRIES ABOUT CORNER CELLS (KEEP IN MIND IF BUGS COME UP)
+	 return LY * totalContribution; 
 }
 /*
 * double Getd2AdgammadyForSimpleShearAlongXAxis(Vertex* V)
@@ -966,6 +976,7 @@ double AGCell::Getd2AdgammadyForSimpleShearAlongXAxis(Vertex* V)
 			}
 			ycrossingEdges++;
 		}
+		/*
 		if (((*e1)).xflag)
 		{	
 			if (ycrossingEdges == 1)
@@ -983,78 +994,20 @@ double AGCell::Getd2AdgammadyForSimpleShearAlongXAxis(Vertex* V)
 				}
 			}
 		}
+		*/
 	}
 	// xcrossing count might be unnecessary because you got the boundary conditions right before
 	if (ycrossingEdges > 0)
 	{
 		if (xint2 < xint1)
 		{
-			totalContribution = secondEdgeContribution - firstEdgeContribution; 
+			totalContribution = secondEdgeContribution - firstEdgeContribution;
 		}
 		else
 		{
 			totalContribution = firstEdgeContribution - secondEdgeContribution;
 		}
-		/*
-		if ((xcrossings % 2) == 0)
-		{
-			
-		}
-		else
-		{
-			if (xint2 > xint1)
-			{
-				totalContribution = firstEdgeContribution - secondEdgeContribution;
-			}
-			else
-			{
-				totalContribution = secondEdgeContribution - firstEdgeContribution;
-			}
-		}
-		*/
 	}
-		// END OF NEW CODE FOR FINDING LEFT VS RIGHT EDGE 
-		//clockwiseEdges.push_back(e1);
-		/*
-		if (evecadder)
-		{
-			crosscellvec = crosscellvec + ev;
-		}
-		if (((*e1).yflag)) // ADD AN IF ID_MATCH
-		{
-			if (ycrossingEdges < 1)
-			{
-				ycrossingEdges++;
-				if (id_match)
-				{
-					firstEdgeContribution = 1;
-				}
-				evecadder = true;
-			}
-			else
-			{
-				// alternatively, (*e1).getCenter().y can do the same thing 
-				i = vertexNum;
-				if (id_match)
-				{
-					secondEdgeContribution = 1;
-				}
-				evecadder = false;
-			}
-		}
-		
-		
-		// if dAdLxdy works, then this should work
-	}
-	if (crosscellvec.x > 0)
-	{
-		totalContribution = firstEdgeContribution - secondEdgeContribution;
-	}
-	else
-	{
-		totalContribution = secondEdgeContribution - firstEdgeContribution;
-	}
-	*/
 	return 0.5 * LY * totalContribution; // 4/12/24 ORDERING SHOULD BE RIGHT - POTENTIAL WORRIES ABOUT CORNER CELLS (KEEP IN MIND IF BUGS COME UP
 }
 /*
@@ -1063,7 +1016,6 @@ double AGCell::Getd2AdgammadyForSimpleShearAlongXAxis(Vertex* V)
 * Calculates the xx component of the Cauchy stress tensor for a cell
 */
 double AGCell::GetCellStressXX()
-
 {
 	vector<Vertex*> clockwiseVertex = (*this).GetClockWiseVertices();
 	int vertexNum = clockwiseVertex.size();
