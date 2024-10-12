@@ -30,18 +30,20 @@ currentPos = ftell(fid);
 %Loop through each timepoint and create an image of the tissue at that time
 while (true)
     %Read the file
-    [V,E, C,BoxSize, currentPos, includeCell] = ReadSimulationOutput(fid, currentPos); 
-    
+    %[V,E, C,BoxSize, currentPos, includeCell] = ReadSimulationOutput(fid, currentPos);
+    [V,E,BoxSize, currentPos] = ReadSimulationOutput(fid, currentPos); % DEPRACATED VERSION 
     %If you have reached the end of the file stop 
     if currentPos == -2  %check end of file
         break
     end
     %Make the perodic boundary conditions 
-    [Vpbc,Epbc, Cpbc] = MakePBC(V,E,C, BoxSize, false);
+    %[Vpbc,Epbc, Cpbc] = MakePBC(V,E,C, BoxSize, false);
+    [Vpbc, Epbc] = MakePBC(V, E, BoxSize);
     
     %Make a plot 
     clf
-    PlotSimulationOutput(Vpbc,Epbc, Cpbc, BoxSize,MaxLX,MaxLY)
+    %PlotSimulationOutput(Vpbc,Epbc, Cpbc, BoxSize,MaxLX,MaxLY)
+    PlotSimulationOutput(Vpbc, Epbc, BoxSize, MaxLX, MaxLY)
 
     %Save the plot as a tiff image 
     framename=strcat(outputFileName,'/frame_',num2str(count,'%03d'),'.tif');

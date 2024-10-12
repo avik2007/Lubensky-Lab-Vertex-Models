@@ -74,7 +74,8 @@ while ~strcmpi(line, 'endGlobal')
         return
     end
 end
-
+%disp(LX{1})
+%disp(LY{1})
 %Output Lx and Ly as BoxSize
 BoxSize = [Lx{1},Ly{1}];
 time=t{1};
@@ -171,7 +172,7 @@ for i = 1:nFields
             EdgeData(1).xflag = EData(:,i);
         case 'yflag'
             EdgeData(1).yflag = EData(:,i);
-        case '_length'
+        case 'length'
             EdgeData(1).length = EData(:,i);
         case 'tension'
             EdgeData(1).tension = EData(:,i);

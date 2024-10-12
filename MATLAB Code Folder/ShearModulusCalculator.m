@@ -137,7 +137,7 @@ save(savename, p0smname, p0byrangename,SMvarname);
 %%
 %plot(p0sm(:,1), 0.02*p0sm(:,2),'o');
 K = 1;
-errorbar(p0sm(:,1), 0.02*p0sm(:,2) / K, 0.02*SMvar, 'o')
+errorbar(p0sm(:,1), p0sm(:,2), SMvar, 'o')
 title('Shear Modulus v Shape Index');
 ylabel('$\mathbf{r \langle G \rangle}$', 'Interpreter', 'latex', 'FontSize', 14, 'FontName', 'Times New Roman');
 xlabel('$\mathbf{\frac{P_0}{\langle A \rangle }}$', 'Interpreter', 'latex', 'FontSize', 14, 'FontName','Times New Roman');

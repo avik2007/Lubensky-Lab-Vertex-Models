@@ -13,8 +13,8 @@ clear
 
 %% Inputs needed
 nomfichier='mytissue.txt';  %the file name
-n=10;                       %1/2 of the Cells per row
-m=10;                       %Cells per collumn 
+n=1;                       %1/2 of the Cells per row
+m=2;                       %Cells per collumn 
 r=89542;                    %Seed for the random number generators
 
 %% Global Parameters 

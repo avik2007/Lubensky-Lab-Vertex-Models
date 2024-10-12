@@ -1,4 +1,4 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % This script produces a txt file with the initial conditions needed to run the 
 % vertex model cpp exicutable. The Global values are set by the user. The
 % cell positions are a honeycomb tilling of the plane. The resulting txt file
@@ -13,8 +13,8 @@ clear
 
 %% Inputs needed
 INITIALSTEPSIZE = 0.0001;    %Initial stepsize for the numberic integrator 
-nomfichier=strcat('my_tissue_backtrack_fix_stifftest','.txt');  %the file name
-n=3;                       %1/2 of the Cells per row
+nomfichier=strcat('shearmodulus_check0.95','.txt');  %the file name
+n=1;                       %1/2 of the Cells per row
 m=2;                       %Cells per collumn 
 r=89542;                    %Seed for the random number generators
 
@@ -39,15 +39,15 @@ A0 = LX * LY / NCells;%4033.1139     ;                    %LX*LY/NCells;        
 % the equilibrium area.
 MINAREA = A0/100;                    %Minimum allowed cell area (smaller cells will be removed)
 MINLENGTH =	l/40;                    %Minimum edge length (smaller edges will be merged to form a fourfold vertex
-NEWEDGELENGTH =	l/20;                %Length of a new edge created in the T1 process
-% K = Ratio * GAMMA / l^3 ;           %for pressure=K(A-A0)
+NEWEDGELENGTH =	l/20;                %Length of a new edge created in the T1 process%
+%K = Ratio * GAMMA / l^3 ;           %for pressure=K(A-A0)
 K = Ratio * 10 * GAMMA / l;          %for pressure=K(1-A/A0)
 Alpha_M = GAMMA*t0/l;                % Drag coefficent
 TISSUE_ALPHA = 10000000000000000000000000000000 * Alpha_M;%10000000*Ralpha*Alpha_M;       % How fast the box size updates relative to the vertex motion
 TISSUE_EXT_STRESS_Y = 0;             % External Stress on the tissue (positive values expancile) 
 TISSUE_EXT_STRESS_X = 0;
-P0 = 3.722 * sqrt(A0);
-LAMBDA = K / 0.05; % mimics Manning Model 
+P0 = 0.*(sqrt(24 / sqrt(3))) * sqrt(A0); % sqrt(24 / sqrt(3)) = regular hexagon shape parameter
+LAMBDA = 0.01 * K * A0;%K / 0.05; % mimics Manning Model 
 VERBOSEON = 1; %boolean, tells code to output extra data for cells and edges when true
 equilibriumtolerance = 0.00000000001;
 

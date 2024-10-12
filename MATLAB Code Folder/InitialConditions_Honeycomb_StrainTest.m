@@ -13,8 +13,8 @@ clear
 
 %% Inputs needed
 INITIALSTEPSIZE = 0.0001;    %Initial stepsize for the numberic integrator 
-nomfichier=strcat('my_tissue_backtrack_fix_stifftest','.txt');  %the file name
-n=3;                       %1/2 of the Cells per row
+nomfichier=strcat('my_tissue_backtrack_fix_stifftest_smallest','.txt');  %the file name
+n=1;                       %1/2 of the Cells per row
 m=2;                       %Cells per collumn 
 r=89542;                    %Seed for the random number generators
 
@@ -28,7 +28,7 @@ Ralpha=1000000000000000000000000000;                   %Ralpha=10 means the box 
 TOTALTIME =	80;             %How long to run the simulation 
 CURRENTTIME = 0.0;          %The initial time
 TIMEINTERVAL =	0.1;        %How often to output the current configuration of the tissue
-%INITIALSTEPSIZE = 0.002;    %Initial stepsize for the numberic integrator 
+INITIALSTEPSIZE = 0.002;    %Initial stepsize for the numberic integrator 
 error_tolerance_absolute_mechanical = 0.01;  %Error tolerence for use with the adaptive stepsize integrators 
 LX=n*3*l +1;
 LY=m*sqrt(3)*l+1; 
@@ -40,7 +40,7 @@ A0 = 4033.1139     ;                    %LX*LY/NCells;                   %Cells 
 MINAREA = A0/100;                    %Minimum allowed cell area (smaller cells will be removed)
 MINLENGTH =	l/40;                    %Minimum edge length (smaller edges will be merged to form a fourfold vertex
 NEWEDGELENGTH =	l/20;                %Length of a new edge created in the T1 process
-% K = Ratio * GAMMA / l^3 ;           %for pressure=K(A-A0)
+%K = Ratio * GAMMA / l^3 ;           %for pressure=K(A-A0)%
 K = Ratio * 10 * GAMMA / l;          %for pressure=K(1-A/A0)
 Alpha_M = GAMMA*t0/l;                % Drag coefficent
 TISSUE_ALPHA = 10000000000000000000000000000000 * Alpha_M;%10000000*Ralpha*Alpha_M;       % How fast the box size updates relative to the vertex motion
@@ -50,12 +50,12 @@ P0 = 3.722 * sqrt(A0);
 LAMBDA = K / 0.05; % mimics Manning Model 
 VERBOSEON = 1; %boolean, tells code to output extra data for cells and edges when true
 equilibriumtolerance = 0.000000000000000000001;
-
+energyListSize = 3;
 %% Create the Hexagonal tillining 
 SEED = r;
 rng(SEED); 
 f2=figure();
-offset=0;%0.01*l; 
+offset=0; % 0.4*l; 
 Points1=zeros(NCells,2); 
 k=1; 
 strainx = 0 ;%.5;
@@ -153,7 +153,7 @@ fprintf(fid, 'ALPHAM\t%f\n', Alpha_M);
 fprintf(fid, 'TISSUE_EXT_STRESS_X\t%f\n', TISSUE_EXT_STRESS_X);
 fprintf(fid, 'TISSUE_EXT_STRESS_Y\t%f\n', TISSUE_EXT_STRESS_Y);
 fprintf(fid, 'equilibriumtolerance\t%d\n', equilibriumtolerance);
-
+fprintf(fid, 'energyListSize\t%d\n', energyListSize);
 fprintf(fid, 'endGlobal\n'); 
 fprintf(fid, 'Vertices\n');
 fprintf(fid, 'id\tx\ty\n');

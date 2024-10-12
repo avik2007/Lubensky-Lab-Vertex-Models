@@ -17,7 +17,6 @@ C_pbc = C;
 
 vcount = -1;     %counter for newly created vertex id
 
-
 %% PBC for edges
 
 %For each edges that cross a boundary, find 2 crossing points on the
@@ -62,7 +61,8 @@ for i = 1:N     %go through all edges
     elseif (E.xflag(i)==0 && E.yflag(i)==1)      %If edge crosses horizontal boundary
         [ysort,isort] = sort(y, 'ascend');       %sort y ascending
         vstart = vertex(isort(2));
-        vend = vertex(isort(1));              %starting and ending vertices
+        vend = vertex(isort(1)); 
+        %starting and ending vertices
         slope = (x(isort(1))-x(isort(2))) / (ysort(1)+BoxSize(2)-ysort(2));
         xboundary = zeros(2,1);
         yboundary = zeros(2,1);
@@ -260,6 +260,7 @@ if isCellIncluded
 
     for i = 1:N
         cwverts = C.CWVertices{cind(i)};
+        disp(C.CWVertices);
         cwverts(end+1) = cwverts(1);            %make the list 'circular'
 
         currentList = 1;

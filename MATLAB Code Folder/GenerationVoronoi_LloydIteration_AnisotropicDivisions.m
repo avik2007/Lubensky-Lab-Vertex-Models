@@ -17,7 +17,7 @@ rng(r);
 A0 = 1250;
 GAMMA =	 10;%strength of line tension coefficient
 t0 = 1; %time units
-K = 5 * GAMMA / sqrt(A0);  %"young's modulus", strength of area term - using equation given in Meryl's thesis
+K = 5 * GAMMA / (sqrt(A0))^3;  %"young's modulus", strength of area term - using equation given in Meryl's thesis
 % K should have units of pressure!
 %GAMMA = 10;
 %K = 0.001;
@@ -39,7 +39,7 @@ CURRENTTIME = 0.0;
 INITIALSTEPSIZE = t0 / 1000;
 error_tolerance_absolute_mechanical =	0.001;
 ALPHAM = GAMMA * ( t0 / sqrt(A0));
-TISSUE_ALPHA = 10 * ALPHAM;
+TISSUE_ALPHA = 100000000000000000000000000000000000000000000000000000000000000000000000000000 * ALPHAM;
 % this tunes the "stiffness" of the box - make very large if you don't want
 % box to move
 TISSUE_EXT_STRESS_X = 0;
