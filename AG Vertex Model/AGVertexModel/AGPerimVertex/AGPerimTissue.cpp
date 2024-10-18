@@ -783,6 +783,9 @@ void AGPerimTissue::Evolve(double interval, double *stepsize, ofstream* errorfil
 		// STEP 8: Check for whether we have hit equilibrium or too small a timestep
 		if (energyList.size() > energyListSize)
 		{
+			energySlope = getLinearRegressionSlope(timeList, energyList);
+			currentFreeEnergy = (*this).CalculateFreeEnergy();
+			*errorfile << std::setprecision(outputPrecision) << CURRENTTIME << "\t" << currentFreeEnergy << "\t" << energySlope << "\t" << (*this).calculatePolydispersity() << endl;
 			(*this).equilibrated = (*this).IsEquilibrated();
 			if ((*this).equilibrated)
 			{
@@ -1908,6 +1911,12 @@ MatrixXf AGPerimTissue::calculateHessian(ofstream* errorfile)
 	MatrixXf pressureforceMatrix(2 * numofvertices, 1);
 	pressureforceMatrix.setZero(2 * numofvertices, 1);
 
+	MatrixXf tensionforceMatrix(2 * numofvertices, 1);
+	tensionforceMatrix.setZero(2 * numofvertices, 1);
+
+	MatrixXf forceMatrix(2 * numofvertices, 1);
+	forceMatrix.setZero(2 * numofvertices, 1);
+
 	//MatrixXf cellincidence(2 * numofvertices, 2 * numofvertices);
 	//cellincidence.setZero(2 * numofvertices, 2 * numofvertices);
 
@@ -1922,7 +1931,7 @@ MatrixXf AGPerimTissue::calculateHessian(ofstream* errorfile)
 	double perimeter = 0;
 	double tension_magnitude = 0;
 	double a0, p0;
-	Vect CWvec_pos, vec_pos, CCWvec_pos, CWedgevec, CCWedgevec, CWedgevec_UV, CCWedgevec_UV, dAdrvec, dPdrvec;
+	Vect CWvec_pos, vec_pos, CCWvec_pos, CWedgevec, CCWedgevec, CWedgevec_UV, CCWedgevec_UV, dAdrvec, dPdrvec, dAdrvecALT, dPdrvecALT;
 	double CWmag, CCWmag;
 	double total_d2Adridrj = 0;
 
@@ -1954,7 +1963,7 @@ MatrixXf AGPerimTissue::calculateHessian(ofstream* errorfile)
 		// the pressure
 		cell_pressure = -1 * (*(*cit)).GetPressure(area); // I want pressure to be PRESSURE = K (A - A0) / A0
 		// tension magnitude should be simple enough
-		tension_magnitude =  LAMBDA * (perimeter - p0);
+		tension_magnitude =  LAMBDA * (perimeter - p0); 
 
 		// double K = 1; // this is for debugging
 		// double LAMBDA = 1; // this is for debugging
@@ -2007,24 +2016,25 @@ MatrixXf AGPerimTissue::calculateHessian(ofstream* errorfile)
 				CCWedgevec = ccwedge->GetVectorDifference(cwverts[vindex - 1], cwverts[vindex]);
 				vertIDm1.push_back(vertex_index_map [ (*cwverts[vindex - 1]).id ]);
 			}
-			 dAdrvec = (CWedgevec + CCWedgevec).Rotate(PI / 2) * (0.5);
+			 dAdrvec = (CWedgevec + CCWedgevec).Rotate(PI / 2) * (-1*0.5);
 			 // THERE IS A FUNCTION TO DO THIS IN AGCELL
-
+			 dAdrvecALT = (*agit).GetdAdv((cwverts[vindex]));
 
 			//CWvec_pos - vec_pos;
 			//vec_pos - CCWvec_pos;
 			
-			CWmag = cwedge->GetLength();
-			CCWmag = ccwedge->GetLength();
+			CWmag = CWedgevec.Magnitude();
+			CCWmag = CCWedgevec.Magnitude();
 
 			CWedgevec_UV = CWedgevec / CWmag;
 			CCWedgevec_UV = CCWedgevec / CCWmag;
 			dPdrvec = (CWedgevec_UV* (-1) + CCWedgevec_UV );
+			dPdrvecALT = (*agit).GetdPdv((cwverts[vindex]));
 			// THERE IS A FUNCTION TO DO THIS IN AGCELL
 			ep1vec.push_back(CWedgevec);
-			em1vec.push_back(CCWedgevec); // m1 goes CW
-			dAdr.push_back(dAdrvec);
-			dPdr.push_back(dPdrvec);
+			em1vec.push_back(CCWedgevec); 
+			dAdr.push_back(dAdrvecALT);
+			dPdr.push_back(dPdrvecALT);
 		}
 
 		int i_id, j_id, jp1_id, jm1_id;
@@ -2047,8 +2057,12 @@ MatrixXf AGPerimTissue::calculateHessian(ofstream* errorfile)
 			jp1_id = vertIDp1[j];
 			jm1_id = vertIDm1[j];
 
-			pressureforceMatrix(2 * j_id, 0) += (K / a0) * dAdr[j].x;
-			pressureforceMatrix(2 * j_id + 1, 0) += (K / a0) * dAdr[j].y;
+			pressureforceMatrix(2 * j_id, 0) -= (cell_pressure) * dAdr[j].x;
+			pressureforceMatrix(2 * j_id + 1, 0) -= (cell_pressure ) * dAdr[j].y;
+			tensionforceMatrix(2 * j_id, 0) -= tension_magnitude * dPdr[j].x;
+			tensionforceMatrix(2 * j_id + 1, 0) -= tension_magnitude * dPdr[j].y;
+			forceMatrix(2 * j_id, 0) -= (cell_pressure ) * dAdr[j].x + tension_magnitude * dPdr[j].x;
+			forceMatrix(2 * j_id + 1, 0) -= (cell_pressure ) * dAdr[j].y + tension_magnitude * dPdr[j].y;
 
 			for (int i = 0; i < vnum; i++)
 			{
@@ -2129,19 +2143,29 @@ MatrixXf AGPerimTissue::calculateHessian(ofstream* errorfile)
 	Hessian = d2Adridrj + d2Pdridrj + dAdridAdrj + dPdridPdrj;
 	//*errorfile << std::setprecision(3) << "H = \n" << Hessian << "\n" << "\n" << endl;
 
-	*errorfile << std::setprecision(6) << "incidence at the end  = \n" << incidenceMatrix << "\n \n \n \n" << endl;
+	*errorfile << std::setprecision(10) << "incidence at the end  = \n" << incidenceMatrix << "\n \n \n \n" << endl;
 
-	*errorfile << std::setprecision(6) << "pressureForceVector = \n" << pressureforceMatrix << "\n \n \n \n" << endl;
+	*errorfile << std::setprecision(10) << "pressureForceVector = \n" << pressureforceMatrix << "\n \n \n \n" << endl;
 
-	*errorfile << std::setprecision(6) << "d2Adridrj = \n" << d2Adridrj << "\n" << "\n" << endl;
+	*errorfile << std::setprecision(10) << "tensionForceVector = \n" << tensionforceMatrix << "\n \n \n \n" << endl;
 
-	*errorfile << std::setprecision(6) << "sym(d2Adridrj) = \n" << 0.5*(d2Adridrj + d2Adridrj.transpose()) << "\n" << "\n" << endl;
+	*errorfile << std::setprecision(10) << "ForceVector = \n" << forceMatrix << "\n \n \n \n" << endl;
 
-	*errorfile << std::setprecision(6) << "d2Pdridrj = \n" << d2Pdridrj << "\n" << "\n" << endl;
+	*errorfile << std::setprecision(10) << "d2Adridrj = \n" << d2Adridrj << "\n" << "\n" << endl;
 
-	*errorfile << std::setprecision(6) << "dPdridPdrj = \n" << dPdridPdrj << "\n" << "\n" << endl;
+	*errorfile << std::setprecision(10) << "sym(d2Adridrj) check \n" << d2Adridrj - 0.5*(d2Adridrj + d2Adridrj.transpose()) << "\n" << "\n" << endl;
 
-	*errorfile << std::setprecision(6) << "dAdridAdrj = \n" << dAdridAdrj << "\n" << "\n" << endl;
+	*errorfile << std::setprecision(10) << "d2Pdridrj = \n" << d2Pdridrj << "\n" << "\n" << endl;
+
+	*errorfile << std::setprecision(10) << "sym(d2Pdridrj) check \n" << d2Pdridrj - 0.5 * (d2Pdridrj + d2Pdridrj.transpose()) << "\n" << "\n" << endl;
+
+	*errorfile << std::setprecision(10) << "dPdridPdrj = \n" << dPdridPdrj << "\n" << "\n" << endl;
+
+	*errorfile << std::setprecision(10) << "sym(dPdridPdrj) check \n" << dPdridPdrj - 0.5 * (dPdridPdrj + dPdridPdrj.transpose()) << "\n" << "\n" << endl;
+
+	*errorfile << std::setprecision(10) << "dAdridAdrj = \n" << dAdridAdrj << "\n" << "\n" << endl;
+
+	*errorfile << std::setprecision(10) << "sym(dAdridAdrj) check \n" << dAdridAdrj - 0.5 * (dAdridAdrj + dAdridAdrj.transpose()) << "\n" << "\n" << endl;
 
 	//*errorfile << std::setprecision(6) << "dPdridPdrj - normed dAdridAdrj = \n" << dPdridPdrj - dAdridAdrj / 952.8286 << "\n" << "\n" << endl;
 	//*errorfile << std::setprecision(6) << "Hessian = \n" << Hessian << "\n" << "\n" << endl;
@@ -2195,6 +2219,7 @@ double AGPerimTissue::calculateShearModulusWithEigenDecomposition(ofstream* erro
 	double d2Adrdgamma;
 
 	double dadgcheck = 0;
+	double dadgcheckALT = 0; 
 	double dpdgcheck = 0;
 	double dpdpdgdgcheck = 0;
 	int cellid = 0;
@@ -2254,7 +2279,8 @@ double AGPerimTissue::calculateShearModulusWithEigenDecomposition(ofstream* erro
 		*errorfile << "Tension Magnitude = " << tension_magnitude << endl;
 
 
- 		dadgcheck = (*agit).GetdAdgammaForSimpleShearAlongXAxis();
+ 		dadgcheck = (*agit).GetdAdgammaForSimpleShearAlongXAxisALTERNATE(); 
+		dadgcheckALT = (*agit).GetdAdgammaForSimpleShearAlongXAxis();
 		dpdgcheck = (*agit).GetdPdgammaForSimpleShearAlongXAxis();
 		dpdpdgdgcheck = (*agit).Getd2Pdgamma2ForSimpleShearAlongXAxis();
 		// let's do d2Edgamma2 first:
@@ -2271,6 +2297,7 @@ double AGPerimTissue::calculateShearModulusWithEigenDecomposition(ofstream* erro
 		d2Edgamma2 += dpdpdgdgterm;
 		d2Edgamma2 += dpdgterm;
 		*errorfile << "dAdgamma for this cell = " << dadgcheck << endl;
+		*errorfile << "dAdgamma for this cell = " << dadgcheckALT << endl;
 		*errorfile << "dPdgamma for this cell = " << dpdgcheck << endl;
 		*errorfile << "d2Pdg2 for this cell = " << dpdpdgdgcheck << endl;
 		*errorfile << "d2Edgamma2 for this cell = " << (dadgterm + dpdpdgdgterm + dpdgterm) << endl;
@@ -2301,7 +2328,7 @@ double AGPerimTissue::calculateShearModulusWithEigenDecomposition(ofstream* erro
 			dPdrdPdgammaVEC(2 * vmapid, 0) = LAMBDA * dpdgcheck * dPdv.x; // double check dPdv
 			dPdrdPdgammaVEC(2 * vmapid + 1, 0) = LAMBDA * dpdgcheck * dPdv.y; // double check dPdv
 			*errorfile << std::setprecision(6) << "Vertex id " << relid << "\t dAdv = " << dAdv.x << "\t dPdv = " << dPdv.x << " \t xBoundary Vector = " << BoundaryVector(2 * vmapid, 0) << "\t d2Adrdgamma 0 \t d2Pdrdgamma " << d2PdrdgammaVEC(2 * vmapid, 0) << "\t dAdrdAdgamma " << dAdrdAdgammaVEC(2 * vmapid, 0) << "\t dPdrdPdgamma " << dPdrdPdgammaVEC(2 * vmapid, 0) << endl;
-			*errorfile << std::setprecision(6) << "Vertex id " << relid << "\t dAdv = " << dAdv.y << "\t dPdv = " << dAdv.y << " \t yBoundary Vector = " << BoundaryVector(2 * vmapid + 1, 0) << "\t d2Adrdgamma " << d2AdrdgammaVEC(2 * vmapid + 1, 0) << "\t d2Pdrdgamma " << d2PdrdgammaVEC(2 * vmapid + 1, 0) << "\t dAdrdAdgamma " << dAdrdAdgammaVEC(2 * vmapid+1, 0) << "\t dPdrdPdgamma " << dPdrdPdgammaVEC(2 * vmapid+1, 0) << endl;
+			*errorfile << std::setprecision(6) << "Vertex id " << relid << "\t dAdv = " << dAdv.y << "\t dPdv = " << dPdv.y << " \t yBoundary Vector = " << BoundaryVector(2 * vmapid + 1, 0) << "\t d2Adrdgamma " << d2AdrdgammaVEC(2 * vmapid + 1, 0) << "\t d2Pdrdgamma " << d2PdrdgammaVEC(2 * vmapid + 1, 0) << "\t dAdrdAdgamma " << dAdrdAdgammaVEC(2 * vmapid+1, 0) << "\t dPdrdPdgamma " << dPdrdPdgammaVEC(2 * vmapid+1, 0) << endl;
 		}
 		//*errorfile << std::setprecision(6) << "BoundaryVector = \n" << BoundaryVector << "\n" << "\n" << endl;
 		FullBoundaryVector += BoundaryVector;
@@ -2349,6 +2376,7 @@ double AGPerimTissue::calculateShearModulusWithEigenDecomposition(ofstream* erro
 	*errorfile << "dpdpdgdg = " << normfactor * dpdpdgdgtotal << endl;
 	*errorfile << "d2Edgamma2 = " << normfactor * d2Edgamma2 << endl;
 	*errorfile << "nonaffine_shear = " << normfactor * nonaffine_shearportion << endl;
+	*errorfile << "Shear Modulus = " << normfactor * (d2Edgamma2 - nonaffine_shearportion) << endl;
 	shearmodulus = normfactor * (d2Edgamma2_mat(0, 0) - nonaffine_shearportion); // I'm doing this to maintain a convention I had in another code
 	// I'll probably have to do some code fixing to deal with this
 	
@@ -2425,7 +2453,7 @@ double AGPerimTissue::CalculateShearModulusWithMatrixInversion(ofstream* errorfi
 		
 
 		// let's do d2Edgamma2 first:
-		d2Edgamma2 += K * (*agit).GetdAdgammaForSimpleShearAlongXAxis() * (*agit).GetdAdgammaForSimpleShearAlongXAxis();
+		d2Edgamma2 += K * (*agit).GetdAdgammaForSimpleShearAlongXAxisALTERNATE() * (*agit).GetdAdgammaForSimpleShearAlongXAxisALTERNATE();
 		d2Edgamma2 += tension_magnitude * (*agit).Getd2Pdgamma2ForSimpleShearAlongXAxis();
 		d2Edgamma2 += LAMBDA * (*agit).GetdPdgammaForSimpleShearAlongXAxis() * (*agit).GetdPdgammaForSimpleShearAlongXAxis();
 
@@ -2438,8 +2466,8 @@ double AGPerimTissue::CalculateShearModulusWithMatrixInversion(ofstream* errorfi
 			BoundaryVector(2 * vmapid, 0) += tension_magnitude * dPdrdgamma.x;
 			BoundaryVector(2 * vmapid + 1, 0) += tension_magnitude * dPdrdgamma.y;
 			dAdv = (*agit).GetdAdv((*vit));
-			BoundaryVector(2 * vmapid, 0) += K * (*agit).GetdAdgammaForSimpleShearAlongXAxis() * dAdv.x; // double check dAdv
-			BoundaryVector(2 * vmapid + 1, 0) += K * (*agit).GetdAdgammaForSimpleShearAlongXAxis() * dAdv.y; // double check dAdv
+			BoundaryVector(2 * vmapid, 0) += K * (*agit).GetdAdgammaForSimpleShearAlongXAxisALTERNATE() * dAdv.x; // double check dAdv
+			BoundaryVector(2 * vmapid + 1, 0) += K * (*agit).GetdAdgammaForSimpleShearAlongXAxisALTERNATE() * dAdv.y; // double check dAdv
 			dPdv = (*agit).GetdPdv((*vit));
 			BoundaryVector(2 * vmapid, 0) += LAMBDA * (*agit).GetdPdgammaForSimpleShearAlongXAxis() * dPdv.x; // double check dPdv
 			BoundaryVector(2 * vmapid + 1, 0) += LAMBDA * (*agit).GetdPdgammaForSimpleShearAlongXAxis() * dPdv.y; // double check dPdv

@@ -197,7 +197,7 @@ int main()
 
 	if (tissue.equilibrated)
 	{ 
-		//MatrixXf H = tissue.calculateHessian(&errorfile);
+		//MatrixXd H = tissue.calculateHessian(&errorfile);
 	//double currentFreeEnergy = tissue.CalculateFreeEnergy();
 		for (list<Cell*>::iterator cit = tissue.cells.begin(); cit != tissue.cells.end(); cit++)
 		{
@@ -214,7 +214,7 @@ int main()
 			verts = (*agit).GetClockWiseVertices();
 			int vertexNum = verts.size();
 			errorfile << "dP/dgamma = " << (*agit).GetdPdgammaForSimpleShearAlongXAxis() << ", Cell id = " << (*agit).id << endl;
-			errorfile << "dA/dgamma = " << (*agit).GetdAdgammaForSimpleShearAlongXAxis() << ", Cell id = " << (*agit).id << endl;
+			errorfile << "dA/dgamma = " << (*agit).GetdAdgammaForSimpleShearAlongXAxisALTERNATE() << ", Cell id = " << (*agit).id << endl;
 			for (int i = 0; i < vertexNum; i++)
 			{
 				currVertex = (verts[i]);
@@ -227,8 +227,8 @@ int main()
 
 		}
 		//errorfile << tissue.currentFreeEnergy << endl;
-		MatrixXf hessian(2 * tissue.cells.size(), 2 * tissue.cells.size());
-		MatrixXf hessian_check(2 * tissue.cells.size(), 2 * tissue.cells.size());
+		MatrixXd hessian(2 * tissue.cells.size(), 2 * tissue.cells.size());
+		MatrixXd hessian_check(2 * tissue.cells.size(), 2 * tissue.cells.size());
 		hessian = tissue.calculateHessian(&eqfile);
 		hessian_check = hessian - hessian.transpose();
 

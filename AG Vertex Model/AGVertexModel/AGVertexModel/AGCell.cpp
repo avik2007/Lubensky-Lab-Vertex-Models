@@ -477,7 +477,7 @@ Vect AGCell::GetdAdv(Vertex* v)
 	Vertex *vplus, *vminus;
 	Vect dAdv(0, 0);
 	Edge * eplus, *eminus;
-	Vect vTovplus, vminusTovplus;
+	Vect vTovplus, vminusTov;
 	cwverts = (*this).SavedInfoForEvolve_CWVerts;
 	vnum = cwverts.size();
 	
@@ -510,8 +510,8 @@ Vect AGCell::GetdAdv(Vertex* v)
 		eplus = (*v).GetEdgeBetween(vplus);
 		eminus = (*v).GetEdgeBetween(vminus);
 		vTovplus = (*eplus).GetVectorDifference(v, vplus);
-		vminusTovplus = (*eminus).GetVectorDifference(vminus, v);
-		dAdv =  (vTovplus + vminusTovplus).Rotate(PI / 2) * (-1*0.5); //NEGATIVE SIGN IS ATTEMPT TO MAINTAIN CCW convention
+		vminusTov = (*eminus).GetVectorDifference(vminus, v);
+		dAdv =  (vTovplus + vminusTov).Rotate(PI / 2) * (-1*0.5); //NEGATIVE SIGN IS ATTEMPT TO MAINTAIN CCW convention
 	}
 
 	return dAdv;
@@ -574,7 +574,7 @@ Vect AGCell::GetdPdv(Vertex* v)
 		eminus = (*v).GetEdgeBetween(vminus);
 		vTovplus = (*eplus).GetVectorDifference(v, vplus);
 		vminusTovplus = (*eminus).GetVectorDifference(vminus, v);
-		dPdv = vTovplus / vTovplus.Magnitude() + vminusTovplus / vminusTovplus.Magnitude() * (-1);
+		dPdv = vTovplus / vTovplus.Magnitude() * (-1) + vminusTovplus / vminusTovplus.Magnitude() ;
 		// SIGN CONVENTION OF dPdv MEANT TO MAINTAIN COUNTERCLOCKWISE CONVENTION, DESPITE THE FACT THAT I'M USING CW CONVETION IN CODE
 	}
 
@@ -785,6 +785,8 @@ double AGCell::Getd2AdLxdy(Vertex* V)
 * double GetdAdgammaForSimpleShearAlongXaxis()
 *
 *  Calculates dAdgamma for a simple shear where the deformation occurs along the x-axis (so the unit cell above the main unit cell is shifted to the right)
+* 
+*  THIS IS INCORRECT - IT DOESN'T HANDLE CORNER EDGES VERY WELL. AND SOMETIMES NOT EVEN EDGE CELLS.
 */
 double AGCell::GetdAdgammaForSimpleShearAlongXAxis()
 {
@@ -797,9 +799,9 @@ double AGCell::GetdAdgammaForSimpleShearAlongXAxis()
 	vector<Vertex*> clockwiseVertex = (*this).GetClockWiseVertices();
 	int vertexNum = clockwiseVertex.size();
 	double vectDiff;
-	int firstEdgeContribution = 0;
-	int secondEdgeContribution = 0;
-	int totalContribution = 0;
+	double firstEdgeContribution = 0;
+	double secondEdgeContribution = 0;
+	double totalContribution = 0;
 	double x1 = 0;
 	double x2 = 0;
 	Vect ev;
@@ -858,7 +860,7 @@ double AGCell::GetdAdgammaForSimpleShearAlongXAxis()
 			}
 			ycrossingEdges++;
 		}
-		/*
+		
 		if (((*e1)).xflag)
 		{
 			if (ycrossingEdges == 1)
@@ -876,12 +878,12 @@ double AGCell::GetdAdgammaForSimpleShearAlongXAxis()
 				}
 			}
 		}
-		*/
+		
 	}
 	// xcrossing count might be unnecessary because you got the boundary conditions right before
 	if (ycrossingEdges > 0)
 	{
-		if (xint2 < xint1)
+		if (xint2 < xint1 && xcrossings == 0)
 		{
 			totalContribution = secondEdgeContribution - firstEdgeContribution;
 		}
@@ -891,6 +893,111 @@ double AGCell::GetdAdgammaForSimpleShearAlongXAxis()
 		}
 	}
 	 return LY * totalContribution; 
+}
+
+/*
+* double GetdAdgammaForSimpleShearAlongXaxisALTERNATE()
+*
+*  Calculates dAdgamma for a simple shear where the deformation occurs along the x-axis (so the unit cell above the main unit cell is shifted to the right)
+* *
+* *
+* * THIS IS THE CORRECT ONE! CALCULATE THIS QUANTITY BY CHECKING WHERE EDGES CROSS THE X AND Y BOUNDARIES
+*/
+double AGCell::GetdAdgammaForSimpleShearAlongXAxisALTERNATE()
+{
+	int ycrossingEdges = 0;
+	double dAdLy = 0;
+	Vertex* v1, * v2;
+	Edge* e1;
+	vector<Edge*> clockwiseEdges;
+	vector<Vertex*> clockwiseVertex = (*this).GetClockWiseVertices();
+	int vertexNum = clockwiseVertex.size();
+	double vectDiff;
+	double y1 = 0;
+	double y2 = 0;
+	double x1 = 0;
+	double x2 = 0;
+	double finalVal = 0;
+	Vect ev;
+	Vect crosscellvec(0, 0);
+	bool evecadder = false;
+	clockwiseVertex.push_back(clockwiseVertex[0]);
+
+	for (int i = 0; i < vertexNum; i++)
+	{
+		v1 = clockwiseVertex[i];
+		v2 = clockwiseVertex[i + 1];
+		e1 = (*v1).GetEdgeBetween(v2);
+		clockwiseEdges.push_back(e1);
+		ev = (*e1).GetVectorDifference(v1, v2);
+
+		if (((*e1).yflag))
+		{
+			if (ycrossingEdges < 1)
+			{
+				y1 = 0.5 * ((*v2).r.y + (*v1).r.y);// 9/9/2024 fixing this to ignore boundary conditions//0.5 * ev.y;//(*e1).GetCenter().y;
+				x1 = (*v1).r.x + 0.5 * ev.x;//(*e1).GetCenter().x;
+				ycrossingEdges++;
+				evecadder = true;
+			}
+			else
+			{
+				y2 = 0.5 * ((*v2).r.y + (*v1).r.y);// 9/9/2024 fixing this to ignore boundary conditions// - 0.5 * ev.y;//(*e1).GetCenter().y;
+				x2 = (*v2).r.x - 0.5 * ev.x;//(*e1).GetCenter().x;
+				// alternatively, (*e1).getCenter().y can do the same thing 
+				i = vertexNum;
+			}
+			// the y1, x1 and y2, x2 calculations are done this way to get around boundary condition concerns
+			crosscellvec = crosscellvec + ev;
+
+		}
+		else
+		{
+			if (evecadder)
+			{
+				crosscellvec = crosscellvec + ev;
+			}
+		}
+
+
+	}
+
+	// account for boundary conditions and getting the direction right
+	// 7/11/2024, CHECK THIS CROSSCELLVEC calculation
+	if (crosscellvec.x > 0)
+	{
+		finalVal = y1 - y2;
+	}
+	else
+	{
+		finalVal = y2 - y1;
+	}
+	/*
+	if (x2 > x1)
+	{
+		if (evxflag)
+		{
+			finalVal = y1 - y2;
+		}
+		else
+		{
+			finalVal = y2 - y1;
+		}
+	}
+	else
+	{
+		if (evxflag)
+		{
+			finalVal = y2 - y1;
+		}
+		else
+		{
+			finalVal = y1 - y2;
+		}
+
+	}
+	*/
+	return LY * finalVal; // 4/12/24 ORDERING SHOULD BE RIGHT - POTENTIAL WORRIES ABOUT CORNER CELLS (KEEP IN MIND IF BUGS COME UP)
 }
 /*
 * double Getd2AdgammadyForSimpleShearAlongXAxis(Vertex* V)

@@ -101,6 +101,9 @@ public:
 	virtual double GetdAdgammaForSimpleShearAlongXAxis(); 
 	// gets the derivative of the cells area w.r.t. gamma if gamma is the shear strength for a simple shear in the x-direction
 
+	virtual double GetdAdgammaForSimpleShearAlongXAxisALTERNATE();
+	// this is the older version of dAdgamma - and it should be less correct by my vertex model calculation is getting worse...
+
 	virtual double Getd2AdgammadyForSimpleShearAlongXAxis(Vertex* v);
 	// gets the derivative of the cells area w.r.t. gamma and a vertex y coordinate if gamma is the shear strength for a simple shear in the x-direction
 
