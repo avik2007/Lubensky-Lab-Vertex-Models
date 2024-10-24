@@ -121,11 +121,25 @@ public:
 	//! This is the helper function that actually do mitosis on cells.
 	virtual void HelperMitosis(Cell* parentcell, double divisionangle);	
 
+	// calculates the second derivative of the perimeter in the Hessian with respect to vertices (d2P/dridrj)
+	virtual MatrixXf calculated2PdridrjMatrix(ofstream* errorfile);
+
+	// calculates the second derivative of the perimeter in the Hessian with respect to vertices (d2P/dridrj)
+	virtual MatrixXd calculated2PdridrjMatrixd(ofstream* errorfile);
+
 	// calculates the Hessian of the model
-	virtual Eigen::MatrixXf calculateHessian(ofstream* errorfile);
+	virtual MatrixXf calculateHessian(ofstream* errorfile);
+
+	// calculates Hessian with double 
+	virtual MatrixXd calculateHessiand(ofstream* errorfile);
+
+	// calculates ShearModulus with double precision eigen things
+	virtual double calculateShearModulusWithEigenDecompositiond(ofstream* errorfile);
 
 	// calculates the shear modulus of the tissue by inverting a matrix
 	virtual double CalculateShearModulusWithMatrixInversion(ofstream* errorfile);
+
+	virtual void CalculateShearModulusForPythonCalculation(ofstream* errorfile, ofstream* pythonfile);
 
 	// calculates the shear modulus of the tissue using eigendecomposition of hessian
 	virtual double calculateShearModulusWithEigenDecomposition(ofstream* errorfile);

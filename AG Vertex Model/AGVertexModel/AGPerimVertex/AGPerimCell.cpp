@@ -338,7 +338,7 @@ double AGPerimCell::GetdPdgammaForSimpleShearAlongXAxis()
 			// if the x coordinate of the top vertex is less than that of the bottom vertex, 
 			directioncos = edgeVect.x / edgeVect.Magnitude();
 			if (edgeVect.y < 0)
-			{
+			{ 
 				updownfactor = -1;
 			}
 			else

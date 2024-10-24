@@ -13,7 +13,7 @@ clear
 
 %% Inputs needed
 INITIALSTEPSIZE = 0.0001;    %Initial stepsize for the numberic integrator 
-nomfichier=strcat('shearmodulus_check0.95','.txt');  %the file name
+nomfichier=strcat('shearmodulus_check1.1','.txt');  %the file name
 n=1;                       %1/2 of the Cells per row
 m=2;                       %Cells per collumn 
 r=89542;                    %Seed for the random number generators
@@ -46,7 +46,7 @@ Alpha_M = GAMMA*t0/l;                % Drag coefficent
 TISSUE_ALPHA = 10000000000000000000000000000000 * Alpha_M;%10000000*Ralpha*Alpha_M;       % How fast the box size updates relative to the vertex motion
 TISSUE_EXT_STRESS_Y = 0;             % External Stress on the tissue (positive values expancile) 
 TISSUE_EXT_STRESS_X = 0;
-P0 = 0.*(sqrt(24 / sqrt(3))) * sqrt(A0); % sqrt(24 / sqrt(3)) = regular hexagon shape parameter
+P0 = 1.1*(sqrt(24 / sqrt(3))) * sqrt(A0); % sqrt(24 / sqrt(3)) = regular hexagon shape parameter
 LAMBDA = 0.01 * K * A0;%K / 0.05; % mimics Manning Model 
 VERBOSEON = 1; %boolean, tells code to output extra data for cells and edges when true
 equilibriumtolerance = 0.00000000001;

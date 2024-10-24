@@ -21,6 +21,7 @@
 #include <stddef.h>
 #include <Eigen/Dense>
 #include <complex> 
+#include <iomanip>
 
 #include "CellClass.h"
 #include "EdgeClass.h"
@@ -141,7 +142,7 @@ int main()
 	string OutputFileName1 = filename + "_out.txt";
 	string OutputFileName2 = filename + "_error.txt";
 
-	ofstream datafile, eqfile, errorfile, digraphfile, hfile;
+	ofstream datafile, eqfile, errorfile, digraphfile, hfile, pfile;
 	datafile.open(OutputFileName1);
 	errorfile.open(OutputFileName2);
 
@@ -183,60 +184,42 @@ int main()
 		cout << "writing at CURRENTTIME: " << CURRENTTIME << endl;
 		// equilibrated gets updated in Evolve
 	}
+	tissue.Evolve(TIMEINTERVAL, &stepSize, &errorfile);
+	// Adding another evolve step to see how it affects the reported forces
 	polydispersity = tissue.calculatePolydispersity();
 	errorfile << "Polydispersity final = " << polydispersity << endl;
 	tissue.WriteOutputDataAppend(&datafile);
 	string OutputFileName3 = filename + "_EQ.txt";
 	string OutputFileName4 = filename + "_H.txt";
+	string OutputFileName5 = filename + "_P.txt";
+
 	eqfile.open(OutputFileName3);
 	tissue.WriteOutputDataAppend(&eqfile);
-
+	hfile.open(OutputFileName4);
+	pfile.open(OutputFileName5);
 	vector<Vertex*> verts;
 	int currID;
 	Vertex* currVertex;
-
+	double Smf, Smd;
 	if (tissue.equilibrated)
 	{ 
-		//MatrixXd H = tissue.calculateHessian(&errorfile);
-	//double currentFreeEnergy = tissue.CalculateFreeEnergy();
-		for (list<Cell*>::iterator cit = tissue.cells.begin(); cit != tissue.cells.end(); cit++)
-		{
-			AGPerimCell* agit = dynamic_cast<AGPerimCell*>(*cit);
-			/*
-			errorfile << "Cell " << (*(*cit)).id << endl;
-			errorfile << "dA / dLx = " << (*agit).GetdAdLx()  << "\n" << endl;
-			errorfile << "dP / dLx = " << (*agit).GetdPdLx() << "\n" << endl;
-			errorfile << "dA / dLy = " << (*agit).GetdAdLy() << "\n" << endl;
-			errorfile << "dP / dLy = " << (*agit).GetdPdLy() << "\n" << endl;
-			errorfile << " d2P / dLx2 = " << (*agit).Getd2PdLx2() << "\n" << endl;
-			errorfile << " d2P / dLy2 = " << (*agit).Getd2PdLy2() << "\n" << endl;
-			*/
-			verts = (*agit).GetClockWiseVertices();
-			int vertexNum = verts.size();
-			errorfile << "dP/dgamma = " << (*agit).GetdPdgammaForSimpleShearAlongXAxis() << ", Cell id = " << (*agit).id << endl;
-			errorfile << "dA/dgamma = " << (*agit).GetdAdgammaForSimpleShearAlongXAxisALTERNATE() << ", Cell id = " << (*agit).id << endl;
-			for (int i = 0; i < vertexNum; i++)
-			{
-				currVertex = (verts[i]);
-				currID = currVertex->id;
-
-				errorfile << "d2P / dLydv = (" << (*agit).Getd2PdgammadvForSimpleShearAlongXAxis(currVertex).x << ", " << (*agit).Getd2PdgammadvForSimpleShearAlongXAxis(currVertex).y << "), Vertex id = " << (*verts[i]).id << ", Cell id = " << (*agit).id << endl;
-				errorfile << "d2A / dLydy = (" << (*agit).Getd2AdgammadyForSimpleShearAlongXAxis(currVertex) << "), Vertex id = " << (*verts[i]).id << ", Cell id = " << (*agit).id << endl;
-
-			}
-
-		}
-		//errorfile << tissue.currentFreeEnergy << endl;
-		MatrixXd hessian(2 * tissue.cells.size(), 2 * tissue.cells.size());
-		MatrixXd hessian_check(2 * tissue.cells.size(), 2 * tissue.cells.size());
+		MatrixXf hessian(2 * tissue.cells.size(), 2 * tissue.cells.size());
+		MatrixXf hessian_check(2 * tissue.cells.size(), 2 * tissue.cells.size());
 		hessian = tissue.calculateHessian(&eqfile);
 		hessian_check = hessian - hessian.transpose();
-
-		eqfile << "hessian = " << (hessian) << "\n \n \n \n ";
+		pfile << "Testing \n" << endl;
+		eqfile << "hessian = \n" << (hessian) << "\n \n \n \n ";
+		hfile << std::setprecision(20) << hessian;
 		eqfile << "hessian symmetry check = " << hessian_check << "\n \n \n \n ";
-		eqfile << "shear modulus = " << (tissue).calculateShearModulusWithEigenDecomposition(&errorfile) << endl;;
-	}
+		Smf = tissue.calculateShearModulusWithEigenDecomposition(&errorfile);
+		Smd = tissue.calculateShearModulusWithEigenDecomposition(&errorfile);
+		eqfile << "shear modulus = " << Smf << endl;
+		eqfile << "double precision shear modulus = " << Smd << endl;
+		eqfile << "difference = " << Smd - Smf << endl;
+	
 		
+	}
+	tissue.CalculateShearModulusForPythonCalculation(&errorfile, &pfile);
 	endtime = std::chrono::system_clock::now();
 	std::chrono::duration<double> elapsed_seconds = endtime - starttime;
 	cout << "ELAPSED TIME: " << elapsed_seconds.count() / 60.0 << "  min\n";

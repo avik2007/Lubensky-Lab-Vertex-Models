@@ -511,7 +511,7 @@ Vect AGCell::GetdAdv(Vertex* v)
 		eminus = (*v).GetEdgeBetween(vminus);
 		vTovplus = (*eplus).GetVectorDifference(v, vplus);
 		vminusTov = (*eminus).GetVectorDifference(vminus, v);
-		dAdv =  (vTovplus + vminusTov).Rotate(PI / 2) * (-1*0.5); //NEGATIVE SIGN IS ATTEMPT TO MAINTAIN CCW convention
+		dAdv =  (vTovplus + vminusTov).Rotate(PI / 2) * (0.5); //NEGATIVE SIGN IS ATTEMPT TO MAINTAIN CCW convention
 	}
 
 	return dAdv;
