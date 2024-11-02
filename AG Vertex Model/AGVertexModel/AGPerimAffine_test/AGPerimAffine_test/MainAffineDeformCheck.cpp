@@ -1,5 +1,6 @@
 // The main function of the vertex model is found here
 #include <iostream>
+#include <iomanip>
 #include <string>
 #include <cmath>
 #include <cstdlib>
@@ -165,8 +166,12 @@ int main()
 	cout << "*******************************************************************************" << endl;
 
 	//cout << LX << " " << LY << endl;
+	double E0 = tissue.CalculateFreeEnergy();
+	double normfactor = (K * pow(LX * LY, 2) / tissue.cells.size());
+	double e0 = E0 / normfactor;
+	datafile << std::setprecision(19) << e0 << endl;
 	CURRENTTIME = 0;
-	double gammas[10] = { 0.001, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007, 0.008, 0.009, 0.01 };
+	double gammas[10] = { 0.0001, 0.0002, 0.0003, 0.0004, 0.0005, 0.0006, 0.0007, 0.0008, 0.0009, 0.001 };
 	double energies[10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 	//tissue.DeformTissue(1 + gammas[0], 1 / (1 + gammas[0]));
 	//energies[0] = tissue.CalculateFreeEnergy() / (K * pow(LX * LY, 2) / tissue.cells.size());
@@ -180,7 +185,7 @@ int main()
 		tissue.DeformTissue(1 / (1 + gammas[i]), 1 + gammas[i]);
 		e2 = tissue.CalculateFreeEnergy() / (K * pow(LX * LY, 2) / tissue.cells.size());
 		ec = e2 - e1;
-		datafile << gammas[i] << " " << energies[i] << " " << ec << endl;
+		datafile << std::setprecision(19) << gammas[i] << " " << energies[i] << endl;
 		//tissue.DeformTissue(1 + gammas[i]/ (1+gammas[i-1]), (1+gammas[i-1]) / (1 + gammas[i]));
 		//energies[i] = tissue.CalculateFreeEnergy() / (K * pow(LX * LY,2) / tissue.cells.size());
 		//datafile << gammas[i] << " " << energies[i] << endl;

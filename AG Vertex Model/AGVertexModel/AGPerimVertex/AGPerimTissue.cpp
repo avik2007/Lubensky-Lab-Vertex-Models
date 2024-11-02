@@ -452,12 +452,12 @@ void AGPerimTissue::HelperReadInputData_CreateObjects(ifstream* datafile){
 *
 * Calculates the energy of the packing using the Hamiltonian
 * in this model:
-* H = (sum over cells) [ 0.5 K(A_cells - A_0) + 0.5 LAMBDA (P_cell - P_0)^2]
+* H = (sum over cells) [ 0.5 K(A_cells - A_0)^2 + 0.5 LAMBDA (P_cell - P_0)^2]
 */
 double AGPerimTissue::CalculateFreeEnergy()
  {
 	double carea, cperim;
-	double a0, p0;
+	double a0, p0, boxenergy;
 	double freeenergy = 0;
 	
 	double perim_difference_sqr = 0;
@@ -492,16 +492,15 @@ double AGPerimTissue::CalculateFreeEnergy()
 		}
 		else
 		{
-			area_difference_sqr += a0*pow(carea/a0 - 1, 2);
+			area_difference_sqr += pow(carea/a0 - 1, 2);
 			// where the energy would look like Ep = 1/2 K A0^2 (A/A0 - 1)^2 ([K] = pressure)
 		}
 		 
 		
 		perim_difference_sqr += pow( cperim - p0, 2); 
-		
-		// extra factor of 1/A0 is because K is written in units of pressure instead of E/length^4
 	}
-	freeenergy =0.5*LAMBDA*perim_difference_sqr + 0.5*K*a0*area_difference_sqr - (*this).CalculateBoxEnergy();
+	boxenergy = (*this).CalculateBoxEnergy();
+	freeenergy = 0.5*LAMBDA*perim_difference_sqr + 0.5*K*a0*area_difference_sqr - boxenergy;
 
 
 	return freeenergy;
@@ -929,7 +928,7 @@ double AGPerimTissue::CalculatePressureEnergy()
 		}
 		else
 		{
-			area_difference_sqr += a0 * pow(carea / a0 - 1, 2);
+			area_difference_sqr +=  pow(carea / a0 - 1, 2);
 			// where the energy would look like Ep = 1/2 K A0^2 (A/A0 - 1)^2 ([K] = pressure)
 		}
 	}
@@ -3360,9 +3359,9 @@ void AGPerimTissue::CalculateShearModulusForPythonCalculation(ofstream* errorfil
 	*pythonfile << "*********************************************************************************************" << endl;
 	*pythonfile << "*********************************************************************************************" << endl;
 	*pythonfile << std::setprecision(20) << "normfactor = \n" << normfactor << endl;
-	*pythonfile << std::setprecision(3) << "null space size = \n" << hessianeigen.eigenvalues().size() - lu_decomp.rank() << endl;
+	//*pythonfile << std::setprecision(3) << "null space size = \n" << hessianeigen.eigenvalues().size() - lu_decomp.rank() << endl;
 	*pythonfile << std::setprecision(20) << "d2Edgamma2 = \n" << d2Edgamma2 << endl;
-	*pythonfile << std::setprecision(20) << "Full Boundary Vector = \n" << FullBoundaryVector << "\n " << endl;
+	*pythonfile << std::setprecision(20) << "Full Boundary Vector = \n" << FullBoundaryVector << endl;
 	*pythonfile << std::setprecision(20) << "Hessian = \n" << Hessian << endl;
 
 	//*errorfile << std::setprecision(20) << "normfactor = " << normfactor << endl;

@@ -68,7 +68,6 @@ double AGStiffTissue::CalculateFreeEnergy()
 	
 		perim_difference_sqr += pow(cperim - p0, 2);
 
-		// extra factor of 1/A0 is because K is written in units of pressure instead of E/length^4
 	}
 	freeenergy = 0.5 * LAMBDA * perim_difference_sqr + 0.5 * pressure_portion - (*this).CalculateBoxEnergy();
 

@@ -121,7 +121,7 @@ int main()
 	//Read the input file
 	bool readfile;
 	
-	InputFileName = "C:\\Users\\abmondal\\Documents\\Lubensky-Lab-Vertex-Models\\MATLAB Data Folder\\M2Ts_LP_rng_150_p0_3.84_ELS_3_EQ_0.002.txt";
+	InputFileName = "C:\\Users\\abmondal\\Documents\\Lubensky-Lab-Vertex-Models\\MATLAB Data Folder\\shearmodulus_check0.6_EQ_0.010.txt";
 	readfile = tissue.ReadInputData(InputFileName);
 	if (!readfile){
 		cout << "Ending because file was not readable" << endl;
@@ -172,7 +172,7 @@ int main()
 	tissue.DeformTissue(DEFORM_NUM + 1, 1 / (1 + DEFORM_NUM));
 
 	// above time variables allow us to pick how often we write to the appendfile
-	while (CURRENTTIME < TOTALTIME)
+	while (CURRENTTIME < TOTALTIME && !(tissue.equilibrated))
 	{
 		cout << "CURRENTTIME " << CURRENTTIME << endl;
 		tissue.Evolve(TIMEINTERVAL, &stepSize, &errorfile); 

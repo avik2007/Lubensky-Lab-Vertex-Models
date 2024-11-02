@@ -215,9 +215,7 @@ int main()
 		Smd = tissue.calculateShearModulusWithEigenDecomposition(&errorfile);
 		eqfile << "shear modulus = " << Smf << endl;
 		eqfile << "double precision shear modulus = " << Smd << endl;
-		eqfile << "difference = " << Smd - Smf << endl;
-	
-		
+		eqfile << "difference = " << Smd - Smf << endl;	
 	}
 	tissue.CalculateShearModulusForPythonCalculation(&errorfile, &pfile);
 	endtime = std::chrono::system_clock::now();
