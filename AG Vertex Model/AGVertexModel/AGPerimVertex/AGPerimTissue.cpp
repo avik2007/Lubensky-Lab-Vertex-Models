@@ -2925,8 +2925,8 @@ double AGPerimTissue::calculateShearModulusWithEigenDecomposition(ofstream* erro
 	*errorfile << "Here is a matrix whose columns form a basis of the null-space of A:\n"
 		<< lu_decomp.kernel() <<"\n \n" << endl;
 	
-
-	double normfactor = (*this).cells.size() / (K * pow(LX * LY, 2));
+	double altnormfactor = (*this).cells.size() / (K * pow(LX * LY, 2));
+	double normfactor =  1 / (K * pow((*this).A0, 2) * (*this).cells.size());
 	*errorfile << std::setprecision(20) << "normfactor = " << normfactor << endl;
 	*errorfile << std::setprecision(20) << "dadg = " << normfactor * dadgtotal << endl;
 	*errorfile << std::setprecision(20) << "dpdg = " << normfactor * dpdgtotal << endl;
@@ -3143,8 +3143,8 @@ double AGPerimTissue::calculateShearModulusWithEigenDecompositiond(ofstream* err
 	*errorfile << "Here is a matrix whose columns form a basis of the null-space of A:\n"
 		<< lu_decomp.kernel() << "\n \n" << endl;
 
-
-	double normfactor = (*this).cells.size() / (K * pow(LX * LY, 2));
+	double altnormfactor = (*this).cells.size() /  (K * pow(LX * LY, 2));
+	double normfactor = 1 / (K * pow(A0, 2)); // (K * pow(LX * LY, 2));
 	*errorfile << std::setprecision(20) << "normfactor = " << normfactor << endl;
 	*errorfile << std::setprecision(20) << "dadg = " << normfactor * dadgtotal << endl;
 	*errorfile << std::setprecision(20) << "dpdg = " << normfactor * dpdgtotal << endl;

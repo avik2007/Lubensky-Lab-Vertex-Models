@@ -169,7 +169,7 @@ int main()
 	double E0 = tissue.CalculateFreeEnergy();
 	double normfactor = (K * pow(LX * LY, 2) / tissue.cells.size());
 	double e0 = E0 / normfactor;
-	datafile << std::setprecision(19) << e0 << endl;
+	//datafile << std::setprecision(19) << e0 << endl;
 	CURRENTTIME = 0;
 	double gammas[10] = { 0.0001, 0.0002, 0.0003, 0.0004, 0.0005, 0.0006, 0.0007, 0.0008, 0.0009, 0.001 };
 	double energies[10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
