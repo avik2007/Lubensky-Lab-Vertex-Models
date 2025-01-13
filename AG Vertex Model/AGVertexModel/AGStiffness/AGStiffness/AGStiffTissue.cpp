@@ -363,6 +363,10 @@ void AGStiffTissue::HelperReadInputData_SetGlobalValues(ifstream* datafile) {
 	if (globals.count("LAMBDAstdratio") == 1) { LAMBDAstdratio = atof(globals["LAMBDAstdratio"].c_str()); }
 	else if (globals.count("LAMBDAstdratio") == 0) { cout << "WARNING: LAMBDAstdratio is not given in input file, used default value " << LAMBDAstdratio << endl; }
 	else { cout << "ERROR: Global variable LAMBDAstdratio has multiple definition in input file, used default value LAMBDAstdratio = " << LAMBDAstdratio << endl; }
+
+	if (globals.count("Ntarget") == 1) { Ntarget = atof(globals["Ntarget"].c_str()); }
+	else if (globals.count("Ntarget") == 0) { cout << "WARNING: Ntarget is not given in input file, used default value " << Ntarget << endl; }
+	else { cout << "ERROR: Global variable Ntarget has multiple definition in input file, used default value Ntarget = " << Ntarget << endl; }
 	//******ADD MORE GLOBAL VARIABLES HERE ALSO ADD THEM TO THE CONSTANTS.H FILE AND GIVE THEM A DEFAULT VALUE IN MAIN*********************//
 	int i = 1;
 	if (energyListSize < 3) { energyListSize = 3; } // minimal size for this has to be 2, I'm setting it to 3 here since if it is equal to 2 there would be no coarse grained slope analysis
@@ -665,7 +669,7 @@ void AGStiffTissue::HelperReadInputData_CreateObjects(ifstream* datafile) {
 		//*************************************************************************//
 
 	}
-	double avgCellSize = LX * LY / cells.size();
+	double avgCellSize = LX * LY / cells.size(); 
 	(*this).currentFreeEnergy = pow(avgCellSize,3) * (K * avgCellSize + LAMBDA * P0 * P0) * cells.size(); // this just needs to start out as a bigger number than the actual tissue energy
 	(*this).pastFreeEnergy = (*this).currentFreeEnergy;
 
@@ -1056,25 +1060,816 @@ void AGStiffTissue::ForceFunction(ofstream* errorfile) {
 		}
 	}
 
-	//Calculate the tissue stress
-	double GammaX = 0;
-	double GammaY = 0;
-	// calculateexternalstress_linear(TAU_STRESS); 
+	// Calculate the tissue stress
+		// This needs to be updated. Maybe get rid of GammaX/Y and figure out how to replace them
+		 //double GammaX = 0;
+		 //double GammaY = 0;
+		 //double cutlineX = 0;
+		 //double cutlineY = 0;
+		 //int sampleSize = 1;
 
-	double cutlineX = distribution(generator) * LX; //Continue to generate random numbers until you cut no concave cells
-	GammaX = TISSUE_EXT_STRESS_X + (*this).CalculateTissueStressX(cutlineX, errorfile);
+		 //calculateexternalstress_linear(TAU_STRESS);
+		 // checking if taking more cuts is more accurate
+		 /**/
+		 /*
+		 for (int i = 0; i < sampleSize; i++)
+		 {
+			 cutlineX = distribution(generator) * LX; //Continue to generate random numbers until you cut no concave cells
+			 GammaX += ( TISSUE_EXT_STRESS_X + (*this).CalculateTissueStressX(cutlineX, errorfile) ) / sampleSize ;
 
-	double cutlineY = distribution(generator) * LY; //Continue to generate random numbers until you cut no concave cells
-	GammaY = TISSUE_EXT_STRESS_Y + (*this).CalculateTissueStressY(cutlineY, errorfile);
+			 cutlineY = distribution(generator) * LY; //Continue to generate random numbers until you cut no concave cells
+			 GammaY += ( TISSUE_EXT_STRESS_Y + (*this).CalculateTissueStressY(cutlineY, errorfile) ) / sampleSize ;
+		 }
+		 */
+
+
+		 // new code, 5/20/2020
+		 // p_ext is external pressure
+	double p_ext = (TISSUE_EXT_STRESS_X + TISSUE_EXT_STRESS_Y) / 2;
+	double sigma_traceless_xx = (TISSUE_EXT_STRESS_X - TISSUE_EXT_STRESS_Y) / 2;
+	double sigma_traceless_yy = -1 * sigma_traceless_xx;
+	// sigma_traceless_xx and sigma_traceless_yy are respectively the xx and yy components of the deviatoric stress tensor
+	double internalXstress = GetInternalTissueStressX(errorfile);
+	double internalYstress = GetInternalTissueStressY(errorfile);
+	//Update LY and LX according to dynamical equations
+	ForceLX = -1 * (LY * LX0 * LX0) * (p_ext + sigma_traceless_xx + internalXstress);
+	ForceLY = -1 * (LY0 * LY0 * LX) * (p_ext + sigma_traceless_yy + internalYstress);
+
+	// ***** ADD EXTRA LENGTH FACTORS FROM LENGTH DEPENDENT VISCOSITY!
+	ForceLX = ForceLX * (LX / (LX0 * LX0 * LY));
+	ForceLY = ForceLY * (LY / (LX * LY0 * LY0));
+
 
 
 	//Add the force from the tissue stress to every vertex
-	for (list<Vertex*>::iterator vit = vertices.begin(); vit != vertices.end(); vit++) {
-		(*(*vit)).SavedInfoForEvolve_TotalForce.x = (*(*vit)).SavedInfoForEvolve_MechForce.x + (alphaM / TISSUE_ALPHA) * (*(*vit)).r.x * GammaX;
-		(*(*vit)).SavedInfoForEvolve_TotalForce.y = (*(*vit)).SavedInfoForEvolve_MechForce.y + (alphaM / TISSUE_ALPHA) * (*(*vit)).r.y * GammaY;
+	//Added the length squared scaling in this step
+	double tempForceX;
+	double tempForceY;
+	double forceMag = 0;
+	double meanForce = 0;
+	double meanSqrForce = 0;
+	double varianceForce = 0;
+	vector <double> forceList;
+
+	for (list<Vertex*>::iterator vit = vertices.begin(); vit != vertices.end(); vit++)
+	{
+		tempForceX = (*(*vit)).SavedInfoForEvolve_MechForce.x + (alphaM / TISSUE_ALPHA) * ((*(*vit)).r.x / LX) * ForceLX;
+		tempForceY = (*(*vit)).SavedInfoForEvolve_MechForce.y + (alphaM / TISSUE_ALPHA) * ((*(*vit)).r.y / LY) * ForceLY;
+		// ***** EXTRA LENGTH FACTORS ADDED FOR DEBUGGING EASE!
+		(*(*vit)).SavedInfoForEvolve_TotalForce.x = tempForceX;
+		(*(*vit)).SavedInfoForEvolve_TotalForce.y = tempForceY;
+
+		//if (CURRENTTIME < 0.6130 && CURRENTTIME > 0.609) { *errorfile << (*(*vit)).id << "\t Fx: " << tempForceX << "\t Fy:" << tempForceY << endl; }
+		//*errorfile << (*(*vit)).id << "\t Fx: " << tempForceX << "\t Fy:" << tempForceY << endl;
+
+		//forceMag = sqrt(pow(tempForceX, 2.0) + pow(tempForceY, 2.0));
+		//meanForce += 1.0 / vertices.size() * forceMag;
+		//meanSqrForce += 1.0 / vertices.size() * pow(forceMag,2.0);
+		//forceList.push_back(forceMag);
+	}
+	//*errorfile << "CURRENTTIME " << CURRENTTIME << "\n";
+	// debugging code to compare stress derived from sum over Force times position vs cutline
+	/*
+	*errorfile << " Int X Stress: " << internalXstress << " CutlineXStress: " << GammaX << " X Rel Error: " << abs(GammaX / internalXstress) - 1  << "\n";
+	*errorfile << " Int Y Stress: " << internalYstress << " CutlineYStress: " << GammaY << " Y Rel Error:  "<< abs(GammaY / internalYstress) - 1 << "\n";
+
+	varianceForce = meanSqrForce - pow(meanForce,2.0);
+	*/
+}
+/*
+* void Evolve( double interval, double *stepsize, ofstream* errorfile)
+*
+* Evolves the tissue one time interval taking steps no larger than dt and updates the vertex positions
+*/
+void AGStiffTissue::Evolve(double interval, double* stepsize, ofstream* errorfile)
+{
+
+	//find the end point of this evolve
+	double endtime = CURRENTTIME + interval;
+	bool reinitialize = true;
+	bool  flag1, flag2, flag3, flag4;
+	int count = 0;
+	double previoustime = 0;
+	bool energyDidIncrease = 0;
+	int index = 0;
+	vector<Vect> initial_positions;
+	int dimension_mechanical = 0;
+	bool breakVar = false;
+	double quadraticPressureEnergy = 0;
+	double expPressureEnergy = 0;
+	double logPressureEnergy = 0;
+	double perimEnergy = 0;
+	double energy_wo_quartic = 0;
+	double cell_type_sum = 0; // 1/24/23, useful for checking if any cells need to divide still
+	//double holding = 0;
+
+
+	while (CURRENTTIME < endtime)
+	{
+		count++;
+		//STEP 1: If the topology has changed get a list of the clockwise vertices in each cell
+		if (reinitialize) {																	//If their has been any topological change OR vertices have crossed a boundary 
+			for (list<Cell*>::iterator cit = cells.begin(); cit != cells.end(); cit++) {		//Loop through the cells 
+				(*(*cit)).SavedInfoForEvolve_CWVerts = (*(*cit)).GetClockWiseVertices();	//and get the vertices in the correct clockwise order 
+				cell_type_sum += (*(*cit)).type;
+				reinitialize = false;
+			}
+		}
+
+		//STEP 2: Integrate 
+		//Loop through the vertices and record the current position in rold 
+		// saving initial conditions
+		dimension_mechanical = vertices.size() + 1;
+		initial_positions.resize(dimension_mechanical);
+
+		for (list<Vertex*>::iterator vit = vertices.begin(); vit != vertices.end(); vit++) { (*(*vit)).rold = (*(*vit)).r; }
+		(*this).Store_Initial_Condition(initial_positions);
+		for (list<Edge*>::iterator eit = edges.begin(); eit != edges.end(); eit++)
+		{
+			AGPerimEdge* agpeit = dynamic_cast<AGPerimEdge*>(*eit);
+			(*agpeit).xflagold = (*(*eit)).xflag;
+			(*agpeit).yflagold = (*(*eit)).yflag;
+		}
+		LXold = LX;				//Record the old box size
+		LYold = LY;
+
+		previoustime = CURRENTTIME;
+
+
+		// enter do while loop - this makes sure that the integrator doesn't take too large a step and keeps resulting 
+		// in decreases in energy
+		do
+		{
+			//(*this).WriteOutputDataAppend(errorfile);
+			//******CHOOSE YOUR INTEGRATOR******
+			if (INTEGRATORNAME == "RK4_Adaptive") {
+				//4th order Runge-Kutta with adaptive stepsize
+				(*this).Integrate_RK4_Adaptive(stepsize, error_tolerance_absolute_mechanical, &CURRENTTIME, endtime, errorfile); //Evolve the vertices and box size dimensions with the given error tolerance (adaptive step size). time is incremented within this function.
+			}
+			else if (INTEGRATORNAME == "RK4") {
+				//4th order Runge-Kutta with fized stepsize
+				(*this).Integrate_RK4(*stepsize, errorfile);
+				CURRENTTIME += *stepsize;	//Update the current time
+			}
+			else if (INTEGRATORNAME == "Euiler") {
+				//Simple Euiler with Fixed stepsize
+				(*this).Integrate_Euiler(*stepsize, errorfile);
+				CURRENTTIME += *stepsize;	//Update the current time
+			}
+			else
+			{
+				cout << "ERROR invalid integrator name! Using Euiler!";
+				(*this).Integrate_Euiler(*stepsize, errorfile);
+				CURRENTTIME += *stepsize;	//Update the current time
+			}
+
+
+			//Step 3: Update box and boundary flags
+			//(*this).Store_New_Positions(trial_integration_step);
+
+			LX = LXnew;				//Update the current box size 
+			LY = LYnew;
+			(*this).HelperEvolve_UpdatePosition();  //Update the vertex positions (this automaticaly updates edge flags if a vertex has crossed the boundary)
+
+
+			// STEP 4: Update Free Energy
+
+			// I want to check free energy here! - this way, I can check if we need to backtrack
+			pastFreeEnergy = currentFreeEnergy;
+			currentFreeEnergy = (*this).CalculateFreeEnergy();
+			energyDidIncrease = (currentFreeEnergy - pastFreeEnergy > 0);
+
+
+			// STEP 5: Check if we're overshooting equilibrium. If so, backtrack, decrease stepsize and change adaptive 
+			// integrator to rk4
+
+			if (energyDidIncrease)
+			{
+				//if (*stepsize < 0.0000001) // this could be turned into a parameter, the minumum stepsize
+				if (*stepsize < 0.00000000000001)
+					//if (*stepsize < 0.00000000000000000000000000000000000000000000000000000000000000001)
+				{
+					breakVar = true;
+					*errorfile << "Stepsize got too small. Break" << endl;
+					break;
+					// This is a step I take so that the adaptive time stepper doesn't keep pushing the stepsize all the way down the machine precision 
+				}
+				//*errorfile << "Current FE \t Stepsize\t Energy Change \t Polydispersity \n";
+				//*errorfile << std::setprecision(outputPrecision) << currentFreeEnergy  << "\t" << *stepsize << "\t" << currentFreeEnergy - pastFreeEnergy << "\t" << (*this).calculatePolydispersity() << endl;
+				//*errorfile << "Energy Increase - change timestep and redo step\n";
+				//*errorfile << "\n";
+				//*errorfile << "--------------------------------------------------------------------------\n";
+
+				//*errorfile << "--------------------------------------------------------------------------\n";
+
+				// BACKTRACK STEP 1 ----- update to initial positions
+				(*this).Update_Old_Mechanical_Variables(initial_positions);
+
+				//BACKTRACK STEP 2 ------ update to inital flags (seems not to throw errors)
+				for (list<Edge*>::iterator eit = edges.begin(); eit != edges.end(); eit++)
+				{
+					// reverts flags back to previous state - not sure if this 
+					AGPerimEdge* agpeit = dynamic_cast<AGPerimEdge*>(*eit);
+					(*(*eit)).xflag = (*agpeit).xflagold;
+					(*(*eit)).yflag = (*agpeit).yflagold;
+				}
+				// BACKTRACK STEP 3 - revert the time
+				CURRENTTIME = previoustime;
+				// BACTRACK STEP 4 - revert the energy - this is error prone due to positions being wrong
+				//holding = (*this).CalculateFreeEnergy();//pastFreeEnergy; // revert current free energy back to where it was before the timestel
+				//*errorfile << "\n Does the energy match the pre-backtracker energy? " << holding << " vs the old " << pastFreeEnergy << " and " << (holding - pastFreeEnergy) <<" \n";
+				currentFreeEnergy = pastFreeEnergy;//holding;
+
+				//BACKTRACK STEP 5: Decrease stepsize AND change integrator
+				*stepsize = *stepsize * 0.75;
+				INTEGRATORNAME = "RK4";
+
+				//*errorfile << "--------------------------------------------------------------------------\n";
+				//(*this).WriteOutputDataAppend(errorfile);
+				//*errorfile << " Stepsize is now:" << *stepsize << endl;
+				//*errorfile << "--------------------------------------------------------------------------\n";
+			}
+
+		} while (energyDidIncrease);
+
+		double energySlope = getLinearRegressionSlope(timeList, energyList);
+
+		//*errorfile << std::setprecision(outputPrecision) << CURRENTTIME << "\t" << *stepsize << "\t" << currentFreeEnergy << "\t" << energySlope << "\t" << (currentFreeEnergy - pastFreeEnergy) / (cells.size() * K * A0) << "\n";
+
+		//quadraticPressureEnergy = (*this).CalculateQuadraticPressureEnergy();
+		perimEnergy = (*this).CalculatePerimeterEnergy();
+		//energy_wo_quartic = perimEnergy + quadraticPressureEnergy;
+
+		*errorfile << std::setprecision(outputPrecision) << CURRENTTIME << "\t" << currentFreeEnergy << "\t" << energySlope << "\t" << (*this).calculatePolydispersity() << endl;
+
+		//if ((abs((currentFreeEnergy - pastFreeEnergy) / ((CURRENTTIME - previoustime)*(cells.size() * K * A0))) < equilibriumtolerance) && currentFreeEnergy - pastFreeEnergy < 0)
+
+		//STEP 6: look for topological changes and set flags if any have occured 
+		flag1 = false;
+		flag2 = false;
+		flag3 = false;
+		flag4 = false;
+		if (APOPTOSISON) flag1 = (*this).Apoptosis(errorfile);
+
+
+		if (T1ON)
+		{
+			//*errorfile << "Free Energy BEFORE T1: " << (*this).CalculateFreeEnergy() << endl;
+			flag2 = (*this).T1(errorfile);
+		}
+		if (flag2) { *errorfile << std::setprecision(outputPrecision) << "Free Energy AFTER T1: " << (*this).CalculateFreeEnergy() << endl; }
+		flag3 = (*this).ResolveVertices(errorfile);
+
+
+
+		double timeratio = CURRENTTIME / TAU_STRESS;
+		double floortr = floor(CURRENTTIME / TAU_STRESS);
+		// This needs a proper calculate equilibrium function
+		if (MITOSISON)
+		{
+			// only does mitosis if packing is equilibrated 
+			if (EQUILIBRIUMMITOSIS)
+			{
+				if ((*this).IsEquilibrated())
+				{
+					flag4 = (*this).Mitosis();
+				}
+			}
+			else //if (timeratio > 1 && timeratio > floortr && timeratio < 2 * INITIALSTEPSIZE + floortr)
+				// Gives two timestep windows for mitosis
+			{
+				flag4 = (*this).Mitosis();
+				cell_type_sum = 0;
+			}
+			// THIS ACTIVATES MITOSIS!!!			
+			//if (WRITEMITOSIS && flag4) (*this).WriteOutputDataAppend(errorfile);
+		}
+		if (flag1 || flag2 || flag3 || flag4) reinitialize = true;  //Determine if we need to reinitialize (recalculate the cell topology)
+
+
+
+
+
+		// STEP 7: Update equilibrium checker. Make sure list of energies being analyzed doesn't get bigger
+		// than desired limit. 
+		if (energyList.size() > energyListSize)
+		{
+			energyList.pop_front();
+			timeList.pop_front();
+		}
+
+		double avgCellSize = LX * LY / cells.size();
+
+		energyList.push_back(currentFreeEnergy / (cells.size() * K * pow(avgCellSize,2)));
+		timeList.push_back(CURRENTTIME);
+
+
+		/*
+		double total_work = 0;
+		for (list<Vertex*>::iterator vit = vertices.begin(); vit != vertices.end(); vit++)
+		{
+			total_work += (*(*vit)).SavedInfoForEvolve_TotalForce.DotProduct( ((*(*vit)).rnew - (*(*vit)).rold) );
+		}
+		*/
+
+
+		// STEP 8: Check for whether we have hit equilibrium or too small a timestep
+		if (energyList.size() > energyListSize)
+		{
+			energySlope = getLinearRegressionSlope(timeList, energyList);
+			currentFreeEnergy = (*this).CalculateFreeEnergy();
+			*errorfile << std::setprecision(outputPrecision) << CURRENTTIME << "\t" << currentFreeEnergy << "\t" << energySlope << "\t" << (*this).calculatePolydispersity() << endl;
+			(*this).equilibrated = (*this).IsEquilibrated();
+			if ((*this).equilibrated)
+			{
+				//(*this).equilibrated = (*this).IsEquilibrated();
+				*errorfile << "Equilibrium condition was met." << endl;
+				cout << "Equilibrium condition was met" << endl;
+				breakVar = true;
+			}
+		}
+
+		if (breakVar)
+		{
+			(*this).equilibrated = true;
+			if (cell_type_sum < 1)
+				break;
+			else
+				breakVar = false;
+			cell_type_sum = 0;
+		}
 	}
 
-	//Update LY and LX
-	ForceLX = LX * GammaX;
-	ForceLY = LY * GammaY;
+	cout << "TISSUE EVOLVED TO TIME " << CURRENTTIME << " in " << count << " steps" << endl;
+	cout << "LX = " << LX << "  LY = " << LY << endl;
+
+}
+
+/*
+* bool Mitosis (overload)
+*
+* Do mitosis on cells. Picks cells for mitosis based on certain criteria and calls HelperMitosis(Cell * parentcell) to perform mitosis
+* on those cells. This overloaded cell uses anisotropy potentials to determine the orientation of the cleavage plane.
+*/
+/**/
+bool AGStiffTissue::Mitosis() {
+	vector<Cell*> mitcells;
+	AGStiffCell* ag1;
+	AGStiffCell* agst1;
+	int flag = 0;
+	int i;
+	double effpressure = 0;
+	double avgcellsize = 0;
+	double area = 0;
+	double cell2area = 0;
+	double p0 = .05;
+	int N;
+	double f = 0; //feedback strength - between 0 and 1
+	// double alpha = p0 / (K*(A0 - f*A0)); //this defines feedback so that if a cell is smaller than f times the preferred area of cells, it can't divide
+	double alpha = .01;
+
+	double p;
+	double angle;
+	//int preMitosisNumCells = cells.size();// number of cells before mitosis
+	//int postMitosisNumCells; // number of cells after mitosis
+	//print Feedback Parameters
+	/*
+	if (CURRENTTIME == 1) {
+		cout << "Mitosis Feedback Parameters:" << endl;
+		cout << "p0: " << p0 << "		alpha: " << alpha << endl;
+	}
+	*/
+	//Here is where we will later insert some criteria for mitosis
+	for (list<Cell*>::iterator cit = cells.begin(); cit != cells.end(); cit++) {
+		//division with feedback like normal
+		agst1 = dynamic_cast<AGStiffCell*>(*cit);
+		area = (*(*cit)).GetArea();
+		avgcellsize = 0;
+		N = 0;
+		for (list<Cell*>::iterator cit2 = cells.begin(); cit2 != cells.end(); cit2++)
+		{
+			avgcellsize += (*(*cit2)).GetArea();
+			N += 1;
+		}
+		avgcellsize = avgcellsize / N;
+		effpressure += (*agst1).KAM * area * (1 -  area / avgcellsize);
+		p = (p0 - alpha * effpressure);
+		if (p < 0)
+		{ //if negative probability, then transfers over to similar procedure for apoptosis and p is set to 0 so mitosis will not occur
+			//ApoptosisSelection(p, *cit); //comment this out to stop apoptosis from happening like this
+			p = 0;
+		}
+
+		bernoulli_distribution distribution(p);        //distribution for weighting chance of success
+		if (distribution(generator))
+		{
+			mitcells.push_back(&(*(*cit)));
+			flag++;
+			//TOTALMITOSES++;
+		}
+	}
+	if (flag == 0) {
+		return false;
+	}
+	else {
+		//Output the cell id and area for all cells undergoing Mitosis
+		// To do mitosis on only one cell, change for statement to i=0; i<(mitcells.size())-(mitcells.size()-1); i++, for normal, i = 0; i<mitcells.size(); i++ 
+		for (i = 0; i < mitcells.size(); i++) { // changed for statement to only include i=0, so mitosis will only effect one cell
+			//NOTE: only perform mitosis on cells that are convex in order to avoid cutting more than two edges.
+			if (CheckConvex((*mitcells[i]).HelperOrderVerticesPos()) == true) {
+				//cout << "Mitosis of cell \t" << (*mitcells[i]).id << endl;
+				//cout << "Cell Area \t" << (*mitcells[i]).GetArea() << endl;
+				//cout << "Current time is \t" << CURRENTTIME << endl;
+				ag1 = dynamic_cast<AGStiffCell*>((mitcells[i]));
+				angle = (*ag1).DivisionAngleDistribution((*ag1).DIVISIONPOTENTIAL);
+				(*this).HelperMitosis(mitcells[i], angle);
+			}
+		}
+
+		// postMitosisNumCells = cells.size(); // number of cells in packing after mitosis
+
+		return true;
+	}
+}
+
+
+/*
+* Cell CreateCell (overload)
+*
+* Creates a new cell and transfers appropriate fields to the new daughter cells.
+*/
+Cell* AGStiffTissue::CreateCell(int typ, vector<Edge*> edgs, string potential, double tcjstrength, double thetaan, double anstrength, double P0, double KAM, double PM)
+{
+	int largestID, newid;
+	list<Cell*>::iterator cit;
+	Cell* newcell{};
+	//Get the id
+	largestID = (*max_element(cellIDs.begin(), cellIDs.end()));			//first look through all of the current vertex ids and get the highest
+	newid = largestID + 1;								//Now make a new ID that is unique
+
+	if (newid > 1000000000) { cout << "ERROR to many cells" << endl; }
+	//create the agcell and add the agcell to the lists
+	AGStiffCell* cptr = new AGStiffCell;
+	(*cptr).id = newid;
+	(*cptr).type = typ;
+	(*cptr).edges = edgs;
+	(*cptr).TCJSTRENGTH = tcjstrength;
+	(*cptr).DIVISIONPOTENTIAL = potential;
+	(*cptr).ANSTRENGTH = anstrength;
+	(*cptr).THETAAN = thetaan;
+	(*cptr).P0 = P0;
+	(*cptr).KAM = KAM;
+	(*cptr).PM = PM;
+	(cells).push_back(cptr);
+	cellIDs.push_back(newid);
+
+	for (cit = cells.begin(); cit != cells.end(); cit++) {
+		if ((*(*cit)).id == newid) {
+			// return &(*(*cit)); - this was the way the old code worked. Linux didn't like this though, so I added newcell.
+			newcell = &(*(*cit));
+			break;
+		}
+	}
+	return newcell;
+}
+
+/*
+* void HelperMitosis( Cell* parent cell, double divisionangle)
+*
+* Called by Mitosis to do the actual pointer and object manipulation required for mitosis
+*/
+void AGStiffTissue::HelperMitosis(Cell* parentcell, double divisionangle) {
+	int i;										//for loops
+	Vect center, p1, p2, q1, q2;				//Used to find newcenteredge
+	Vect rnewvtx;								//the positions of the new vertices
+	vector<Edge*> empty;
+	vector<Edge*> deletededges;					//vector of edge pointers to the two edges to remove
+	vector<Edge*> newedges;						//vector to hold the four new edges to replace the two that are being removed
+	vector<Vertex*> newvertices;				//vector of pointers to the two new vertices
+	vector<Vertex*> cwverts;					//parent cell verts in clockwise order
+	Edge* newedgecenter = 0;					//ptr to the edge through the center of the cell
+	Vertex* v1ptr, * v2ptr, * v3ptr, * v4ptr;
+	double angle;								//angle at which to cut through the cell
+	vector<vector<double>> vertposforflag;		//used to define vertex positions if any flags are set
+	bool newxflag = false;						//flags for which side of boundary newvtxr is on
+	bool newyflag = false;						//flags for which side of boundary newvtxr is on					
+	vector<Vertex*> vertsordered;				//list of pointers to vertices used for the case of flags
+	double xpossum = 0;							//sum of x positions of vertices in cell
+	double ypossum = 0;							//sum of y positions of vertices in cell
+	double centerposx = 0;						//used for center calculation done within such that the center is consistent with the vertposforflag
+	double centerposy = 0;						//used for center calculation done within such that the center is consistent with the vertposforflag
+	vector<int> edgeflagstestind, edgeflagstestx, edgeflagstesty;	//this is used to test for flags on four newly created edges (not one created in center); stores i and two flags
+	int vertnumb;								//lists number of vertices
+	vector<int> newflagstestx, newflagstesty;	//this is used to flag the newedgecenter
+	Cell* c1ptr = NULL;
+	Cell* c2ptr = NULL;
+	Cell* daughter1ptr = NULL;
+	Cell* daughter2ptr = NULL;
+	AGStiffCell* momptr = dynamic_cast<AGStiffCell*>((parentcell));
+
+	vertsordered = (*parentcell).HelperOrderVertices();  //stores vertex information to be called after vertposforflag is checked
+	vertposforflag = (*parentcell).HelperOrderVerticesPos(); //allows positions of vertices outside of domain
+	vertnumb = (*parentcell).GetVertexNumber(); //stores number of vertices in cell
+
+	//This is the geometrical center of the polygonal cell (This center can be outside of the boundaries depending on HelperVerticesPos() values).
+	center = GetGeoCenter(vertposforflag[0], vertposforflag[1]);
+
+
+	//get the angle at which to put the new edge
+	angle = divisionangle;
+	q1 = Vect(center, angle, LX);      //make two points that define a line at the given angle through the center of the cell
+	q2 = Vect(center, angle, -LX);
+
+	//create two new vertices where this angle intersects the edges of the cell with if statement that tests for flag and directs accordingly
+	if ((*parentcell).GetFlag() == 0) {
+		for (i = 0; i < (*parentcell).edges.size(); i++) {								//look at each edge
+			p1 = (*(*(*parentcell).edges[i]).vertex1).r;								//get it's end points and put them into p1 and p2
+			p2 = (*(*(*parentcell).edges[i]).vertex2).r;
+			if (test_for_Intersect(q1, q2, p1, p2, &rnewvtx)) {							//if it crosses the selected angle
+				deletededges.push_back((*parentcell).edges[i]);								//record the edge
+				newvertices.push_back((*this).CreateVertex(rnewvtx, empty));				//make a new vertex at the interscetion and record its ptr
+			}
+		}
+
+		//create a new edge between the two new vertices (must have no xflag and no yflag)
+		newedgecenter = (*this).CreateEdge(newedgecenter, 0, 0, newvertices[0], newvertices[1], parentcell, parentcell);
+	}
+
+	//This is for the case where a cell crosses any boundary (WE LOOP THROUGH AND THEN PAIR THE END WITH THE BEGINNING)
+	if ((*parentcell).GetFlag() == 1) {
+		for (i = 0; i < vertnumb - 1; i++) { //look at each vertex
+			p1.x = (vertposforflag[0])[i]; //get it's end points and put them into p1 and p2 (THESE POSITIONS CAN BE OUT OF BOUNDS)
+			p1.y = (vertposforflag[1])[i];
+			p2.x = (vertposforflag[0])[i + 1];
+			p2.y = (vertposforflag[1])[i + 1];
+			if (test_for_Intersect(q1, q2, p1, p2, &rnewvtx)) {				//if it crosses the selected angle
+				deletededges.push_back((*vertsordered[i]).GetEdgeBetween(vertsordered[i + 1]));								//record the edge			
+				if (rnewvtx.x > LX || rnewvtx.x < 0) { newxflag = 1; } //These six lines used later to create flags for newedgecenter (stores information about which side of boundary for each newvertex)
+				else { newxflag = 0; }
+				if (rnewvtx.y > LY || rnewvtx.y < 0) { newyflag = 1; }
+				else { newyflag = 0; }
+				newflagstestx.push_back(newxflag);
+				newflagstesty.push_back(newyflag);
+				edgeflagstestind.push_back(i); //This whole sections helps us later when trying to set flags for other four newly created edges (TESTS WHICH SIDE OF THE BOUNDARY ARE THE FOUR VERTICES OF DELETED EDGES)
+				if (p1.x > LX || p1.x < 0) { edgeflagstestx.push_back(1); }
+				else { edgeflagstestx.push_back(0); }
+				if (p1.y > LY || p1.y < 0) { edgeflagstesty.push_back(1); }
+				else { edgeflagstesty.push_back(0); }
+				edgeflagstestind.push_back(i + 1);
+				if (p2.x > LX || p2.x < 0) { edgeflagstestx.push_back(1); }
+				else { edgeflagstestx.push_back(0); }
+				if (p2.y > LY || p2.y < 0) { edgeflagstesty.push_back(1); }
+				else { edgeflagstesty.push_back(0); } //Conclusion of section used for setting flags for the other four newly created edges
+				if (rnewvtx.x > LX) { rnewvtx.x = rnewvtx.x - LX; } //This part puts the newvtx within the boundaries appropriately
+				if (rnewvtx.x < 0) { rnewvtx.x = rnewvtx.x + LX; }
+				if (rnewvtx.y > LY) { rnewvtx.y = rnewvtx.y - LY; }
+				if (rnewvtx.y < 0) { rnewvtx.y = rnewvtx.y + LY; }
+				newvertices.push_back((*this).CreateVertex(rnewvtx, empty));
+			}
+		}
+		p1.x = (vertposforflag[0])[vertnumb - 1]; //get it's end points and put them into p1 and p2 FOR THE CASE WHERE THE BOTTOM ELEMENT IS PAIRED WITH THE TOP ELEMENT
+		p1.y = (vertposforflag[1])[vertnumb - 1];
+		p2.x = (vertposforflag[0])[0];
+		p2.y = (vertposforflag[1])[0];
+		if (test_for_Intersect(q1, q2, p1, p2, &rnewvtx)) {				//if it crosses the selected angle
+			deletededges.push_back((*(vertsordered[vertnumb - 1])).GetEdgeBetween(vertsordered[0]));								//record the edge
+			if (rnewvtx.x > LX || rnewvtx.x < 0) { newxflag = 1; } //These six lines used to store information about flags for newedgecenter (stores information about which side of boundary for each newvertex)
+			else { newxflag = 0; }
+			if (rnewvtx.y > LY || rnewvtx.y < 0) { newyflag = 1; }
+			else { newyflag = 0; }
+			newflagstestx.push_back(newxflag);
+			newflagstesty.push_back(newyflag);
+			edgeflagstestind.push_back(vertnumb - 1);
+			if (p1.x > LX || p1.x < 0) { edgeflagstestx.push_back(1); } //This whole sections helps us later when trying to set flags for four other newly created edges (TESTS WHICH SIDE OF THE BOUNDARY ARE THE FOUR VERTICES OF DELETED EDGES)
+			else { edgeflagstestx.push_back(0); }
+			if (p1.y > LY || p1.y < 0) { edgeflagstesty.push_back(1); }
+			else { edgeflagstesty.push_back(0); }
+			edgeflagstestind.push_back(0);
+			if (p2.x > LX || p2.x < 0) { edgeflagstestx.push_back(1); }
+			else { edgeflagstestx.push_back(0); }
+			if (p2.y > LY || p2.y < 0) { edgeflagstesty.push_back(1); }
+			else { edgeflagstesty.push_back(0); } //Conclusion of section used for setting flags for four other newly created edges
+			if (rnewvtx.x > LX) { rnewvtx.x = rnewvtx.x - LX; }//This part puts the newvtx within the boundaries appropriately
+			if (rnewvtx.x < 0) { rnewvtx.x = rnewvtx.x + LX; }
+			if (rnewvtx.y > LY) { rnewvtx.y = rnewvtx.y - LY; }
+			if (rnewvtx.y < 0) { rnewvtx.y = rnewvtx.y + LY; }
+			newvertices.push_back((*this).CreateVertex(rnewvtx, empty));
+		}
+
+		//create a new edge between the two new vertices with appropriate flags
+		//test whether new vertices are on opposite side of a boundary
+		if (newflagstestx[0] != newflagstestx[1] && newflagstesty[0] != newflagstesty[1])
+		{
+			newedgecenter = (*this).CreateEdge(newedgecenter, 1, 1, newvertices[0], newvertices[1], parentcell, parentcell);
+		}
+		else if (newflagstestx[0] == newflagstestx[1] && newflagstesty[0] != newflagstesty[1])
+		{
+			newedgecenter = (*this).CreateEdge(newedgecenter, 0, 1, newvertices[0], newvertices[1], parentcell, parentcell);
+		}
+		else if (newflagstestx[0] != newflagstestx[1] && newflagstesty[0] == newflagstesty[1])
+		{
+			newedgecenter = (*this).CreateEdge(newedgecenter, 1, 0, newvertices[0], newvertices[1], parentcell, parentcell);
+		}
+		else if (newflagstestx[0] == newflagstestx[1] && newflagstesty[0] == newflagstesty[1])
+		{
+			newedgecenter = (*this).CreateEdge(newedgecenter, 0, 0, newvertices[0], newvertices[1], parentcell, parentcell);
+		}
+	}
+
+	//Assign vertex ids to newedgecenter for output purposes
+	(*newedgecenter).IOVertexID[0] = (*(newvertices[0])).id;
+	(*newedgecenter).IOVertexID[1] = (*(newvertices[1])).id;
+
+	//This is just used to warn you if for some reason more than two edges of the cell are intersected
+	if (deletededges.size() != 2) {
+		cout << "ERROR: The Mitosis function had number of intersected edges different than two (Problem with Vertices and GetCenter or with overlap)" << endl;
+	}
+	(*newvertices[0]).edges.push_back(newedgecenter);
+	(*newvertices[1]).edges.push_back(newedgecenter);
+
+	//create the four new edges to replace the ones to be removed and add them to the vertices
+	c1ptr = (*deletededges[0]).GetOtherCell(parentcell);
+	c2ptr = (*deletededges[1]).GetOtherCell(parentcell);
+	v1ptr = (*deletededges[0]).vertex1;
+	v2ptr = (*deletededges[0]).vertex2;
+	v3ptr = (*deletededges[1]).vertex1;
+	v4ptr = (*deletededges[1]).vertex2;
+
+	//Making sure to give all new edges the approriate IOVertexID's and that the vertices know their edges
+	newedges.push_back((*this).CreateEdge(newedgecenter, 0, 0, v1ptr, newvertices[0], parentcell, c1ptr));
+	(*v1ptr).edges.push_back(newedges[0]);
+	(*newvertices[0]).edges.push_back(newedges[0]);
+	(*c1ptr).edges.push_back(newedges[0]);
+	(*parentcell).edges.push_back(newedges[0]);
+	(*(newedges[0])).IOVertexID[0] = (*v1ptr).id;
+	(*(newedges[0])).IOVertexID[1] = (*newvertices[0]).id;
+
+	newedges.push_back((*this).CreateEdge(newedgecenter, 0, 0, v2ptr, newvertices[0], parentcell, c1ptr));
+	(*v2ptr).edges.push_back(newedges[1]);
+	(*newvertices[0]).edges.push_back(newedges[1]);
+	(*c1ptr).edges.push_back(newedges[1]);
+	(*parentcell).edges.push_back(newedges[1]);
+	(*(newedges[1])).IOVertexID[0] = (*v2ptr).id;
+	(*(newedges[1])).IOVertexID[1] = (*newvertices[0]).id;
+
+	newedges.push_back((*this).CreateEdge(newedgecenter, 0, 0, v3ptr, newvertices[1], parentcell, c2ptr));
+	(*v3ptr).edges.push_back(newedges[2]);
+	(*newvertices[1]).edges.push_back(newedges[2]);
+	(*c2ptr).edges.push_back(newedges[2]);
+	(*parentcell).edges.push_back(newedges[2]);
+	(*(newedges[2])).IOVertexID[0] = (*v3ptr).id;
+	(*(newedges[2])).IOVertexID[1] = (*newvertices[1]).id;
+
+	newedges.push_back((*this).CreateEdge(newedgecenter, 0, 0, v4ptr, newvertices[1], parentcell, c2ptr));
+	(*v4ptr).edges.push_back(newedges[3]);
+	(*newvertices[1]).edges.push_back(newedges[3]);
+	(*c2ptr).edges.push_back(newedges[3]);
+	(*parentcell).edges.push_back(newedges[3]);
+	(*(newedges[3])).IOVertexID[0] = (*v4ptr).id;
+	(*(newedges[3])).IOVertexID[1] = (*newvertices[1]).id;
+
+
+	//This sequence of if statements checks if the edge to be deleted crosses a boundary and sees (based on if the newedgecenter crosses the boundary)
+	//which of the two newly created edges on deleted edges needs a flag. This relies heavily on a testflag I set above to see if HelperVerticesPos() took a vertex out of the domain.
+	if (edgeflagstestind.size() == 4) { //This just makes sure that this only runs when the indices of the four vertices of deleted edges are well known
+		if ((*newedgecenter).xflag == 1) { //if the new edge crosses the x bound
+			if (edgeflagstestx[0] != edgeflagstestx[1]) { //if the deleted edge vertices are on opposite sides of the boundary
+				for (i = 0; i < 2; i++) { //for first deleted edge
+					if (edgeflagstestx[i] != newflagstestx[0]) { //which one is opposite the new vertex
+						(*(*vertsordered[edgeflagstestind[i]]).GetEdgeBetween(newvertices[0])).xflag = 1;
+					}
+				}
+			}
+			if (edgeflagstestx[2] != edgeflagstestx[3]) { //if the deleted edge vertices are on opposite sides of the boundary
+				for (i = 2; i < 4; i++) { //for second deleted edge
+					if (edgeflagstestx[i] != newflagstestx[1]) { //which one is opposite the new vertex
+						(*(*vertsordered[edgeflagstestind[i]]).GetEdgeBetween(newvertices[1])).xflag = 1;
+					}
+				}
+			}
+		}
+		if ((*newedgecenter).xflag == 0 && (*parentcell).GetXFlag() == 1) { //if newedgecenter doesn't cross x bound, but cell does
+			if (edgeflagstestx[0] != edgeflagstestx[1]) { //if the deleted edge vertices are on opposite sides of the boundary
+				for (i = 0; i < 2; i++) { //for first deleted edge
+					if (edgeflagstestx[i] != newflagstestx[0]) { //which one is opposite the new vertex
+						(*(*vertsordered[edgeflagstestind[i]]).GetEdgeBetween(newvertices[0])).xflag = 1;
+					}
+				}
+			}
+			if (edgeflagstestx[2] != edgeflagstestx[3]) {
+				for (i = 2; i < 4; i++) { //for second edge
+					if (edgeflagstestx[i] != newflagstestx[1]) {
+						(*(*vertsordered[edgeflagstestind[i]]).GetEdgeBetween(newvertices[1])).xflag = 1;
+					}
+				}
+			}
+		}
+		if ((*newedgecenter).yflag == 1) { //if newedgecenter crosses the y boundary
+			if (edgeflagstesty[0] != edgeflagstesty[1]) { //if vertices are on opposite side of boundary
+				for (i = 0; i < 2; i++) { //for first deleted edge
+					if (edgeflagstesty[i] != newflagstesty[0]) { //which one is opposite the new vertex
+						(*(*vertsordered[edgeflagstestind[i]]).GetEdgeBetween(newvertices[0])).yflag = 1;
+					}
+				}
+			}
+			if (edgeflagstesty[2] != edgeflagstesty[3]) {
+				for (i = 2; i < 4; i++) { //for second deleted edge
+					if (edgeflagstesty[i] != newflagstesty[1]) { //which one is opposite the vertex
+						(*(*vertsordered[edgeflagstestind[i]]).GetEdgeBetween(newvertices[1])).yflag = 1;
+					}
+				}
+			}
+		}
+		if ((*newedgecenter).yflag == 0 && (*parentcell).GetYFlag() == 1) { //if newedgecenter doesn't cross y bound, but cell does
+			if (edgeflagstesty[0] != edgeflagstesty[1]) { //if vertices on opposite side of boundary
+				for (i = 0; i < 2; i++) { //for first deleted edge
+					if (edgeflagstesty[i] != newflagstesty[0]) { //which one is opposite new vertex
+						(*(*vertsordered[edgeflagstestind[i]]).GetEdgeBetween(newvertices[0])).yflag = 1;
+					}
+				}
+			}
+			if (edgeflagstesty[2] != edgeflagstesty[3]) { //if vertices on opposite side of the boundary
+				for (i = 2; i < 4; i++) { //for second deleted edge
+					if (edgeflagstesty[i] != newflagstesty[1]) { //which one is opposite the new vertex
+						(*(*vertsordered[edgeflagstestind[i]]).GetEdgeBetween(newvertices[1])).yflag = 1;
+					}
+				}
+			}
+		}
+	}
+	//end of sequence of if statements. All flags of new edges should be correct.
+
+
+	//Create the two new daughter cells 
+	daughter1ptr = (*this).CreateCell(0, empty, (*momptr).DIVISIONPOTENTIAL, (*momptr).TCJSTRENGTH, (*momptr).THETAAN, (*momptr).ANSTRENGTH, (*momptr).P0, (*momptr).KAM, (*momptr).PM);
+	daughter2ptr = (*this).CreateCell(0, empty, (*momptr).DIVISIONPOTENTIAL, (*momptr).TCJSTRENGTH, (*momptr).THETAAN, (*momptr).ANSTRENGTH, (*momptr).P0, (*momptr).KAM, (*momptr).PM);
+	//PRIMARY REASON I HAD TO OVERRIDE ^^^^ TO UPDPATE CREATECELL
+
+	//Delete the two old edges 
+	(*parentcell).RemoveEdge(deletededges[0]);
+	(*parentcell).RemoveEdge(deletededges[1]);
+	(*c1ptr).RemoveEdge(deletededges[0]);
+	(*c2ptr).RemoveEdge(deletededges[1]);
+	(*v1ptr).RemoveEdge(deletededges[0]);
+	(*v2ptr).RemoveEdge(deletededges[0]);
+	(*v3ptr).RemoveEdge(deletededges[1]);
+	(*v4ptr).RemoveEdge(deletededges[1]);
+	(*this).DestroyEdge(deletededges[0]);
+	(*this).DestroyEdge(deletededges[1]);
+
+	//fill the new daughter cells edge lists and update the edges to include the new daughter cell
+	(*daughter1ptr).edges.push_back(newedgecenter);
+	(*daughter2ptr).edges.push_back(newedgecenter);
+	(*newedgecenter).UpdateCell(parentcell, daughter1ptr);
+	(*newedgecenter).UpdateCell(parentcell, daughter2ptr);
+
+	Edge e, e0, * eptr;
+	Vertex v, v0;
+	e0 = *newedgecenter;
+	v0 = *(newvertices[0]);
+	do {							//for the first daughter				
+		for (i = 0; i < (*parentcell).edges.size(); i++) {																					// look through all of the edges in the cell
+			if (((*(*(*parentcell).edges[i]).vertex1) == v0 || (*(*(*parentcell).edges[i]).vertex2) == v0) && (*(*parentcell).edges[i]) != e0) {		//find the edge that has v0 as a vertex and is not the edge e0 (the one you just looked at)
+				e = (*(*parentcell).edges[i]);
+				eptr = (*parentcell).edges[i];
+			}
+		}
+		(*daughter1ptr).edges.push_back(eptr);					//put the edge in the first daughter cell
+		(*eptr).UpdateCell(parentcell, daughter1ptr); //and update the edge's cells
+		(*daughter1ptr).IOEdgeID.push_back((*eptr).id); //build IOEdgeID for output
+		v = *(v0.GetOtherVertex(eptr));							//use that edge to get the next vertex
+		e0 = e;													//update e0,e,v0,v
+		v0 = v;
+	} while (v0 != (*newvertices[1]));
+	do {
+		for (i = 0; i < (*parentcell).edges.size(); i++) {																					// look through all of the edges in the cell
+			if (((*(*(*parentcell).edges[i]).vertex1) == v0 || (*(*(*parentcell).edges[i]).vertex2) == v0) && (*(*parentcell).edges[i]) != e0) {		//find the edge that has v0 as a vertex and is not the edge e0 (the one you just looked at)
+				e = (*(*parentcell).edges[i]);
+				eptr = (*parentcell).edges[i];
+			}
+		}						//for the second daughter
+		(*daughter2ptr).edges.push_back(eptr);						//put the edge in the second daughter cell
+		(*eptr).UpdateCell(parentcell, daughter2ptr); //and update the edge's cells
+		(*daughter2ptr).IOEdgeID.push_back((*eptr).id); //build IOEdgeID for output
+		v = *(v0.GetOtherVertex(eptr));								//use that edge to get the next vertex
+		e0 = e;														//update e0,e,v0,v
+		v0 = v;
+	} while (v0 != (*newvertices[0]));
+
+	//Set A0 for cells (otherwise integrator won't know what to do)
+	(*daughter1ptr).A0 = (*parentcell).A0; // for AGProliferate - we want this to stay so that the box relaxes
+	(*daughter2ptr).A0 = (*parentcell).A0;
+
+	//Add newedgecenter to IOEDGEID for both cells
+	(*daughter1ptr).IOEdgeID.push_back((*newedgecenter).id);
+	(*daughter2ptr).IOEdgeID.push_back((*newedgecenter).id);
+
+	//Define cell types (will become important when discussing compartment boundaries)
+	(*daughter1ptr).type = 0;//(*parentcell).type + 1;
+	(*daughter2ptr).type = 0; //(*parentcell).type + 1;
+
+	// ^^^^^^^ THIS MIGHT NEED SOME CHANGING!
+
+	//delete the parent cell
+	(*this).DestroyCell(parentcell);
 }

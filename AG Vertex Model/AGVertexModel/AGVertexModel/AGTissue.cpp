@@ -1166,8 +1166,8 @@ void AGTissue::HelperMitosis(Cell * parentcell, double divisionangle) {
 	(*daughter2ptr).IOEdgeID.push_back((*newedgecenter).id);
 
 	//Define cell types (will become important when discussing compartment boundaries)
-	(*daughter1ptr).type = (*parentcell).type + 1;
-	(*daughter2ptr).type = (*parentcell).type + 1;
+	//(*daughter1ptr).type = (*parentcell).type + 1;
+	//(*daughter2ptr).type = (*parentcell).type + 1;
 
 	// ^^^^^^^ THIS MIGHT NEED SOME CHANGING!
 
@@ -1753,7 +1753,7 @@ void AGTissue::RK4Helper_EuilerStep(double dt, ofstream* errorfile) {
 }
 /*
 * double CalculateFreeEnergy()
-*
+* THIS SHOULD BE GENERALIZED TO ALLOW FOR EXPONENTIAL, AND LOG, AND QUARTIC ENERGIES (11/7/2024 - A.M.)
 * Calculates the energy of the packing using the Hamiltonian
 * in this model:
 * H = (sum over cells) K(A_cells - A_0) + Gamma (sum over edges) L_edge

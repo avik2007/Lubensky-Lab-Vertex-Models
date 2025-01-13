@@ -88,7 +88,7 @@ double THETAAN = 0;
 double Kstdratio = 0;
 double A0stdratio = 0;
 double LAMBDAstdratio = 0;
-
+double Ntarget = 100;
 
 //This is the generator for random numbers to use call "distribution(generator)" 
 mt19937_64 generator;
@@ -179,7 +179,7 @@ int main(){
 	tissue.LAMBDAstd = tissue.LAMBDAstdratio * LAMBDA;
 	//tissue.AssignPerimeterModuli(tissue.constantLAMBDA, tissue.meanLAMBDA, tissue.LAMBDAstd);
 	INTEGRATORNAME = "RK4_Adaptive";
-	alphaM = 20 * alphaM;
+	//alphaM = 20 * alphaM;
 	MITOSISON = 0;
 	while (!(tissue.IsEquilibrated()))
 	{

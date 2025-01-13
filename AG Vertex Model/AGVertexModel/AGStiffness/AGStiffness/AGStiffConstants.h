@@ -16,4 +16,5 @@ using namespace std;
 extern double Kstdratio;
 extern double A0stdratio;
 extern double LAMBDAstdratio;
+extern double Ntarget;
 #endif

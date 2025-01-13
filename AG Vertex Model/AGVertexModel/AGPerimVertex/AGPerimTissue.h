@@ -111,12 +111,11 @@ public:
 	//! Splits vertices so edges (e1,e2) and (e3,e4) are paired and cells c2 and c4 are neighbors
 	//! returns the magnutude of Force-Forcenewedge and changes the value of Force
 	virtual double HelperResolveVertices_CheckStability(Vertex* v, Edge* e1, Edge* e2, Edge* e3, Edge* e4, Cell* c1, Cell* c2, Cell* c3, Cell* c4, Vect *Force);
+	//virtual void DestroyCell(Cell* cptr);
+	virtual Cell* CreateCell(int typ, vector<Edge*> edgs, string potential, double tcjstrength, double thetaan, double anstrenght);
 
 	// Do mitosis on cells. Picks cells for mitosis based on certain criteria and calls HelperMitosis(Cell * parentcell) to perform mitosis on those cells.
 	virtual bool Mitosis();
-
-	//virtual void DestroyCell(Cell* cptr);
-	virtual Cell* CreateCell(int typ, vector<Edge*> edgs, string potential, double tcjstrength, double thetaan, double anstrenght);
 
 	//! This is the helper function that actually do mitosis on cells.
 	virtual void HelperMitosis(Cell* parentcell, double divisionangle);	

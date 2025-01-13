@@ -41,12 +41,12 @@ double AGCell::GetPressure(double Area)
 	if ((*this).pressureType == "LOG")
 	{
 		return K * (1 / (1 + Area / (*this).A0));
-		// where the energy would look like Ep = - K A0 Log(1 + A/A0) ([K] = pressure/L^2)
+		// where the energy would look like Ep = - K A0 Log(1 + A/A0) ([K] = pressure)
 	}
 	else if ((*this).pressureType == "EXPONENTIAL")
 	{
 		return K * exp(-Area / (*this).A0);
-		// where the energy would look like Ep = K A0 exp(-(A/A0-1)) ([K] = pressure/L^2)
+		// where the energy would look like Ep = K A0 exp(-(A/A0-1)) ([K] = pressure)
 		// and the exp(1) in the denominator is put in so that the local concavity of the function
 	}
 	else if ((*this).pressureType == "QUARTIC")
@@ -57,11 +57,47 @@ double AGCell::GetPressure(double Area)
 		return K * ((1 - Area / (*this).A0) * (1 - 6 * C4) + 2 * C4 * pow(1 - Area / (*this).A0, 3));
 	// this is an attempt to get QUARTIC behaving properly. I'm guessing the concavity of the pressure energy 1/2 gets the 
 	// vertex model behaving as expected. Which we did not find in the first quartic potential.
-	else if ((*this).pressureType == "QUARTIC3.0")
-		return K * ((1 - Area / (*this).A0) + C4 * pow(Area / (*this).A0, 3));
 	else
 	{
 		return K * (1 - Area / (*this).A0);
+		// where the energy would look like Ep = 1/2 K A0 (A/A0 - 1)^2 ([K] = pressure/L^2)
+	}
+}
+
+/*
+* double GetNegativeDPressureDArea
+*
+*
+* Calculates pressure of the cell based on the cell potential type (here, we're adding an option for the pressure
+* taking a log or a exponential potential
+*/
+double AGCell::GetNegativeDPressureDArea(double Area)
+{
+	if ((*this).pressureType == "LOG")
+	{
+		return ( K / (*this).A0 ) * (1 / pow((1 + Area / (*this).A0), 2));
+		// where the energy would look like Ep = - K A0 Log(1 + A/A0) and the pressure looks like
+		// P = K * (1 / (1 + Area / (*this).A0)) ([K] = pressure)
+	}
+	else if ((*this).pressureType == "EXPONENTIAL")
+	{
+		return (K / (*this).A0) * (exp(-Area / (*this).A0));
+		// where the energy would look like Ep = K A0 exp(-(A/A0-1)) ([K] = pressure)
+		// and the exp(1) in the denominator is put in so that the local concavity of the function
+		// matches the others 
+		// and pressure looks like P = K * exp(-Area / (*this).A0);
+	}
+	else if ((*this).pressureType == "QUARTIC")
+	{
+		return (K / (*this).A0) * ( 1 + 6 * C4 * pow(1 - Area / (*this).A0, 2));
+	}
+	else if ((*this).pressureType == "QUARTIC2.0")
+		return (K / (*this).A0) * ( (1 - 6 * C4) + 6 * C4 * pow(1 - Area / (*this).A0, 2));
+	// this is an attempt to get QUARTIC behaving properly. I'm guessing the concavity of the pressure energy 1/2 gets the 
+	// vertex model behaving as expected. Which we did not find in the first quartic potential.
+	else
+	{
+		return (K / (*this).A0);
 		// where the energy would look like Ep = 1/2 K A0 (A/A0 - 1)^2 ([K] = pressure/L^2)
 	}
 }

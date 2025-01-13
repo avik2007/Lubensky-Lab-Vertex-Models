@@ -184,6 +184,7 @@ int main()
 		cout << "writing at CURRENTTIME: " << CURRENTTIME << endl;
 		// equilibrated gets updated in Evolve
 	}
+	tissue.equilibrated = true;
 	tissue.Evolve(TIMEINTERVAL, &stepSize, &errorfile);
 	// Adding another evolve step to see how it affects the reported forces
 	polydispersity = tissue.calculatePolydispersity();

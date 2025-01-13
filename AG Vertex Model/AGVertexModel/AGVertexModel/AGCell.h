@@ -71,6 +71,8 @@ public:
 	//! Same as GetPressure() but with cell area as input. Attention This function contains the actual implementation of GetPressure. All other GetPressure functions should call this function to prevent multiple implementations. Furthermore any modification/extension to the algorithm should only be made here.
 	virtual double GetPressure(double Area);
 
+	virtual double GetNegativeDPressureDArea(double Area); // Useful for shear modulus calculation
+
 	double GetThetaTCJ(); // helps determine orientation of cell division using TCJ distribution
 
 	double GetTCJAnisotropy(); // measure of anisotropy in cells 

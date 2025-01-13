@@ -652,8 +652,8 @@ void AGPerimTissue::Evolve(double interval, double *stepsize, ofstream* errorfil
 			if (energyDidIncrease)
 			{
 				//if (*stepsize < 0.0000001) // this could be turned into a parameter, the minumum stepsize
-				//if (*stepsize <   0.00000000000001)
-				if (*stepsize < 0.00000000000000000000000000000000000000000000000000000000000000001)
+				if (*stepsize <   0.00000000000001)
+				//if (*stepsize < 0.00000000000000000000000000000000000000000000000000000000000000001)
 				{
 					breakVar = true;
 					*errorfile << "Stepsize got too small. Break" << endl;
@@ -1330,90 +1330,7 @@ void AGPerimTissue::HelperWriteOutputData_Write2File(ofstream* datafile, bool in
 	*datafile << "End" << endl << endl;
 }
 
-/*
-* bool Mitosis (overload)
-*
-* Do mitosis on cells. For AGPerimTissue (1/24/2023), I want to make it so that it will divide cells by type
-*/
-bool AGPerimTissue::Mitosis() {
-	vector<Cell*> mitcells;
-	AGPerimCell* ag1;
-	int flag = 0;
-	int i;
-	bool convex_condition;
 
-	double f = 0; //feedback strength - between 0 and 1
-	// double alpha = p0 / (K*(A0 - f*A0)); //this defines feedback so that if a cell is smaller than f times the preferred area of cells, it can't divide
-	double alpha = 0;
-	double thisarea = 0;
-	double area_ratio = 0;
-	double p = 0;
-	double angle;
-	//int preMitosisNumCells = cells.size();// number of cells before mitosis
-	//int postMitosisNumCells; // number of cells after mitosis
-	//print Feedback Parameters
-	/*
-	if (CURRENTTIME == 1) {
-		cout << "Mitosis Feedback Parameters:" << endl;
-		cout << "p0: " << p0 << "		alpha: " << alpha << endl;
-	}
-	*/
-	//Here is where we will later insert some criteria for mitosis
-	for (list<Cell*>::iterator cit = cells.begin(); cit != cells.end(); cit++)
-	{
-		thisarea = (*(*cit)).GetArea();
-		area_ratio = (thisarea - (*(*cit)).A0) / (*(*cit)).A0;
-		if (area_ratio < 0)
-		{
-			p = 0;
-		}
-		else if (area_ratio > .01)
-		{
-			p = 1;
-			flag++;
-			mitcells.push_back(&(*(*cit)));
-		}
-		else
-		{
-			p = area_ratio;
-			flag++;
-			mitcells.push_back(&(*(*cit)));
-		}
-		// conditional to make certain specific cells divide
-		//if ((*(*cit)).type > 0)
-		//{
-		//	mitcells.push_back(&(*(*cit)));
-		//	(*(*cit)).type = 0;
-		//	flag++;
-		//	//TOTALMITOSES++;
-		//}
-	}
-	if (flag == 0) {
-		return false;
-	}
-	else {
-		//Output the cell id and area for all cells undergoing Mitosis
-		// To do mitosis on only one cell, change for statement to i=0; i<(mitcells.size())-(mitcells.size()-1); i++, for normal, i = 0; i<mitcells.size(); i++ 
-		for (i = 0; i < mitcells.size(); i++) { // changed for statement to only include i=0, so mitosis will only effect one cell
-			//NOTE: only perform mitosis on cells that are convex in order to avoid cutting more than two edges.
-			convex_condition = (CheckConvex((*mitcells[i]).HelperOrderVerticesPos()) == true);
-			if (convex_condition) {
-				//cout << "Mitosis of cell \t" << (*mitcells[i]).id << endl;
-				//cout << "Cell Area \t" << (*mitcells[i]).GetArea() << endl;
-				//cout << "Current time is \t" << CURRENTTIME << endl;
-				ag1 = dynamic_cast<AGPerimCell*>((mitcells[i]));
-				cout << (*ag1).id << endl;
-				angle = (*ag1).DivisionAngleDistribution((*ag1).DIVISIONPOTENTIAL);
-				(*this).HelperMitosis(mitcells[i], angle);
-				
-			}
-		}
-
-		// postMitosisNumCells = cells.size(); // number of cells in packing after mitosis
-
-		return true;
-	}
-}
 /*
 bool AGTissue::Mitosis()
 {
@@ -1519,7 +1436,89 @@ Cell* AGPerimTissue::CreateCell(int typ, vector<Edge*> edgs, string potential, d
 	}
 	return newcell;
 }
+/*
+* bool Mitosis (overload)
+*
+* Do mitosis on cells. Picks cells for mitosis based on certain criteria and calls HelperMitosis(Cell * parentcell) to perform mitosis
+* on those cells. This overloaded cell uses anisotropy potentials to determine the orientation of the cleavage plane.
+*/
+bool AGPerimTissue::Mitosis() {
+	vector<Cell*> mitcells;
+	AGPerimCell* ag1;
+	int flag = 0;
+	int i;
+	double effpressure = 0;
+	double avgcellsize = 0;
+	double area = 0;
+	double cell2area = 0;
+	double p0 = .05;
+	int N;
+	double f = 0; //feedback strength - between 0 and 1
+	// double alpha = p0 / (K*(A0 - f*A0)); //this defines feedback so that if a cell is smaller than f times the preferred area of cells, it can't divide
+	double alpha = .01;
 
+	double p;
+	double angle;
+	//int preMitosisNumCells = cells.size();// number of cells before mitosis
+	//int postMitosisNumCells; // number of cells after mitosis
+	//print Feedback Parameters
+	/*
+	if (CURRENTTIME == 1) {
+		cout << "Mitosis Feedback Parameters:" << endl;
+		cout << "p0: " << p0 << "		alpha: " << alpha << endl;
+	}
+	*/
+	//Here is where we will later insert some criteria for mitosis
+	for (list<Cell*>::iterator cit = cells.begin(); cit != cells.end(); cit++) {
+		//division with feedback like normal
+		area = (*(*cit)).GetArea();
+		avgcellsize = 0;
+		N = 0;
+		for (list<Cell*>::iterator cit2 = cells.begin(); cit2 != cells.end(); cit2++)
+		{
+			avgcellsize += (*(*cit2)).GetArea();
+			N += 1;
+		}
+		avgcellsize = avgcellsize / N;
+		effpressure += K * (1 - area / avgcellsize);
+		p = (p0 - alpha * effpressure);
+		if (p < 0)
+		{ //if negative probability, then transfers over to similar procedure for apoptosis and p is set to 0 so mitosis will not occur
+			//ApoptosisSelection(p, *cit); //comment this out to stop apoptosis from happening like this
+			p = 0;
+		}
+
+		bernoulli_distribution distribution(p);        //distribution for weighting chance of success
+		if (distribution(generator))
+		{
+			mitcells.push_back(&(*(*cit)));
+			flag++;
+			//TOTALMITOSES++;
+		}
+	}
+	if (flag == 0) {
+		return false;
+	}
+	else {
+		//Output the cell id and area for all cells undergoing Mitosis
+		// To do mitosis on only one cell, change for statement to i=0; i<(mitcells.size())-(mitcells.size()-1); i++, for normal, i = 0; i<mitcells.size(); i++ 
+		for (i = 0; i < mitcells.size(); i++) { // changed for statement to only include i=0, so mitosis will only effect one cell
+			//NOTE: only perform mitosis on cells that are convex in order to avoid cutting more than two edges.
+			if (CheckConvex((*mitcells[i]).HelperOrderVerticesPos()) == true) {
+				//cout << "Mitosis of cell \t" << (*mitcells[i]).id << endl;
+				//cout << "Cell Area \t" << (*mitcells[i]).GetArea() << endl;
+				//cout << "Current time is \t" << CURRENTTIME << endl;
+				ag1 = dynamic_cast<AGPerimCell*>((mitcells[i]));
+				angle = (*ag1).DivisionAngleDistribution((*ag1).DIVISIONPOTENTIAL);
+				(*this).HelperMitosis(mitcells[i], angle);
+			}
+		}
+
+		// postMitosisNumCells = cells.size(); // number of cells in packing after mitosis
+
+		return true;
+	}
+}
 /*
 * void HelperMitosis( Cell* parent cell, double divisionangle)
 *
@@ -2219,10 +2218,10 @@ MatrixXf AGPerimTissue::calculateHessian(ofstream* errorfile)
 				//cellincidence(2 * j_id + 1, 2 * i_id) += 1;
 
 				// the dAdri * dAdrj portion
-				dAdridAdrj_percell(2 * j_id, 2 * i_id) += (K / a0) * dAdr[j].x * dAdr[i].x;
-				dAdridAdrj_percell(2 * j_id, 2 * i_id + 1) += (K / a0) * dAdr[j].x * dAdr[i].y;
-				dAdridAdrj_percell(2 * j_id + 1, 2 * i_id + 1) += (K / a0) * dAdr[j].y * dAdr[i].y;
-				dAdridAdrj_percell(2 * j_id + 1, 2 * i_id) += (K / a0) * dAdr[j].y * dAdr[i].x;
+				dAdridAdrj_percell(2 * j_id, 2 * i_id) += (*agit).GetNegativeDPressureDArea(area) * dAdr[j].x * dAdr[i].x;
+				dAdridAdrj_percell(2 * j_id, 2 * i_id + 1) += (*agit).GetNegativeDPressureDArea(area) * dAdr[j].x * dAdr[i].y;
+				dAdridAdrj_percell(2 * j_id + 1, 2 * i_id + 1) += (*agit).GetNegativeDPressureDArea(area) * dAdr[j].y * dAdr[i].y;
+				dAdridAdrj_percell(2 * j_id + 1, 2 * i_id) += (*agit).GetNegativeDPressureDArea(area) * dAdr[j].y * dAdr[i].x;
 
 				// the dPdri * dPdrj portion
 				dPdridPdrj_percell(2 * j_id, 2 * i_id) += LAMBDA * dPdr[j].x * dPdr[i].x;
@@ -2326,37 +2325,37 @@ MatrixXf AGPerimTissue::calculateHessian(ofstream* errorfile)
 
 	//*errorfile << std::setprecision(3) << "H = \n" << Hessian << "\n" << "\n" << endl;
 
-	*errorfile << std::setprecision(20) << "incidence at the end  = \n" << incidenceMatrix << "\n \n \n \n" << endl;
+	//*errorfile << std::setprecision(20) << "incidence at the end  = \n" << incidenceMatrix << "\n \n \n \n" << endl;
 
-	*errorfile << std::setprecision(20) << "pressureForceVector = \n" << pressureforceMatrix << "\n \n \n \n" << endl;
+	//*errorfile << std::setprecision(20) << "pressureForceVector = \n" << pressureforceMatrix << "\n \n \n \n" << endl;
 
-	*errorfile << std::setprecision(20) << "tensionForceVector = \n" << tensionforceMatrix << "\n \n \n \n" << endl;
+	//*errorfile << std::setprecision(20) << "tensionForceVector = \n" << tensionforceMatrix << "\n \n \n \n" << endl;
 
 	*errorfile << std::setprecision(20) << "ForceVector = \n" << forceMatrix << "\n \n \n \n" << endl;
 
-	*errorfile << std::setprecision(20) << "Force Diff = \n" << forceDifferences << "\n \n \n \n" << endl;
+	//*errorfile << std::setprecision(20) << "Force Diff = \n" << forceDifferences << "\n \n \n \n" << endl;
 
 	*errorfile << std::setprecision(20) << "d2Adridrj = \n" << d2Adridrj << "\n" << "\n" << endl;
 
 	*errorfile << std::setprecision(20) << "sym(d2Adridrj) check \n" << d2Adridrj - 0.5*(d2Adridrj + d2Adridrj.transpose()) << "\n" << "\n" << endl;
 
-	*errorfile << std::setprecision(20) << "d2Pdridrj = \n" << d2Pdridrj << "\n" << "\n" << endl;
+	//*errorfile << std::setprecision(20) << "d2Pdridrj = \n" << d2Pdridrj << "\n" << "\n" << endl;
 
-	*errorfile << std::setprecision(20) << "d2Pdridrj ALT = \n" << d2Pdridrj_ALT << "\n" << "\n" << endl;
+	//*errorfile << std::setprecision(20) << "d2Pdridrj ALT = \n" << d2Pdridrj_ALT << "\n" << "\n" << endl;
 
-	*errorfile << std::setprecision(20) << "sym(d2Pdridrj) check \n" << d2Pdridrj - 0.5 * (d2Pdridrj + d2Pdridrj.transpose()) << "\n" << "\n" << endl;
+	//*errorfile << std::setprecision(20) << "sym(d2Pdridrj) check \n" << d2Pdridrj - 0.5 * (d2Pdridrj + d2Pdridrj.transpose()) << "\n" << "\n" << endl;
 
-	*errorfile << std::setprecision(20) << "sym(d2Pdridrj) ALT = \n" << d2Pdridrj_ALT - 0.5 * (d2Pdridrj_ALT + d2Pdridrj_ALT.transpose()) << "\n" << "\n" << endl;
+	//*errorfile << std::setprecision(20) << "sym(d2Pdridrj) ALT = \n" << d2Pdridrj_ALT - 0.5 * (d2Pdridrj_ALT + d2Pdridrj_ALT.transpose()) << "\n" << "\n" << endl;
 
-	*errorfile << std::setprecision(20) << "d2Pdridrj alt minus standard = \n" << d2Pdridrj_ALT - d2Pdridrj << "\n" << "\n" << endl;
+	//*errorfile << std::setprecision(20) << "d2Pdridrj alt minus standard = \n" << d2Pdridrj_ALT - d2Pdridrj << "\n" << "\n" << endl;
 
-	*errorfile << std::setprecision(20) << "dPdridPdrj = \n" << dPdridPdrj << "\n" << "\n" << endl;
+	//*errorfile << std::setprecision(20) << "dPdridPdrj = \n" << dPdridPdrj << "\n" << "\n" << endl;
 
-	*errorfile << std::setprecision(20) << "sym(dPdridPdrj) check \n" << dPdridPdrj - 0.5 * (dPdridPdrj + dPdridPdrj.transpose()) << "\n" << "\n" << endl;
+	//*errorfile << std::setprecision(20) << "sym(dPdridPdrj) check \n" << dPdridPdrj - 0.5 * (dPdridPdrj + dPdridPdrj.transpose()) << "\n" << "\n" << endl;
 
-	*errorfile << std::setprecision(20) << "dAdridAdrj = \n" << dAdridAdrj << "\n" << "\n" << endl;
+	//*errorfile << std::setprecision(20) << "dAdridAdrj = \n" << dAdridAdrj << "\n" << "\n" << endl;
 
-	*errorfile << std::setprecision(20) << "sym(dAdridAdrj) check \n" << dAdridAdrj - 0.5 * (dAdridAdrj + dAdridAdrj.transpose()) << "\n" << "\n" << endl;
+	//*errorfile << std::setprecision(20) << "sym(dAdridAdrj) check \n" << dAdridAdrj - 0.5 * (dAdridAdrj + dAdridAdrj.transpose()) << "\n" << "\n" << endl;
 
 	//*errorfile << std::setprecision(6) << "dPdridPdrj - normed dAdridAdrj = \n" << dPdridPdrj - dAdridAdrj / 952.8286 << "\n" << "\n" << endl;
 	//*errorfile << std::setprecision(6) << "Hessian = \n" << Hessian << "\n" << "\n" << endl;
@@ -2585,10 +2584,10 @@ MatrixXd AGPerimTissue::calculateHessiand(ofstream* errorfile)
 				//cellincidence(2 * j_id + 1, 2 * i_id) += 1;
 
 				// the dAdri * dAdrj portion
-				dAdridAdrj_percell(2 * j_id, 2 * i_id) += (K / a0) * dAdr[j].x * dAdr[i].x;
-				dAdridAdrj_percell(2 * j_id, 2 * i_id + 1) += (K / a0) * dAdr[j].x * dAdr[i].y;
-				dAdridAdrj_percell(2 * j_id + 1, 2 * i_id + 1) += (K / a0) * dAdr[j].y * dAdr[i].y;
-				dAdridAdrj_percell(2 * j_id + 1, 2 * i_id) += (K / a0) * dAdr[j].y * dAdr[i].x;
+				dAdridAdrj_percell(2 * j_id, 2 * i_id) += (*agit).GetNegativeDPressureDArea(area) * dAdr[j].x * dAdr[i].x;
+				dAdridAdrj_percell(2 * j_id, 2 * i_id + 1) += (*agit).GetNegativeDPressureDArea(area) * dAdr[j].x * dAdr[i].y;
+				dAdridAdrj_percell(2 * j_id + 1, 2 * i_id + 1) += (*agit).GetNegativeDPressureDArea(area) * dAdr[j].y * dAdr[i].y;
+				dAdridAdrj_percell(2 * j_id + 1, 2 * i_id) += (*agit).GetNegativeDPressureDArea(area) * dAdr[j].y * dAdr[i].x;
 
 				// the dPdri * dPdrj portion
 				dPdridPdrj_percell(2 * j_id, 2 * i_id) += LAMBDA * dPdr[j].x * dPdr[i].x;
@@ -2692,37 +2691,37 @@ MatrixXd AGPerimTissue::calculateHessiand(ofstream* errorfile)
 
 	//*errorfile << std::setprecision(3) << "H = \n" << Hessian << "\n" << "\n" << endl;
 
-	*errorfile << std::setprecision(20) << "incidence at the end  = \n" << incidenceMatrix << "\n \n \n \n" << endl;
+	//*errorfile << std::setprecision(20) << "incidence at the end  = \n" << incidenceMatrix << "\n \n \n \n" << endl;
 
-	*errorfile << std::setprecision(20) << "pressureForceVector = \n" << pressureforceMatrix << "\n \n \n \n" << endl;
+	//*errorfile << std::setprecision(20) << "pressureForceVector = \n" << pressureforceMatrix << "\n \n \n \n" << endl;
 
-	*errorfile << std::setprecision(20) << "tensionForceVector = \n" << tensionforceMatrix << "\n \n \n \n" << endl;
+	//*errorfile << std::setprecision(20) << "tensionForceVector = \n" << tensionforceMatrix << "\n \n \n \n" << endl;
 
-	*errorfile << std::setprecision(20) << "ForceVector = \n" << forceMatrix << "\n \n \n \n" << endl;
+	//*errorfile << std::setprecision(20) << "ForceVector = \n" << forceMatrix << "\n \n \n \n" << endl;
 
-	*errorfile << std::setprecision(20) << "Force Diff = \n" << forceDifferences << "\n \n \n \n" << endl;
+	//*errorfile << std::setprecision(20) << "Force Diff = \n" << forceDifferences << "\n \n \n \n" << endl;
 
-	*errorfile << std::setprecision(20) << "d2Adridrj = \n" << d2Adridrj << "\n" << "\n" << endl;
+	//*errorfile << std::setprecision(20) << "d2Adridrj = \n" << d2Adridrj << "\n" << "\n" << endl;
 
-	*errorfile << std::setprecision(20) << "sym(d2Adridrj) check \n" << d2Adridrj - 0.5 * (d2Adridrj + d2Adridrj.transpose()) << "\n" << "\n" << endl;
+	//*errorfile << std::setprecision(20) << "sym(d2Adridrj) check \n" << d2Adridrj - 0.5 * (d2Adridrj + d2Adridrj.transpose()) << "\n" << "\n" << endl;
 
-	*errorfile << std::setprecision(20) << "d2Pdridrj = \n" << d2Pdridrj << "\n" << "\n" << endl;
+	//*errorfile << std::setprecision(20) << "d2Pdridrj = \n" << d2Pdridrj << "\n" << "\n" << endl;
 
-	*errorfile << std::setprecision(20) << "d2Pdridrj ALT = \n" << d2Pdridrj_ALT << "\n" << "\n" << endl;
+	//*errorfile << std::setprecision(20) << "d2Pdridrj ALT = \n" << d2Pdridrj_ALT << "\n" << "\n" << endl;
 
-	*errorfile << std::setprecision(20) << "sym(d2Pdridrj) check \n" << d2Pdridrj - 0.5 * (d2Pdridrj + d2Pdridrj.transpose()) << "\n" << "\n" << endl;
+	//*errorfile << std::setprecision(20) << "sym(d2Pdridrj) check \n" << d2Pdridrj - 0.5 * (d2Pdridrj + d2Pdridrj.transpose()) << "\n" << "\n" << endl;
 
-	*errorfile << std::setprecision(20) << "sym(d2Pdridrj) ALT = \n" << d2Pdridrj_ALT - 0.5 * (d2Pdridrj_ALT + d2Pdridrj_ALT.transpose()) << "\n" << "\n" << endl;
+	//*errorfile << std::setprecision(20) << "sym(d2Pdridrj) ALT = \n" << d2Pdridrj_ALT - 0.5 * (d2Pdridrj_ALT + d2Pdridrj_ALT.transpose()) << "\n" << "\n" << endl;
 
-	*errorfile << std::setprecision(20) << "d2Pdridrj alt minus standard = \n" << d2Pdridrj_ALT - d2Pdridrj << "\n" << "\n" << endl;
+	//*errorfile << std::setprecision(20) << "d2Pdridrj alt minus standard = \n" << d2Pdridrj_ALT - d2Pdridrj << "\n" << "\n" << endl;
 
-	*errorfile << std::setprecision(20) << "dPdridPdrj = \n" << dPdridPdrj << "\n" << "\n" << endl;
+	//*errorfile << std::setprecision(20) << "dPdridPdrj = \n" << dPdridPdrj << "\n" << "\n" << endl;
 
-	*errorfile << std::setprecision(20) << "sym(dPdridPdrj) check \n" << dPdridPdrj - 0.5 * (dPdridPdrj + dPdridPdrj.transpose()) << "\n" << "\n" << endl;
+	//*errorfile << std::setprecision(20) << "sym(dPdridPdrj) check \n" << dPdridPdrj - 0.5 * (dPdridPdrj + dPdridPdrj.transpose()) << "\n" << "\n" << endl;
 
-	*errorfile << std::setprecision(20) << "dAdridAdrj = \n" << dAdridAdrj << "\n" << "\n" << endl;
+	//*errorfile << std::setprecision(20) << "dAdridAdrj = \n" << dAdridAdrj << "\n" << "\n" << endl;
 
-	*errorfile << std::setprecision(20) << "sym(dAdridAdrj) check \n" << dAdridAdrj - 0.5 * (dAdridAdrj + dAdridAdrj.transpose()) << "\n" << "\n" << endl;
+	//*errorfile << std::setprecision(20) << "sym(dAdridAdrj) check \n" << dAdridAdrj - 0.5 * (dAdridAdrj + dAdridAdrj.transpose()) << "\n" << "\n" << endl;
 
 	//*errorfile << std::setprecision(6) << "dPdridPdrj - normed dAdridAdrj = \n" << dPdridPdrj - dAdridAdrj / 952.8286 << "\n" << "\n" << endl;
 	//*errorfile << std::setprecision(6) << "Hessian = \n" << Hessian << "\n" << "\n" << endl;
@@ -2842,7 +2841,7 @@ double AGPerimTissue::calculateShearModulusWithEigenDecomposition(ofstream* erro
 		dpdpdgdgcheck = (*agit).Getd2Pdgamma2ForSimpleShearAlongXAxis();
 		// let's do d2Edgamma2 first:
 		
-		dadgterm = (K / a0) * dadgcheck * dadgcheck;
+		dadgterm = (*agit).GetNegativeDPressureDArea(area) * dadgcheck * dadgcheck;
 		dpdgterm = LAMBDA * dpdgcheck * dpdgcheck;
 		dpdpdgdgterm = tension_magnitude * dpdpdgdgcheck;
 
@@ -2875,10 +2874,10 @@ double AGPerimTissue::calculateShearModulusWithEigenDecomposition(ofstream* erro
 			d2PdrdgammaVEC(2 * vmapid, 0) = tension_magnitude * d2Pdrdgamma.x;
 			d2PdrdgammaVEC(2 * vmapid + 1, 0) = tension_magnitude * d2Pdrdgamma.y;
 			dAdv = (*agit).GetdAdv((*vit));
-			BoundaryVector(2 * vmapid, 0) += (K / a0) * dadgcheck * dAdv.x; // double check dAdv
-			BoundaryVector(2 * vmapid + 1, 0) += (K / a0) * dadgcheck * dAdv.y ; // double check dAdv
-			dAdrdAdgammaVEC(2 * vmapid, 0) = (K / a0) * dadgcheck * dAdv.x;
-			dAdrdAdgammaVEC(2 * vmapid + 1, 0) = (K / a0) * dadgcheck * dAdv.y;
+			BoundaryVector(2 * vmapid, 0) += (*agit).GetNegativeDPressureDArea(area) * dadgcheck * dAdv.x; // double check dAdv
+			BoundaryVector(2 * vmapid + 1, 0) += (*agit).GetNegativeDPressureDArea(area) * dadgcheck * dAdv.y ; // double check dAdv
+			dAdrdAdgammaVEC(2 * vmapid, 0) = (*agit).GetNegativeDPressureDArea(area) * dadgcheck * dAdv.x;
+			dAdrdAdgammaVEC(2 * vmapid + 1, 0) = (*agit).GetNegativeDPressureDArea(area) * dadgcheck * dAdv.y;
 			dPdv = (*agit).GetdPdv((*vit));
 			BoundaryVector(2 * vmapid, 0) += LAMBDA * dpdgcheck * dPdv.x; // double check dPdv
 			BoundaryVector(2 * vmapid + 1, 0) += LAMBDA * dpdgcheck * dPdv.y; // double check dPdv
@@ -2925,7 +2924,6 @@ double AGPerimTissue::calculateShearModulusWithEigenDecomposition(ofstream* erro
 	*errorfile << "Here is a matrix whose columns form a basis of the null-space of A:\n"
 		<< lu_decomp.kernel() <<"\n \n" << endl;
 	
-	double altnormfactor = (*this).cells.size() / (K * pow(LX * LY, 2));
 	double normfactor =  1 / (K * pow((*this).A0, 2) * (*this).cells.size());
 	*errorfile << std::setprecision(20) << "normfactor = " << normfactor << endl;
 	*errorfile << std::setprecision(20) << "dadg = " << normfactor * dadgtotal << endl;
@@ -3057,7 +3055,7 @@ double AGPerimTissue::calculateShearModulusWithEigenDecompositiond(ofstream* err
 		dpdpdgdgcheck = (*agit).Getd2Pdgamma2ForSimpleShearAlongXAxis();
 		// let's do d2Edgamma2 first:
 
-		dadgterm = (K / a0) * dadgcheck * dadgcheck;
+		dadgterm = (*agit).GetNegativeDPressureDArea(area) * dadgcheck * dadgcheck;
 		dpdgterm = LAMBDA * dpdgcheck * dpdgcheck;
 		dpdpdgdgterm = tension_magnitude * dpdpdgdgcheck;
 
@@ -3090,10 +3088,10 @@ double AGPerimTissue::calculateShearModulusWithEigenDecompositiond(ofstream* err
 			d2PdrdgammaVEC(2 * vmapid, 0) = tension_magnitude * d2Pdrdgamma.x;
 			d2PdrdgammaVEC(2 * vmapid + 1, 0) = tension_magnitude * d2Pdrdgamma.y;
 			dAdv = (*agit).GetdAdv((*vit));
-			BoundaryVector(2 * vmapid, 0) += (K / a0) * dadgcheck * dAdv.x; // double check dAdv
-			BoundaryVector(2 * vmapid + 1, 0) += (K / a0) * dadgcheck * dAdv.y; // double check dAdv
-			dAdrdAdgammaVEC(2 * vmapid, 0) = (K / a0) * dadgcheck * dAdv.x;
-			dAdrdAdgammaVEC(2 * vmapid + 1, 0) = (K / a0) * dadgcheck * dAdv.y;
+			BoundaryVector(2 * vmapid, 0) += (*agit).GetNegativeDPressureDArea(area) * dadgcheck * dAdv.x; // double check dAdv
+			BoundaryVector(2 * vmapid + 1, 0) += (*agit).GetNegativeDPressureDArea(area) * dadgcheck * dAdv.y; // double check dAdv
+			dAdrdAdgammaVEC(2 * vmapid, 0) = (*agit).GetNegativeDPressureDArea(area) * dadgcheck * dAdv.x;
+			dAdrdAdgammaVEC(2 * vmapid + 1, 0) = (*agit).GetNegativeDPressureDArea(area) * dadgcheck * dAdv.y;
 			dPdv = (*agit).GetdPdv((*vit));
 			BoundaryVector(2 * vmapid, 0) += LAMBDA * dpdgcheck * dPdv.x; // double check dPdv
 			BoundaryVector(2 * vmapid + 1, 0) += LAMBDA * dpdgcheck * dPdv.y; // double check dPdv
@@ -3143,8 +3141,8 @@ double AGPerimTissue::calculateShearModulusWithEigenDecompositiond(ofstream* err
 	*errorfile << "Here is a matrix whose columns form a basis of the null-space of A:\n"
 		<< lu_decomp.kernel() << "\n \n" << endl;
 
-	double altnormfactor = (*this).cells.size() /  (K * pow(LX * LY, 2));
-	double normfactor = 1 / (K * pow(A0, 2)); // (K * pow(LX * LY, 2));
+
+	double normfactor = (*this).cells.size() / (K * pow(LX * LY, 2));
 	*errorfile << std::setprecision(20) << "normfactor = " << normfactor << endl;
 	*errorfile << std::setprecision(20) << "dadg = " << normfactor * dadgtotal << endl;
 	*errorfile << std::setprecision(20) << "dpdg = " << normfactor * dpdgtotal << endl;
@@ -3271,7 +3269,7 @@ void AGPerimTissue::CalculateShearModulusForPythonCalculation(ofstream* errorfil
 		dpdpdgdgcheck = (*agit).Getd2Pdgamma2ForSimpleShearAlongXAxis();
 		// let's do d2Edgamma2 first:
 
-		dadgterm = (K / a0) * dadgcheck * dadgcheck;
+		dadgterm = (*agit).GetNegativeDPressureDArea(area) * dadgcheck * dadgcheck;
 		dpdgterm = LAMBDA * dpdgcheck * dpdgcheck;
 		dpdpdgdgterm = tension_magnitude * dpdpdgdgcheck;
 
@@ -3304,10 +3302,10 @@ void AGPerimTissue::CalculateShearModulusForPythonCalculation(ofstream* errorfil
 			d2PdrdgammaVEC(2 * vmapid, 0) = tension_magnitude * d2Pdrdgamma.x;
 			d2PdrdgammaVEC(2 * vmapid + 1, 0) = tension_magnitude * d2Pdrdgamma.y;
 			dAdv = (*agit).GetdAdv((*vit));
-			BoundaryVector(2 * vmapid, 0) += (K / a0) * dadgcheck * dAdv.x; // double check dAdv
-			BoundaryVector(2 * vmapid + 1, 0) += (K / a0) * dadgcheck * dAdv.y; // double check dAdv
-			dAdrdAdgammaVEC(2 * vmapid, 0) = (K / a0) * dadgcheck * dAdv.x;
-			dAdrdAdgammaVEC(2 * vmapid + 1, 0) = (K / a0) * dadgcheck * dAdv.y;
+			BoundaryVector(2 * vmapid, 0) += (*agit).GetNegativeDPressureDArea(area) * dadgcheck * dAdv.x; // double check dAdv
+			BoundaryVector(2 * vmapid + 1, 0) += (*agit).GetNegativeDPressureDArea(area) * dadgcheck * dAdv.y; // double check dAdv
+			dAdrdAdgammaVEC(2 * vmapid, 0) = (*agit).GetNegativeDPressureDArea(area) * dadgcheck * dAdv.x;
+			dAdrdAdgammaVEC(2 * vmapid + 1, 0) = (*agit).GetNegativeDPressureDArea(area) * dadgcheck * dAdv.y;
 			dPdv = (*agit).GetdPdv((*vit));
 			BoundaryVector(2 * vmapid, 0) += LAMBDA * dpdgcheck * dPdv.x; // double check dPdv
 			BoundaryVector(2 * vmapid + 1, 0) += LAMBDA * dpdgcheck * dPdv.y; // double check dPdv

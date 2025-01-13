@@ -64,6 +64,7 @@ public:
 	double LAMBDAstdratio;
 	double meanLAMBDA;
 	double LAMBDAstd;
+	double Ntarget;
 	//ADDITIONAL FUNCTIONS
 	// Updates read input function to accept new global variables 
 	virtual void HelperReadInputData_SetGlobalValues(ifstream* datafile);
@@ -93,11 +94,24 @@ public:
 	//! Calculates the force on every vertex and stores the result in vertex.
 	virtual void ForceFunction(ofstream* errorfile);
 
+	// does the numerical integration for the simulation
+	virtual void Evolve(double interval, double* stepsize, ofstream* errorfile);
+
 	//! Sets the preferred area of A0 for all the cells
 	virtual void AssignPreferredAreas(bool constantA0, double A0, double A0std);
 
 	//! Sets the perimeter modulus for all the cells
 	virtual void AssignPerimeterModuli(bool constantPM, double PM, double PMstd);
+
+	// Do mitosis on cells. Picks cells for mitosis based on certain criteria and calls HelperMitosis(Cell * parentcell) to perform mitosis on those cells.
+	virtual bool Mitosis();
+
+	//virtual void DestroyCell(Cell* cptr);
+	// THIS CODE ALREADY SETS A0, YOU DON'T NEED TO ADD ANOTHER INPUT PARAMETER
+	virtual Cell* CreateCell(int typ, vector<Edge*> edgs, string potential, double tcjstrength, double thetaan, double anstrenght, double P0, double KAM, double PM);
+
+	//! This is the helper function that actually do mitosis on cells.
+	virtual void HelperMitosis(Cell* parentcell, double divisionangle);	
 };
 
 #endif

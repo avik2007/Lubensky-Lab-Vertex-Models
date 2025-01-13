@@ -121,7 +121,7 @@ int main()
 	//Read the input file
 	bool readfile;
 	
-	InputFileName = "C:\\Users\\abmondal\\Documents\\Lubensky-Lab-Vertex-Models\\MATLAB Data Folder\\shearmodulus_check0.6_EQ_0.010.txt";
+	InputFileName = "C:\\Users\\abmondal\\Documents\\Lubensky-Lab-Vertex-Models\\MATLAB Data Folder\\IRC_rng_100_p0_3.83_ELS_3_EQ_0.010.txt";
 	readfile = tissue.ReadInputData(InputFileName);
 	if (!readfile){
 		cout << "Ending because file was not readable" << endl;
