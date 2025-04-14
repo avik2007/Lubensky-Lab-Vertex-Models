@@ -17,7 +17,7 @@ rng(r);
 A0 = 1250;
 GAMMA =	 10;%strength of line tension coefficient
 t0 = 1; %time units
-K = 5 * GAMMA / (sqrt(A0))^3;  %"young's modulus", strength of area term - using equation given in Meryl's thesis
+K = 5 * GAMMA / (sqrt(A0));%^3;  %"young's modulus", strength of area term - using equation given in Meryl's thesis
 % K should have units of pressure!
 %GAMMA = 10;
 %K = 0.001;
