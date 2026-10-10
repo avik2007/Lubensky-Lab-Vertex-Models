@@ -1,0 +1,6 @@
+\contentsline {section}{\numberline {1}TCJ Angular Potential}{1}{}%
+\contentsline {section}{\numberline {2}Anisotropic Potential}{2}{}%
+\contentsline {section}{\numberline {3}Combined Potential}{2}{}%
+\contentsline {section}{\numberline {4}Implementation}{3}{}%
+\contentsline {subsection}{\numberline {4.1}TCJ and Anisotropic}{4}{}%
+\contentsline {subsection}{\numberline {4.2}Combined Distribution}{4}{}%

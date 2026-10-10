@@ -1,0 +1,25 @@
+\contentsline {section}{\numberline {1}Citation}{2}{}%
+\contentsline {section}{\numberline {2}Introduction to Brownian Dynamics}{2}{}%
+\contentsline {section}{\numberline {3}NPT ensemble}{4}{}%
+\contentsline {section}{\numberline {4}Calculation of the Dynamics}{5}{}%
+\contentsline {section}{\numberline {5}Changes for Periodic Boundary Conditions}{7}{}%
+\contentsline {subsection}{\numberline {5.1}Energy Dependence on Box Size}{8}{}%
+\contentsline {subsubsection}{\numberline {5.1.1}$ k A_0 A_{box}$}{8}{}%
+\contentsline {subsubsection}{\numberline {5.1.2}$ \gamma \sum \limits _{edges \hspace {1mm} j} l_j$}{8}{}%
+\contentsline {subsubsection}{\numberline {5.1.3}$\genfrac {}{}{}{}{k}{2} \sum \limits _{cells\hspace {1mm}i} A_i^2$}{10}{}%
+\contentsline {section}{\numberline {6}Full Dynamics}{12}{}%
+\contentsline {section}{\numberline {7}Internal Stress Tensor}{13}{}%
+\contentsline {section}{\numberline {8}Purpose of Box Length Derivative}{14}{}%
+\contentsline {subsection}{\numberline {8.1}Papers that mention this}{15}{}%
+\contentsline {subsection}{\numberline {8.2}Simple Model Calculation}{15}{}%
+\contentsline {section}{\numberline {9}Implementing this Formalism}{18}{}%
+\contentsline {subsection}{\numberline {9.1}Mobility Terms}{18}{}%
+\contentsline {subsection}{\numberline {9.2}Avoiding Deformation Gradient}{18}{}%
+\contentsline {section}{\numberline {10}Length Dependent Drag }{20}{}%
+\contentsline {subsection}{\numberline {10.1}Multiplicative Noise in Scaled Coordinates}{20}{}%
+\contentsline {subsection}{\numberline {10.2}Proving that there exists a Boltzmann Distribution in (x,L) phase space}{21}{}%
+\contentsline {section}{\numberline {11}Putting this all together}{23}{}%
+\contentsline {section}{\numberline {12}Calculating Pressure in the Vertex Model}{23}{}%
+\contentsline {section}{\numberline {13}Predicting the Steady State Area of Cells in a Hexagonal Lattice}{24}{}%
+\contentsline {subsection}{\numberline {13.1}Steady State for Perimeter Squared Model}{25}{}%
+\contentsline {section}{\numberline {14}Units in the Vertex Model}{26}{}%

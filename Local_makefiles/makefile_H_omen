@@ -1,0 +1,21 @@
+VM    = /home/avik2007/Lubensky-Lab-Vertex-Models/AG Vertex Model/AGVertexModel
+BASE  = $(VM)/AGVertexModel
+PERIM = $(VM)/AGPerimVertex
+HESS  = $(VM)/AGPerimHessian_test/AGPerimHessian_test
+EIGEN = $(VM)/AGPerimHessian_test/packages/Eigen3.3.3.9/lib/native/include
+
+all:
+	g++ -std=c++11 -g -fno-fast-math \
+	-I"$(BASE)" -I"$(PERIM)" -I"$(HESS)" -I"$(EIGEN)" \
+	"$(BASE)/AGCell.cpp" \
+	"$(BASE)/AGTissue.cpp" \
+	"$(BASE)/CellClass.cpp" \
+	"$(BASE)/EdgeClass.cpp" \
+	"$(BASE)/TissueClass.cpp" \
+	"$(BASE)/VectClass.cpp" \
+	"$(BASE)/VertexClass.cpp" \
+	"$(PERIM)/AGPerimTissue.cpp" \
+	"$(PERIM)/AGPerimEdge.cpp" \
+	"$(PERIM)/AGPerimCell.cpp" \
+	"$(HESS)/MainHessianTest.cpp" \
+	-o agperim_hess

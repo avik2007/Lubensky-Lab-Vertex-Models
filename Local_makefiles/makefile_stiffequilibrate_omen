@@ -1,0 +1,25 @@
+VM    = /home/avik2007/Lubensky-Lab-Vertex-Models/AG Vertex Model/AGVertexModel
+BASE  = $(VM)/AGVertexModel
+PERIM = $(VM)/AGPerimVertex
+STIFF = $(VM)/AGStiffness/AGStiffness
+STIFFEQUIL = $(VM)/AGStiffEquilibrate
+EIGEN = $(VM)/AGStiffness/packages/Eigen3.3.3.9/lib/native/include
+
+all:
+	g++ -std=c++11 -g \
+	-I"$(BASE)" -I"$(PERIM)" -I"$(STIFF)" -I"$(STIFFEQUIL)" -I"$(EIGEN)" \
+	"$(BASE)/AGCell.cpp" \
+	"$(BASE)/AGTissue.cpp" \
+	"$(BASE)/CellClass.cpp" \
+	"$(BASE)/EdgeClass.cpp" \
+	"$(BASE)/TissueClass.cpp" \
+	"$(BASE)/VectClass.cpp" \
+	"$(BASE)/VertexClass.cpp" \
+	"$(PERIM)/AGPerimTissue.cpp" \
+	"$(PERIM)/AGPerimEdge.cpp" \
+	"$(PERIM)/AGPerimCell.cpp" \
+	"$(STIFF)/AGStiffTissue.cpp" \
+	"$(STIFF)/AGStiffCell.cpp" \
+	"$(STIFF)/AGStiffEdge.cpp" \
+	"$(STIFFEQUIL)/MainStiffEquilibrate.cpp" \
+	-o agperim_stiffequilibrate

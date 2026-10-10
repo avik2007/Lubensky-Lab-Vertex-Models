@@ -1,0 +1,6 @@
+all:	
+	g++ -std=c++11 -g  AGCell.cpp AGCell.h AGConstants.h AGTissue.cpp AGTissue.h CellClass.cpp CellClass.h Constants.h \
+	EdgeClass.cpp EdgeClass.h TissueClass.cpp TissueClass.h VectClass.cpp VectClass.h VertexClass.cpp VertexClass.h \
+	MainReverse.cpp AGPerimTissue.h AGPerimTissue.cpp AGPerimEdge.h AGPerimEdge.cpp AGPerimConstants.h AGPerimCell.h \
+	AGPerimCell.cpp -o agperim_reverse
+

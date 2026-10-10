@@ -1,0 +1,20 @@
+VM    = /home/avik2007/Lubensky-Lab-Vertex-Models/AG Vertex Model/AGVertexModel
+BASE  = $(VM)/AGVertexModel
+PERIM = $(VM)/AGPerimVertex
+MODULI = $(VM)/AGPerimModuli
+
+all:
+	g++ -std=c++11 -g \
+	-I"$(BASE)" -I"$(PERIM)" -I"$(MODULI)" \
+	"$(BASE)/AGCell.cpp" \
+	"$(BASE)/AGTissue.cpp" \
+	"$(BASE)/CellClass.cpp" \
+	"$(BASE)/EdgeClass.cpp" \
+	"$(BASE)/TissueClass.cpp" \
+	"$(BASE)/VectClass.cpp" \
+	"$(BASE)/VertexClass.cpp" \
+	"$(PERIM)/AGPerimTissue.cpp" \
+	"$(PERIM)/AGPerimEdge.cpp" \
+	"$(PERIM)/AGPerimCell.cpp" \
+	"$(MODULI)/MainYM.cpp" \
+	-o agperim_calculatedE

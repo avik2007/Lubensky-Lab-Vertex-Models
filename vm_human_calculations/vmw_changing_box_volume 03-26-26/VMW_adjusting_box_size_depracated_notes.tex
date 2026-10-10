@@ -1,0 +1,251 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{physics}
+\usepackage{float} 
+\usepackage[margin=1in]{geometry}
+\usepackage{enumitem}
+\usepackage{breqn}
+\usepackage{soul,color}
+\usepackage{blindtext}
+\usepackage{mathtools}
+\usepackage{verbatim}
+\begin{document}
+\title{ Vertex Model Calculations \\ {\normalsize Adjusting Box Size}}
+\author{Avik Mondal}
+\maketitle 
+\tableofcontents
+\section{Depracated Fokker Planck stuff}
+The following section was calculated with an incorrect dynamical system. I have since corrected the coordinate dynamics. As of 5/13/20, I don't  believe it is possible to get rid of the time dependent friction the following argument.
+\subsection{Scaling Mobility Terms}
+Something that could become an issue for the simulation in the case of the box getting large is the dynamics for the unscaled coordinates. We note that in Eqn \ref{eqn: coordinatedyn}, the dynamics scale as the box size squared. As the number of cells in the box increases and the box gets bigger, this could lead to increasingly large numbers for the simulation to process. To account for this, I use this section to see how to correctly scale the mobility inversely with box size squared. \\ \\
+We begin by writing what would be the correct set of Langevin equations for our simulation:
+\begin{center}
+\begin{equation}
+\label{eqn: brownianydn}
+\begin{split}
+\pdv{x_i^n}{t} &= -\nu |L_i|^2 \pdv{\bar{H}}{x_i^n} + B_i |L_i| \eta_i^n(t)\\
+\pdv{F_{\beta\beta}}{t} &= -\mu \pdv{\bar{H}}{F_{\beta\beta}} + C_\beta \xi_{\beta\beta}(t)\\
+\end{split}
+\end{equation}
+\end{center}
+More details for the stochastic variables:
+\begin{center}
+\begin{equation}
+\begin{split}
+\expval{\eta_i^n} &= 0\\
+\expval{\xi_{\alpha\alpha}} &= 0\\
+\expval{\eta_i^n(t) \eta_j^m(t') } &= \delta_{nm} \delta_{ij} \delta(t-t')\\
+\expval{\xi_{\alpha\alpha}(t) \xi_{\beta\beta}(t')} &= \delta_{\alpha\beta} \delta(t-t')\\
+\expval{\eta_i^n(t) \xi_{\alpha\alpha}(t')} &= 0\\
+\end{split}
+\end{equation}
+\end{center}
+In less symbols, all the noise in Eqns \ref{eqn: brownianydn} is white. I will study how to nicely scale the mobility terms $\nu$ and $\mu$ by checking the form of the equilibrium distribution of the Fokker Planck equation that corresponds to this set of Langevin equations. \\ \\
+For the theory used in this section, I'm using the following: \\\\
+Langevin Equations with Multiplicative Noise. Theory and Applications to Physical Processes,
+Katja Lindenberg, K. E. Shuler, V. Seshadri and B. J. West, in \textit{Probabilistic Analysis and Related
+Topics}, ed. T. Bharucha-Reid, Vol. 3 (Academic Press, 1983).
+\\ \\
+which nicely covers handling multiplicative noise, Ito-Stratanovich dilemna and some examples of the application of these topics. \\ \\
+On the topic of Ito vs Stratonovich, I've gone with the Stratanovich interpretation of the Fokker Planck equation for the following calculation; ultimately, it seems like the Stratanovich interpretation is far more reasonable for any physical processes. This interpretation assumes that the random noise does have a correlation on small times, which is consistent with observations of microscopic processes. Then, the Fokker Planck equation is derived by taking the limit that this correlation time interval approaches 0, more out of mathematical convenience than any physical reality. So then, for the Stratanovich interpretation, a multidimensional Langevin equation of the form of :
+\begin{center}
+\begin{equation}
+\label{eqn: lindenberg1}
+\dv{\vb{x}(t)}{t} = \vb{G}[\vb{x}(t)] + \underline{\underline{g}}[\vb{x}(t)]\vb{f}(t)  
+\end{equation}
+\end{center}
+(where $\vb{f}(t)$ is analagous to my $ \nu(t)$) corresponds to the following Fokker Planck Equation:
+\begin{center}
+\begin{equation}
+\label{eqn: sfp}
+\pdv{P(\vb{x} ,t|\vb{x}_0)}{t} = -\sum\limits_j \pdv{x_j} \bigg\{ \bigg[G_j + \frac{1}{2} \sum\limits_l \pdv{x_l} g^2_{jl}\bigg]P\bigg\} + \sum\limits_{i,j} \pdv{[g_{ij}^2 P]}{x_i}{x_j}
+\end{equation}
+\end{center}
+where $g_{ij}^2 = g_{il} g_{jl}$. We can easily see what $\vb{G}$ and $\underline{\underline{g}}$ should be: 
+\begin{center}
+\begin{equation}
+\vb{G} = \mqty( -\nu |L_1|^2 \pdv{\bar{H}}{x_1^1}\\ -\nu |L_2|^2 \pdv{\bar{H}}{x_2^1}\\ \vdots\\ -\mu \pdv{\bar{H}}{F_{11}}\\ -\mu \pdv{\bar{H}}{F_{22}}) \hspace{1cm} \underline{\underline{g}} = \mqty(\dmat{B_1 |L_1|, B_2 |L_2|, \ddots, C_1, C_2 })
+\end{equation}
+\end{center}
+Noting the form of $\underline{\underline{g}}$, we can see that $\nabla \cdot {\underline{\underline{g}}} = 0$. This allows us to simplify our Fokker Planck equation:
+\begin{center}
+\begin{equation}
+\label{eqn: ansatz}
+\sum\limits_j \pdv{x_j} (G_j P) = \frac{1}{2}\sum\limits_{i,j} \pdv{[g_{ij}^2 P]}{x_i}{x_j} 
+\end{equation}
+\end{center} 
+I also dropped the time derivative since we are ultimately only interested in the equilibrium solution. To find P, I will try an Ansatz of:
+\begin{center}
+\begin{equation}
+\label{eqn: boltzmann}
+P = \frac{1}{Z} \exp\bigg[\int 2  \underline{\underline{g}}^{-2} \cdot \vb{G} \cdot d{\vb{x}} \bigg] = \frac{1}{Z} \exp\bigg[\frac{\bar{H}}{k_B T}\bigg]
+\end{equation}
+\end{center}
+where I am using $\vb{x}$ as a vector containing all the degrees of freedom of this system, including all the unscaled coordinates and the deformation gradient. Z normalizes this probability distribution.  Since:
+\begin{center}
+\begin{equation}
+\label{eqn: lineint}
+\int \pdv{\bar{H}}{\vb{x}}\cdot d\vb{x} = \bar{H}
+\end{equation}
+\end{center}
+I'm going define constants in such a way that:
+\begin{center}
+\begin{equation}
+\label{eqn: gG}
+\underline{\underline{g}}^{-2}\cdot\bar{G} = \frac{\nabla \bar{H}}{k_B T}
+\end{equation}
+\end{center}
+where $\nabla$ runs over all the derivatives with respect to all the degrees of freedom in our Langevin equations, which for our purposes, includes unscaled coordinates and the deformation gradients. This means that we need to make the following variable assignments:
+\begin{center}
+\begin{equation}
+B_i = \sqrt{2 k_B T \nu} \hspace{2cm} C_i = \sqrt{2 k_B T \mu}
+\end{equation}
+\end{center}
+and so to get the Boltzmann distribution, our constants do not need to scale with box lengths or coordinates. Finally, I need to check that this Ansatz satisfies Eqn. \ref{eqn: ansatz}. Plugging in this Ansatz, we get the following:
+\begin{center}
+\begin{equation}
+\label{eqn: plugin}
+\nabla \cdot (\vb{G} P) = \frac{1}{2} \nabla\cdot \nabla \cdot (\underline{\underline{g^2}}P ) = \mqty( -\nu |L_1|^2 \pdv[2]{\bar{H}}{x_1}\\ -\nu |L_2|^2 \pdv[2]{\bar{H}}{x_2}\\ \vdots\\ -\mu \pdv[2]{\bar{H}}{F_{11}}\\ -\mu \pdv[2]{\bar{H}}{F_{22}})P + \mqty( -\nu |L_1|^2 \pdv{\bar{H}}{x_1^1}\\ -\nu |L_2|^2 \pdv{\bar{H}}{x_2^1}\\ \vdots\\ -\mu \pdv{\bar{H}}{F_{11}}\\ -\mu \pdv{\bar{H}}{F_{22}})\cdot \bigg(- \frac{\nabla \bar{H}}{k_B T}\bigg)P
+\end{equation}
+\end{center}
+Then, our Ansatz satisfies the Stratanovich Fokker Planck equation given our chosen values of $B_i$ and $C_i$. and it appears that we can very simply scale the mobilities to deal with the box length. I propose the following:
+\begin{center}
+\begin{equation}
+\nu_1 = \frac{\nu'}{|L_1|^2} \hspace{1cm} \nu_2 =  \frac{\nu'}{|L_2|^2}
+\end{equation}
+\end{center}
+where $\nu_1$ applies to the ``x" unscaled coordinates and $\nu_2$ applies to the ``y" unscaled coodinates. If we cared about $B$ and $C$ we would have to plug in the new values of $\mu$ and $\nu$ to satisfy the Fokker Planck equation.
+
+Strictly speaking, the correct way to check how to properly scale the mobilities would be to make sure that my Langevin equation satisfies the Fluctuation-Dissipation Theorem. In this work, I satisfy FDT by correctly setting $B$ and $C$ such that I get a Boltzmann distribution as the stationary solution to the Fokker-Planck equation. This is analogous to using the correct Einstein Relation, which is a consequence of  FDT. 
+
+\section{Depracated Calculations from Previous Iteration of this document}
+$\pdv{E}{s_e}$ makes no sense because of the fundamental theorem of calculus, which I apparently forgot. I'm leaving these calculations because I want to have a record of the radius of curvature calculations as well as the simplified Doi and Edwards Lagrange multiplier calculations.
+
+\subsection{Constraints on Radius of Curvature}
+
+Another way of paramaterizing these curved edges is by using a radius of curvature. This might be a bit more physically justified method of talking about curved edges, given the types of forces on each edge. In the vertex model, each edge has 3 forces acting on it: two hydrostatic pressures and a tensile force. From the Young-Laplace Law, we know that these three forces constrain an edge to look like a section of a circle. The Young-Laplace Law in 2D looks like:
+\begin{center}
+\begin{equation}
+\frac{T}{R} = \Delta p
+\end{equation}
+\end{center}
+In our system, $\Delta p$ is the differences in pressures across the edge. $T$ is the tension, which in our system is fixed. $R$ is the radius of curvature. \\ \\
+Sidenote: I learned a lot of this radius of curvature stuff from studying some of the theory of the bubbly vertex model, particularly from this paper: \\  \\
+Ishimoto, Y., Morishita, Y. (2014) "Bubbly vertex dynamics: A dynamical and geometrical model for epithelial tissues with curved cell shapes". Physical Review E 90, 052711. DOI: 10.1103/PhysRevE.90.052711 \\ \\ \\
+From this paper, we get nice equations for the length of curved edges as well as the areas of cells with these curved edges:
+\begin{center}
+\begin{equation}
+\begin{split}
+L_e &= 2 R_e \arcsin(\frac{L_e^0}{2 R_e})\\
+A_a &= A_a^0 + \sum\limits_{\expval{k}} R_k^2\bigg(\arcsin(\frac{L_k^0}{2 R_k}) - \frac{L_k^0}{2 R_k}\bigg)\\
+\end{split}
+\end{equation}
+\end{center}
+where $\expval{k}$ refers to the edges associated with cell $a$ and $A_a^0$ is the area of a cell with straight edges. I should note, in the formalism introduced by the above paper, the radius of curvature is defined as positive with respect to a cell if it is concave to said cell and negative with respect to a cell if it is convex to said cell. With this in mind, we do not need to add any "sign" factors to the area. calculation. Our vertex model energy with the radius of curvature looks like:
+\begin{center}
+\begin{equation}
+\label{eqn: radiienergy}
+E = \sum\limits_{\text{edges }e} 2 \gamma R_e \arcsin(\frac{L_e^0}{2 R_e}) + \sum\limits_{\text{cells }a} \frac{K}{2} \bigg[ A_a^0 + \sum\limits_{\expval{k}} R_k^2\bigg(\arcsin(\frac{L_k^0}{2 R_k}) - \frac{L_k^0}{2 R_k}\bigg) - A_0\bigg]^2
+\end{equation}
+\end{center}
+Now, there are two constraints that seem like they would be good for this system. Looking at the Young-Laplace Law, it is evident that with a fixed tension and a fixed non-zero pressure, there will be curved edges. However, if there were another force acting on the length of the edge that could cause this pressure differential to go to $0$, that would be equivalent to the radius of curvature approaching infinity. So one potential constraint is:
+\begin{center}
+\begin{equation}
+C_e = R_e^2 - c^2
+\end{equation}
+\end{center}
+where $c$ is some arbitrary constant that I will take to $\infty$ at the end of the calculation. This shares an important similarity with the constraints I tried for $\eta$ in the previous section. Just as with those constraints, this curvature constraint is only a function of the radius of curvature, so solving for the Lagrange multiplier becomes relatively simple. Additionally, the a similar expression as before holds:
+\begin{center}
+\begin{equation}
+\lambda_e = \cfrac{\pdv{R_e}E}{\pdv{R_e}C_e}\bigg\vert_{R_e \to \infty}
+\end{equation}
+\end{center}
+We can calculate this derivative:
+\begin{center}
+\begin{equation}
+\label{eqn: dedr}
+\pdv{E}{R_e} = 2\gamma\Bigg[\arcsin(\frac{L_e^0}{2 |R_e|}) - \cfrac{\cfrac{L_e^0}{2 |R_e|}}{\sqrt{1 - \bigg(\cfrac{L_e^0}{2 R_e}\bigg)^2}}\Bigg] + K(A_e^1 - A_e^2)\Bigg[2 |R_e| \arcsin(\frac{L_e^0}{2 |R_e|}) -\frac{L_e^0}{2} - \cfrac{\cfrac{L_e^0}{2}}{\sqrt{1 - \bigg(\cfrac{L_e^0}{2 R_e}\bigg)^2}}\Bigg]
+\end{equation}
+\end{center}
+I simplified the derivative of the area term by noting that since two cells will share edge $e$, the derivatives of the areas with respect to their curvatures should only differ by a sign. Then, the derivative of the area term should effectively be the difference of the areas multiplied by the same factor. Here, $A_e^2$ is the the area of the cell that sees the edge $e$ as convex. I've put absolute values on the $R_e$'s for this equation to just so that the derivative behaves in a reasonable way. The sign convention of R introduced in the paper is convenient for calculating areas but is not taken into account for this derivative. Whether or not a cell sees an edge as convex or concave, the energy of an edge (tensile energy) should go up when the magnitude of the radius of curvature goes up, because this increases the length of the edge.\\ \\
+Solving for the Lagrange multiplier requires plugging in $|R_e| = |c|$ and taking the limit that $|c|\to\infty$. Unfortunately, this results in the above derivative being $0$. The Lagrange multiplier then becomes:
+\begin{center}
+\begin{equation}
+\lambda_e = \cfrac{\pdv{R_e}E}{\pdv{R_e}C_e}\bigg\vert_{R_e \to \infty} = \cfrac{\pdv{R_e}E}{2 R_e}\bigg\vert_{R_e \to \infty} = \frac{0}{\infty} = 0
+\end{equation}
+\end{center}
+which is also not helpful. \\ \\
+An alternative constraint is the following:
+\begin{center}
+\begin{equation}
+\label{eqn: toughconstraint}
+C_e = \Bigg(2 R_e \arcsin(\frac{L_e^0}{2 R_e})\Bigg) - (L_e^0)
+\end{equation}
+\end{center}
+
+where I constrain R_e to be positive (I can deal with the sum over areas in other ways). One thing we can say immediately is that this constraint is definitely a function of vertex positions and the deformation gradient because of the $L_e^0$. As a result, solving for the set of Lagrange multipliers is significantly more difficult and requires the theory of Doi and Edwards. 
+
+\subsection{Doi and Edward Lagrange Multiplier Theory}
+They have a formula for the set of Lagrange multipliers given a dynamical equation for degrees of freedom and constraint equations:
+\begin{center}
+\begin{equation}
+\label{eqn: doiedwardslambda}
+\lambda_p = \bigg(\pdv{C_p}{q_a} H_{ab} \pdv{C_q}{q_b}\bigg)^{-1} \pdv{C_q}{q_n} H_{nm} \pdv{q_m} E
+\end{equation}
+\end{center}
+Lots to unpack here. $C_p$ is the set of constraints on the system. In our case, $p$ runs from $1$ to the number of edges. $H_{nm}$ is the matrix that contains all the mobility coefficients. A better way to define it is to say that Doi and Edwards define the dynamics of their system as:
+\begin{center}
+\begin{equation}
+\label{eqn: doiedwardsdyna}
+v_n = H_{nm} F_m
+\end{equation}
+\end{center}
+where $v_n$ is the time derivative of some degree of freedom in the system and $F$ is the force defined as the derivative of a potential with respect to that degree of freedom (this is a simplification of Doi and Edward's theory, but for our purposes in the zero-temperature limit, it is accurate). Summation over $m$ is implied. In our case, $H_{nm}$ is diagonal. The $q_n$ I use in Eqn \ref{eqn: doiedwardslambda} refers to the set of degrees of freedom of our system, now including vertex coordinates, deformation gradient elements, and $s_e$'s. This Lagrange multiplier equation is derived from the following three equations:
+\begin{center}
+\begin{equation}
+\begin{split}
+v_n &= H_{nm} F_m\\
+F_m &= -\pdv{q_m} E + \lambda_p \pdv{C_p}{q_m} \\
+\pdv{C_p}{\vb{q}}\cdot \vb{v} &= 0
+\end{split}
+\end{equation}
+\end{center}
+The first equation is the dynamical equation of the system. The second equation defines the forces. The last equation extremizes the system (and is equivalent to setting the gradient of the energy to $0$ with the previous constraints). \\ \\
+\subsection{Problem with Complicated Constraints}
+Doi and Edward's give a tidy way of handling the constraints that depend on the majority of the degrees of freedom. However, I believe that such constraints will prevent us from solving this system analytically. Take the constraint from Eqn \ref{eqn: toughconstraint}. Because of $L_e^0$, the constraint depends on vertex coordinates and sometimes the deformation gradient in addition to the new degree of freedom, the radius of curvature. That means that $q_n \in {{\tilde{x_i^n}}, {F_{\alpha\alpha}}, {R_e}}$. This means that $\pdv{C_q}{q_m}$ is not a square matrix, since have less constraints than degrees of freedom. Then, we can only invert the parenthesized portion of Eqn. \ref{eqn: doiedwardslambda} by calculating out the entire thing. In addition to this, one can convince themselves that the final parenthesized quantity, while square, will not be a diagonal matrix. That makes inverting the matrix analytically non-trivial. It might have to be a computational problem. On the off chance that we do find a way to solve this problem, here's some more details pertaining to the Doi and Edwards theory: \\ \\ 
+
+Since we're introducing a new degree of freedom, we need to introduce a ``velocity" for it. I propose the following:
+\begin{center}
+\begin{equation}
+\pdv{R_e}{t} = -o \pdv{E}{R_e}
+\end{equation}
+\end{center}
+where $o$ was supposed to be omicron to stay consistent with the other mobility terms but it turns out omicron looks like ``o". Then, $H_{ab}$ looks like:
+\begin{center}
+\begin{equation}
+\underline{\underline{H}} = \mqty(\dmat{-\nu, \ddots, -\mu, \ddots, -o, \ddots})
+\end{equation}
+\end{center}
+where the ellipses represent repeats of the previously mentioned term and the off diagonal terms are $0$. We have 3 different derivatives for the constraints:
+\begin{center}
+\begin{equation}
+\pdv{C_e}{R_e} = \delta_{p = R_e} \bigg[2 \arcsin(\frac{L_e^0}{2 R_e}) - \cfrac{\frac{L_e^0}{2 R_e}}{\sqrt{1-\bigg(\frac{L_e^0}{2 R_e}\bigg)^2}}\bigg]
+\end{equation}
+\end{center}
+\begin{center}
+\begin{equation}
+\pdv{C_p}{x_i^n} = \delta_{p = x_i^n} \Bigg[\cfrac{-(\vu{L}_p^0)_i}{\sqrt{1-\bigg(\frac{L_p^0}{2 R_p}\bigg)^2}}\Bigg]
+\end{equation}
+\end{center}
+\begin{center}
+\begin{equation}
+\pdv{C_p}{F_{\alpha\alpha}} = \delta_{p=F_{\alpha\alpha}} \delta(\text{p is a crossing edge})\Bigg[\cfrac{\cos(\vu{L}_p^0, \vu*{\alpha}) L_{\alpha\alpha}}{\sqrt{1-\bigg(\frac{L_p^0}{2 R_p}\bigg)^2}}\Bigg]
+\end{equation}
+\end{center}
+\subsection{Toy Model with Radius of Curvature}
+This may or may not very useful in any way shape or form, but if we imagine a vertex model that has fixed vertex and box degrees of freedom, we effectively have an energy that only depends on the radius of curvature.  Then, we simplify our Lagrange multiplier theory greatly. In that case, we end up with $\lambda_e = \gamma$. This should be intuitive, since if all the vertices and edges are all fixed, the only way to minimize energy with a constraint that looks like the edge of the length is to make the Lagrange multiplier identical to the tension.
+\end{document}

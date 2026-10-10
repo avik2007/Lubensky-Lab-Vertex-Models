@@ -1,0 +1,7 @@
+\contentsline {section}{\numberline {1}Depracated Fokker Planck stuff}{1}% 
+\contentsline {subsection}{\numberline {1.1}Scaling Mobility Terms}{1}% 
+\contentsline {section}{\numberline {2}Depracated Calculations from Previous Iteration of this document}{4}% 
+\contentsline {subsection}{\numberline {2.1}Constraints on Radius of Curvature}{4}% 
+\contentsline {subsection}{\numberline {2.2}Doi and Edward Lagrange Multiplier Theory}{7}% 
+\contentsline {subsection}{\numberline {2.3}Problem with Complicated Constraints}{8}% 
+\contentsline {subsection}{\numberline {2.4}Toy Model with Radius of Curvature}{9}% 

@@ -1,0 +1,146 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{physics}
+\usepackage{float} 
+\usepackage[margin=1in]{geometry}
+\usepackage{enumitem}
+\usepackage{breqn}
+\usepackage{soul,color}
+\usepackage{blindtext}
+\usepackage{mathtools}
+
+\begin{document}
+\title{ Vertex Model Calculations \\ {\normalsize Anisotropic Divisions}}
+\author{Avik Mondal}
+\maketitle 
+\tableofcontents
+\section{TCJ Angular Potential}
+
+At the individual cell level, we borrow from the theory developed in a Nature paper (Bosveld et al, 2016). In this paper, they develop a model to describe the effect of the distribution of the tricellular junctions on the placement of the cleavage plane in mitosis. See paper for the full theory: 
+\\ \\
+Bosveld, F., Markova, O., Guirao, B. et al. Epithelial tricellular junctions act as interphase cell shape sensors to orient mitosis. Nature 530, 495–498 (2016). \\ https://doi.org/10.1038/nature16970 \\ \\
+
+Here, I implemented a simplified model in the vertex model.
+\begin{center}
+\begin{equation}
+U(\theta) = \cos[ 2 (\theta - \theta_{TCJ}) ]
+\end{equation}
+\end{center} 
+This model roughly follows the theoretical curve for the GFP-Mud potential in the paper's Figure 2g. As the paper mentions,  since this potential seems to allow for a more accurate prediction the angle of the cell's elongation axis and division axis immediately prior to mitosis. 
+$\theta_{TCJ}$ is an angle derived by taking into account the angular distribution of the tricellular junctions in the cells. This leads to a probability distribution of:
+\begin{center}
+\begin{equation}
+P(\theta) = \frac{1}{\pi I_0(k_{\theta})}\exp\{-k_{\theta}\cos[2(\theta - \theta_{TCJ})]\} \hspace{1cm} \theta \in [0,\pi)
+\end{equation}
+\end{center}
+$k_\theta$ acts as an inverse temperature factor. It can also be thought of as the strength of the potential. Here, $I_0(k_\theta)$ refers to the Bessel ``I" function of order zero, evaluated at $k_\theta$. This arises because the integral of an exponential of a cosine (or a sine) is the integral definition of a Bessel function. See section \ref{mod} for details of implementation.
+\section{Anisotropic Potential}
+In order to enforce an overall anisotropy for a cell packing, I also added another potential of the following form:
+\begin{center}
+\begin{equation}
+U(\theta) = k \cos^2(\theta - \theta_{an})
+\end{equation}
+\end{center}
+This potential is inspired by one used for anisotropic magnetic materials. It is also good to note that ultimately this form is trivially different than the TCJ potential written in the previous section. I'll leave it in this form because I find it a bit more intuitive as a potential for anisotropy. Then, for this potential, the probability distribution is:
+\begin{center}
+\begin{equation}
+P(\theta) = \frac{1}{\pi  e^{-\frac{k}{2}} I_0\left(\frac{k}{2}\right)} \exp\{- k\cos^2[\theta - \theta_{an}]\}
+\end{equation}
+\end{center}
+\section{Combined Potential}
+Ultimately, both potentials will be implemented concurrently. The anisotropic potential will be added to guarantee that even the most disordered packings show anisotropy in the long run. The only thing that makes this potential non-trivial after the last two sections is the normalization.
+\begin{center}
+\begin{equation}
+U = k_\theta \cos[2(\theta - \theta_{TCJ})] + k \cos^2[\theta-\theta_{AN}]
+\end{equation}
+\end{center}
+The integral of the negative exponential of this is not an integral that I could find in tables or in Mathematica. However, the following integral is a known quantity:
+\begin{center}
+\begin{equation}
+\int\limits_{\theta = 0}^{\theta = \pi} \exp\{ -A \sin(2 \theta) - B \cos(2 \theta) \} d\theta = \pi I_0 (\sqrt{A^2 + B^2})
+\end{equation}
+\end{center}
+We can rewrite the above potential to get it in the desired form:
+\begin{center}
+\begin{equation}
+\begin{split}
+U(\theta) &= k_\theta \cos[2(\theta - \theta_{TCJ})] + k \cos^2[\theta-\theta_{AN}]\\
+ &= k_\theta \cos[2(\theta - \theta_{TCJ})] + k \{\frac{1}{2}\cos[2(\theta - \theta_{AN})] + \frac{1}{2}\}\\
+ &= k_\theta \cos(2\theta) \cos(2\theta_{TCJ}) + k_\theta \sin(2\theta) \sin(2\theta_{TCJ}) + \frac{k}{2} \cos(2\theta) \cos(2\theta_{AN}) + \frac{k}{2} \sin(2\theta) \sin(2\theta_{AN})\\
+ &= \big[k_\theta \cos(2\theta_{TCJ}) + \frac{k}{2}\cos(2\theta_{AN})\big]\cos(2\theta) + \big[k_\theta\sin(2\theta_{TCJ}) + \frac{k}{2}\sin(2 \theta_{AN}) \big] \sin(2\theta)
+\end{split}
+\end{equation}
+\end{center}
+I dropped the constant $\frac{k}{2}$ since it will have no affect on the final potential. Now, we have the form that we need. The normalization constant for this potential is:
+\begin{center}
+\begin{equation}
+Z = \pi I_0 ({\sqrt{\big[k_\theta\sin(2\theta_{TCJ}) + \frac{k}{2}\sin(2 \theta_{AN}) \big]^2 + \big[k_\theta\cos(2\theta_{TCJ}) + \frac{k}{2}\cos(2\theta_{AN})\big]^2 )}}
+\end{equation}
+\end{center}
+\section{Implementation}
+\label{mod}
+I'm using rejection sampling to sample values. 
+A detailed description of the algorithm (and the reasoning behind it) is given nicely here:\\ https://en.wikipedia.org/wiki/Rejection\_sampling\#Algorithm. \\ \\
+(Note to self: figure out hyperlinks, the package ``hyperrefs" is not working). \\ \\
+Typically, the analytical method of implementing probability distributions is known as Inverse Transform Sampling. Using this method involves being able to nicely invert the cdf's of all the probability distributions. However, for all of the above potentials, even just calculating the cdf over a portion of the domains is analytically impossible. Thus, we resort to a numerical method. Rejection sampling is very reminiscent of Monte Carlo computational methods. The effective algorithm is as follows:
+\begin{enumerate}
+\item Instantiate two random uniform variables. The first (call it $X$) is distributed uniformly over the domain of the probability distribution. The second (call it $Y$) is distributed uniformly over the range of the function. (*Note: Technically, this would be the most efficient way to implement Y. If finding a maximum is difficult, in theory you could find just an upper bound for the maximum value of Y. The larger this bound however, the less efficient the rejection sampler). 
+\item Sample $X$ and $Y$. Treat $X$ as a proposed random variable from your distribution of choice (call it $P(X)$ ).
+
+\item Accept $X$ if $P(X) > Y$. Otherwise, resample. 
+\end{enumerate}
+One thing I realize now is that is algorithm does not need a normalized probability distribution. Without normalization, you would still accept values at the correct rate.
+
+Rejection sampling works nicely for non-standard probability distributions and is allegedly faster than Inverse Transform Sampling, but it does make modularity in the code a bit harder to achieve. What I am doing for now is creating a method known as ``DivisionAngleDistribution" which takes a string argument. The string argument will be the name of a potential, i.e ``TCJ, ani, or combined". The method will choose which potential to carry out rejection sampling with according to the string argument. This function will be virtual so that new potentials can be added to it. As far as the input file goes, if the potential is ``ani" or ``combined", the cells are told what their anisotropic strength and anisotropic division angle should be. This information is omitted for the ``TCJ" potential. 
+
+\subsection{TCJ and Anisotropic}
+These potentials are a bit simpler because the exponential only has one function of $\theta$. For the purposes of the rejection sampling, I sample over the domain with $X = \theta - \theta_{TCJ}$ (replace $\theta_{TCJ}$ with $\theta_{an}$ for anisotropic potential). Then, once an appropriate sampling has been made, I add back in the constant angle. This sampling also makes it simple to identify the maximum value of both probability distribution; for both, $\theta_{max} = \frac{\pi}{2}$. Finding the maximum of the probability distribution is a requirement for rejection sampling.
+
+\subsection{Combined Distribution}
+This potential is more complicated. For one, I can't omit the $\theta_{TCJ}$ and $\theta_{an}$ until later as with the other potentials. They are parameters of the function I use to calculate this distribution. Secondly, because the different parameters ($k_\theta$ (tcj strength), $k$ (anisotropic strength), $\theta_{TCJ}$, and $\theta_{an}$) can make the function vary significantly, the location of the maximum can vary wildly. However, in the process of simplifying it to a form that could be normalized easily, we found a form that should make it analytically simple enough to find a maximum. The actual location of the maximum is significantly harder to find and not really necessary. 
+
+We are effectively trying to find the minima of the combined potential that looks something like $A \sin(2\theta) + B \cos(2\theta)$ (the minima of the potential will give the maximum of the probability distribution). We can solve this problem by solving the following system of equations:
+\begin{center}
+\begin{equation}
+\begin{split}
+\cos^2(2\theta_c) + \sin^2(2\theta_c) &= 1\\
+-B \sin(2\theta_c) + A\cos(2\theta_c) &= 0\\
+\end{split}
+\end{equation}
+\end{center}
+These two equations nicely allow us to solve for the extrema of the potential without needing to know the critical angle. The reason for this is that the Pythagorean theorem gives us an equation that allows us to relate the sine or cosine of the critical angle to some rational number. We can see this here. Solving the second of the two above equations, we get:
+\begin{center}
+\begin{equation}
+\cos(2\theta_c) = \frac{B}{A} \sin(2\theta_c)
+\end{equation}
+\end{center}
+We can plug this into the Pythagorean theorem:
+\begin{center}
+\begin{equation}
+\begin{split}
+\bigg(1+\frac{B^2}{A^2}\bigg) \sin^2(2\theta_c) &= 1 \rightarrow \\
+\sin^2(2\theta_c) = \cfrac{1}{1+\frac{B^2}{A^2}}
+\end{split}
+\end{equation}
+\end{center}
+Now, we have completely solved for the sine and cosine of the critical angle - we can plug them into get what we want:
+\begin{center}
+\begin{equation}
+\begin{split}
+A\cos(2\theta_c) + B\sin(2\theta_c) &= \\
+A \sqrt{\cfrac{1}{1+\frac{B^2}{A^2}}} + \frac{B^2}{A} \sqrt{\cfrac{1}{1+\frac{B^2}{A^2}}} &= \sqrt{A^2 + B^2} \\
+\end{split}
+\end{equation}
+\end{center}
+So then the maximum value of the combined distribution is the negative exponential of the above radical, which looks like:
+\begin{center}
+\begin{equation}
+\text{max}(P_{\text{comb}}) = \exp\bigg[{-\sqrt{\big[k_\theta\sin(2\theta_{TCJ}) + \frac{k}{2}\sin(2 \theta_{AN}) \big]^2 + \big[k_\theta\cos(2\theta_{TCJ}) + \frac{k}{2}\cos(2\theta_{AN})\big]^2 }}\bigg]
+\end{equation}
+\end{center}
+
+\end{document}

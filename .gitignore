@@ -1,0 +1,14 @@
+# LLM research notes — potentially large files, not tracked in git
+vm_llm_research/
+
+# Editor backups / autosaves
+*~
+\#*#
+
+# LaTeX build artifacts
+*.aux
+*.log
+*.synctex.gz
+
+# Windows download markers (WSL)
+*:Zone.Identifier
