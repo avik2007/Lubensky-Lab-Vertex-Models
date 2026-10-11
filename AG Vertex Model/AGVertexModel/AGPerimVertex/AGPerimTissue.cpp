@@ -2895,6 +2895,13 @@ double AGPerimTissue::calculateShearModulusWithEigenDecomposition(ofstream* erro
 	double nonaffine_shearportion = 0;
 	//double dispx, dispy, rot;
 	*errorfile << "Number of eigenvalues = " << hessianeigen.eigenvalues().size() << "\n \n \n" << endl;
+	// Threshold below which an eigenvalue is treated as numerically zero, and the
+	// tolerance above which a near-zero mode's force projection (xi_dot_u) counts as
+	// non-negligible ("floppy state"). Matches the threshold already used in
+	// calculateShearModulusWithEigenDecompositiond so single- and double-precision
+	// agree (vm_claude_proposed_fixes.md Issue 3).
+	const double EIGENVALUE_THRESHOLD = 1e-5;
+	const double FLOPPY_TOLERANCE = 1e-4;
 	for (int index = hessianeigen.eigenvalues().size() - lu_decomp.rank(); index < hessianeigen.eigenvalues().size(); index++)
 	{
 		int jndex = 0;
@@ -2915,16 +2922,37 @@ double AGPerimTissue::calculateShearModulusWithEigenDecomposition(ofstream* erro
 			jndex++;
 		}
 
-		nonaffine_shearcontribution = 1 / hessianeigen.eigenvalues()(index, 0) * pow((hessianeigen.eigenvectors().col(index).transpose() * FullBoundaryVector)(0, 0), 2);
-		*errorfile << "Non affine check " << pow((hessianeigen.eigenvectors().col(index).transpose() * FullBoundaryVector)(0, 0), 2) << endl;
-		*errorfile << "Eigenvalue " << index << " contribution to nonaffine = " << nonaffine_shearcontribution << endl;
-		nonaffine_shearportion += nonaffine_shearcontribution;
+		double xi_dot_u = (hessianeigen.eigenvectors().col(index).transpose() * FullBoundaryVector)(0, 0);
+		if (currenteigenvalue > EIGENVALUE_THRESHOLD)
+		{
+			nonaffine_shearcontribution = xi_dot_u * xi_dot_u / currenteigenvalue;
+			*errorfile << "Non affine check " << xi_dot_u * xi_dot_u << endl;
+			*errorfile << "Eigenvalue " << index << " contribution to nonaffine = " << nonaffine_shearcontribution << endl;
+			nonaffine_shearportion += nonaffine_shearcontribution;
+		}
+		else if (fabs(xi_dot_u) > FLOPPY_TOLERANCE)
+		{
+			// Near-zero eigenvalue with a non-negligible force projection: the
+			// configuration is mechanically floppy/marginal and the quasi-static
+			// nonaffine correction diverges. Report zero shear modulus instead of a
+			// spurious finite number from dividing by ~0 (vm_claude_proposed_fixes.md Issue 3).
+			*errorfile << "FLOPPY STATE detected at eigenvalue " << index << " = " << currenteigenvalue << ", xi_dot_u = " << xi_dot_u << ". Returning shear modulus = 0." << endl;
+			return 0.0;
+		}
 	}
 	*errorfile << "\n \n \n The size of the columns space of the Hessian is the" << " = " << hessianeigen.eigenvalues().size() - lu_decomp.rank() << endl;
 	*errorfile << "Here is a matrix whose columns form a basis of the null-space of A:\n"
 		<< lu_decomp.kernel() <<"\n \n" << endl;
-	
-	double normfactor =  1 / (K * pow((*this).A0, 2) * (*this).cells.size());
+
+	// Canonical normalization (matches calculateShearModulusWithEigenDecompositiond()):
+	// g* = Nc / (K * A_box^2), with A_box = LX*LY the actual simulation box area. This
+	// holds regardless of whether the tissue's target area (*this).A0 matches the true
+	// mean per-cell area.
+	// Old (pre-fix) normalization implicitly assumed (*this).A0 == (LX*LY)/Nc, which
+	// breaks once A0 is a fixed target that no longer matches the true average cell
+	// area (e.g. after cell division or anisotropic growth) - see vm_claude_proposed_fixes.md Issue 5.
+	// double normfactor_OLD = 1.0 / (K * pow((*this).A0, 2) * (*this).cells.size());
+	double normfactor = (*this).cells.size() / (K * pow(LX * LY, 2));
 	*errorfile << std::setprecision(20) << "normfactor = " << normfactor << endl;
 	*errorfile << std::setprecision(20) << "dadg = " << normfactor * dadgtotal << endl;
 	*errorfile << std::setprecision(20) << "dpdg = " << normfactor * dpdgtotal << endl;
@@ -3013,7 +3041,7 @@ double AGPerimTissue::calculateShearModulusWithEigenDecompositiond(ofstream* err
 	MatrixXd dPdrdPdgammaVEC(2 * numofvertices, 1);
 	dPdrdPdgammaVEC.setZero(2 * numofvertices, 1);
 
-	float currenteigenvalue;
+	double currenteigenvalue;
 	for (list<Vertex*>::iterator vit = vertices.begin(); vit != vertices.end(); vit++)
 	{
 		// The fastest way to do this is with an unordered map (the C++ equivalent to Python dictionaries)
@@ -3109,11 +3137,17 @@ double AGPerimTissue::calculateShearModulusWithEigenDecompositiond(ofstream* err
 	double nonaffine_shearportion = 0;
 	//double dispx, dispy, rot;
 	*errorfile << "Number of eigenvalues = " << hessianeigen.eigenvalues().size() << "\n \n \n" << endl;
+	// Threshold below which an eigenvalue is treated as numerically zero, and the
+	// tolerance above which a near-zero mode's force projection (xi_dot_u) counts as
+	// non-negligible ("floppy state") - see vm_claude_proposed_fixes.md Issue 3.
+	const double EIGENVALUE_THRESHOLD = 1e-5;
+	const double FLOPPY_TOLERANCE = 1e-4;
 	for (int index = hessianeigen.eigenvalues().size() - lu_decomp.rank(); index < hessianeigen.eigenvalues().size(); index++)
 	{
 		int jndex = 0;
 		currenteigenvalue = real(hessianeigen.eigenvalues()(index, 0));
-		if (currenteigenvalue > 1e-5)
+		double xi_dot_u = (hessianeigen.eigenvectors().col(index).transpose() * FullBoundaryVector)(0, 0);
+		if (currenteigenvalue > EIGENVALUE_THRESHOLD)
 		{
 			*errorfile << hessianeigen.eigenvalues()(index, 0) << " , eigenvalue " << index << " and the vect : \n";
 
@@ -3131,10 +3165,19 @@ double AGPerimTissue::calculateShearModulusWithEigenDecompositiond(ofstream* err
 				jndex++;
 			}
 
-			nonaffine_shearcontribution = 1 / hessianeigen.eigenvalues()(index, 0) * pow((hessianeigen.eigenvectors().col(index).transpose() * FullBoundaryVector)(0, 0), 2);
-			*errorfile << "Non affine check " << pow((hessianeigen.eigenvectors().col(index).transpose() * FullBoundaryVector)(0, 0), 2) << endl;
+			nonaffine_shearcontribution = xi_dot_u * xi_dot_u / currenteigenvalue;
+			*errorfile << "Non affine check " << xi_dot_u * xi_dot_u << endl;
 			*errorfile << "Eigenvalue " << index << " contribution to nonaffine = " << nonaffine_shearcontribution << endl;
 			nonaffine_shearportion += nonaffine_shearcontribution;
+		}
+		else if (fabs(xi_dot_u) > FLOPPY_TOLERANCE)
+		{
+			// Near-zero eigenvalue with a non-negligible force projection: the
+			// configuration is mechanically floppy/marginal and the quasi-static
+			// nonaffine correction diverges. Report zero shear modulus instead of a
+			// spurious finite number from dividing by ~0 (vm_claude_proposed_fixes.md Issue 3).
+			*errorfile << "FLOPPY STATE detected at eigenvalue " << index << " = " << currenteigenvalue << ", xi_dot_u = " << xi_dot_u << ". Returning shear modulus = 0." << endl;
+			return 0.0;
 		}
 	}
 	*errorfile << "\n \n \n The size of the columns space of the Hessian is the" << " = " << hessianeigen.eigenvalues().size() - lu_decomp.rank() << endl;

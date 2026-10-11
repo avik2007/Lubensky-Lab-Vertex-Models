@@ -1,5 +1,15 @@
 # Claude Recent Actions
 
+## 2026-10-10
+- Picked up the approved-but-unimplemented plan from `vm_claude_plans/2026-10-09_shear-modulus-eigenvalue-threshold-normfactor-and-hessian-precision-fixes.md`.
+- Independently re-verified its claims against current source before trusting them, including the one that looked most likely to be wrong (the `GetdAdgammaForSimpleShearAlongXAxis` vs `...ALTERNATE` naming claim) — confirmed accurate via `grep -a` (the file's non-standard encoding silently breaks plain `grep`, which initially made it look like neither function was implemented anywhere; `-a` revealed both, with docstrings settling which one is correct).
+- User corrected scope: "ignore Python" means ignore anything that exists only to serve the Python path, not just the `.py` file — so Fix 3 from the 2026-10-09 plan (double-precision Hessian export for `CalculateShearModulusForPythonCalculation`) was dropped entirely rather than implemented. Recorded as lesson L002.
+- Implemented in `AG Vertex Model/AGVertexModel/AGPerimVertex/AGPerimTissue.cpp`:
+  - **Issue 3**: both `calculateShearModulusWithEigenDecomposition` and `calculateShearModulusWithEigenDecompositiond` now share an `EIGENVALUE_THRESHOLD = 1e-5` / `FLOPPY_TOLERANCE = 1e-4` pattern — modes below threshold with non-negligible force projection (`xi_dot_u`) now return shear modulus = 0 (floppy-state early-return) instead of silently contributing (single-precision function) or being silently skipped (double-precision function). Also fixed `calculateShearModulusWithEigenDecompositiond`'s `currenteigenvalue` from `float` to `double` (was truncating before the threshold comparison).
+  - **Issue 5**: `calculateShearModulusWithEigenDecomposition`'s normalization factor changed from `1/(K*A0^2*Nc)` to `Nc/(K*(LX*LY)^2)`, matching the double-precision function.
+- Verified by compiling (`g++ -std=c++14 -fopenmp -fno-fast-math -Wall`) `MainHessianTest.cpp` + all its dependencies against the NuGet-vendored Eigen at `AGPerimHessian_test/packages/Eigen3.3.3.9/...` — full build and link succeeded (exit 0), only pre-existing warnings (unrelated unused variables etc.), no new errors.
+- Updated `vm_claude_actions/vm_claude_todo.md`: marked Issues 3 and 5 done, Issue 4 dropped (not deferred), Issue 6 re-confirmed not-a-bug, dropped the standalone-Python-script Priority-1 item.
+
 ## 2026-03-26 (session 2)
 - Read `vertex_model_master_derivations.tex` in full.
 - Explored all relevant C++ source files: `AGPerimTissue.cpp` (Hessian + shear modulus), `AGPerimCell.cpp` (LEBC strain derivatives), `AGCell.cpp` (area gradient, pressure), `EdgeClass.cpp` (`GetVectorDifference` LEBC logic).
