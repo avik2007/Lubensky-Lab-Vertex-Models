@@ -9,6 +9,7 @@
   - **Issue 5**: `calculateShearModulusWithEigenDecomposition`'s normalization factor changed from `1/(K*A0^2*Nc)` to `Nc/(K*(LX*LY)^2)`, matching the double-precision function.
 - Verified by compiling (`g++ -std=c++14 -fopenmp -fno-fast-math -Wall`) `MainHessianTest.cpp` + all its dependencies against the NuGet-vendored Eigen at `AGPerimHessian_test/packages/Eigen3.3.3.9/...` — full build and link succeeded (exit 0), only pre-existing warnings (unrelated unused variables etc.), no new errors.
 - Updated `vm_claude_actions/vm_claude_todo.md`: marked Issues 3 and 5 done, Issue 4 dropped (not deferred), Issue 6 re-confirmed not-a-bug, dropped the standalone-Python-script Priority-1 item.
+- **Committed** on `MondalShearDev`: commit `5f7a19504fcca4683762497d01f54911c0aef881` ("Fix shear modulus eigenvalue threshold, floppy-state, and normalization bugs"), 2026-10-10 21:54:46 -0400. Scope: exactly 4 files — `AG Vertex Model/AGVertexModel/AGPerimVertex/AGPerimTissue.cpp` and the three `vm_claude_actions/*.md` files. Staged explicitly by path (not `git add -A`) because the working tree has ~2900+ unrelated dirty entries from pre-existing CRLF line-ending drift across the repo (predates this session, not touched). To revert just this fix: `git revert 5f7a19504fcca4683762497d01f54911c0aef881`. To inspect it later: `git show 5f7a19504fcca4683762497d01f54911c0aef881`.
 
 ## 2026-03-26 (session 2)
 - Read `vertex_model_master_derivations.tex` in full.
