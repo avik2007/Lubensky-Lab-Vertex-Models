@@ -1,5 +1,12 @@
 # Claude To-Do List
 
+## PRIORITY 0 (next session)
+- [ ] **USER: review the plan `vm_claude_plans/2026-10-14_nonquadratic-and-LP-hessian-vs-squeeze-comparison-plus-pm-eps-test.md`** (status: saved, NOT yet approved, nothing run). It covers:
+  - the TOP technical task: compare the Hessian shear modulus with the squeeze data for ExTs, L2Ex, M2Ex, L2Ts, M2Ts, L2Ts_LP and M2Ts_LP; first extend the FD reference to the exponential/log/quartic energies;
+  - regenerating the T2ss G-vs-p0 plot with the fixed code, adding G_pure and ½(G_simple + G_pure);
+  - the ±ε (reflect-about-y=x) test with the scratch relaxer only. The pure-shear modulus stays out of AGPerimTissue.cpp for now.
+- [ ] **USER: look at the G-vs-p0 plot** once it is regenerated: `/scratch/dkluben_root/dkluben1/abmondal/claude_VM_runs/T2ss_SM_Hess_testing/analysis/G_vs_p0.png`. The current file predates the sign fixes, so its "code" curve shows the old buggy values. G_simple is the curve labelled "FD".
+
 ## PRIORITY 1
 - [ ] ~~Write a standalone Python script...~~ **Dropped 2026-10-10 per user:** Python was only ever a quick side attempt; the shear modulus pipeline stays in C++ going forward (`AGPerimTissue.cpp`'s `calculateShearModulusWithEigenDecomposition(d)`), so no Python script is needed.
 
@@ -19,7 +26,8 @@
 - [x] **Bug 2 (fixed 2026-10-14):** `AGCell::Getd2AdgammadyForSimpleShearAlongXAxis` had the wrong sign for corner cells (122/122 bad cells crossed both x and y). Rewritten from the shoelace formula on the unwrapped polygon: d²A/dγdy_j = σ (L_y/2)(ℓ_{j−1} − ℓ_{j+1}).
 - [x] **Bug 3 (fixed 2026-10-14):** `AGCell::GetdAdgammaForSimpleShearAlongXAxisALTERNATE` flipped sign for 41/1546 y-crossing cells (the `crosscellvec.x` heuristic). Rewritten as dA/dγ = L_y Σ_k ℓ_k ∂A/∂x_k. This also revises Issue 6: ALTERNATE was not fully correct; it is now. The non-ALTERNATE version is unchanged and unused.
   - Verification on 128 tissues: 0 bad cells; Ξ matches FD to 1e-10. G_code_d = G_FD to ~5e-9 relative for every tissue with p0 ≤ 3.82. For p0 ≥ 3.83 the remaining differences are floppy-state returns in genuinely fluid tissues.
-- [ ] **THEN:** investigate the median G_FD/G_squeeze = 1.04 in the solid (p0 ≤ 3.78); the user wants this closer to 1.
+- [x] **Investigated the G_FD/G_squeeze ≈ 1.02–1.04 offset (2026-10-14): not a code error.** New scratch driver `MainSqueezeCheck.cpp` (README §5 of the FD-check folder) reproduces every benchmark energy in the solid to 6 digits (frozen topology, fixed box). The offset factorizes into (1) pure-vs-simple shear anisotropy of each finite 100-cell sample, which is seed-locked (0.93–1.07 per seed) and averages toward 1, and (2) a ~1% bias from the one-sided quadratic fit over ε ≤ 0.01 (a quartic fit of the same energies recovers the Hessian pure-shear modulus to ≤ 0.6%). The ratio of 7-seed means is 1.016–1.027 for p0 3.75–3.79.
+- [ ] **USER DECISION:** how to bring the comparison closer to 1: (a) report the orientation-averaged ½(G_simple + G_pure), which needs a pure-shear Ξ in the code; (b) more seeds; (c) redo the benchmark with symmetric ±ε, smaller ε and full-precision output. Ratio of means with option (a) against the ε → 0 curvature: 1.003–1.013 at p0 3.75–3.79.
 
 ## Backlog
 - [ ] Review shear modulus and Hessian calculation code to understand current state (`AGStiffness`, `AGPerimModuli`, `AGPerimHessian_test`, `script_TO_CALC_SM_FROM_CPP.py`)

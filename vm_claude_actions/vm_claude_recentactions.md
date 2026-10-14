@@ -1,5 +1,11 @@
 # Claude Recent Actions
 
+## 2026-10-14 (squeeze-benchmark offset)
+- Wrote `src/MainSqueezeCheck.cpp` and `analysis/compare_squeeze.py` in the scratch FD-check folder (`/scratch/dkluben_root/dkluben1/abmondal/claude_VM_runs/T2ss_SM_Hess_testing/`); no repo source touched. SLURM job 63973299.
+- Result: the Hessian vs squeeze-fit offset is sample anisotropy (pure vs simple shear) plus a one-sided finite-strain fit bias. It is not a code error. Details are in that folder's README §5; the next step is a user decision (see todo).
+- Saved the next plan, unapproved, to `vm_claude_plans/2026-10-14_nonquadratic-and-LP-hessian-vs-squeeze-comparison-plus-pm-eps-test.md`. It is PRIORITY 0 in the todo.
+- Close-out: synced the scratch folder to `/nfs/turbo/lsa-dkluben/abmondal/CompressionInducedFluidizationData/claude_hessian_testing/T2ss_SM_Hess_testing/` (checksum-verified). The 4 files that changed since the first backup (README.md, Makefile, batch_fdcheck.sbat, src/MainHessFDCheck.cpp) were updated there; their earlier versions are kept as `*.pre-final-2026-10-14`.
+
 ## 2026-10-10
 - Picked up the approved-but-unimplemented plan from `vm_claude_plans/2026-10-09_shear-modulus-eigenvalue-threshold-normfactor-and-hessian-precision-fixes.md`.
 - Independently re-verified its claims against current source before trusting them, including the one that looked most likely to be wrong (the `GetdAdgammaForSimpleShearAlongXAxis` vs `...ALTERNATE` naming claim) — confirmed accurate via `grep -a` (the file's non-standard encoding silently breaks plain `grep`, which initially made it look like neither function was implemented anywhere; `-a` revealed both, with docstrings settling which one is correct).
