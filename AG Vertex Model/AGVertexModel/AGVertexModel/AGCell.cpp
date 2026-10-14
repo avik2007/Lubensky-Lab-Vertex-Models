@@ -932,226 +932,126 @@ double AGCell::GetdAdgammaForSimpleShearAlongXAxis()
 }
 
 /*
-* double GetdAdgammaForSimpleShearAlongXaxisALTERNATE()
+* static void HelperLEBCUnwrap(cell, cwverts, level, yunwrapped, areasign)
 *
-*  Calculates dAdgamma for a simple shear where the deformation occurs along the x-axis (so the unit cell above the main unit cell is shifted to the right)
-* *
-* *
-* * THIS IS THE CORRECT ONE! CALCULATE THIS QUANTITY BY CHECKING WHERE EDGES CROSS THE X AND Y BOUNDARIES
+* Shared helper for the two Lees-Edwards (simple shear along x) area derivatives below.
+* (Added 2026-10-14 to fix sign errors found by a finite-difference check; see
+* vm_claude_actions/vm_claude_todo.md, bugs 2 and 3.)
+*
+* WHAT IT DOES
+* Walks the cell's clockwise vertex list v_0, v_1, ..., v_{n-1} and "unwraps" the polygon
+* across the periodic boundaries using Edge::GetVectorDifference (which already knows each
+* edge's xflag / yflag). For every vertex it records
+*   level[k]      = the vertical periodic image the vertex sits in, relative to v_0, i.e. the
+*                   running sum of n_y = (number of box heights the edge v_{k-1} -> v_k jumps).
+*                   Under Lees-Edwards simple shear gamma, a vertex in image level l is
+*                   displaced by l * gamma * LY in x.
+*   yunwrapped[k] = the y coordinate of v_k in the unwrapped (continuous) polygon.
+*   areasign      = +1 if the unwrapped shoelace sum is positive, -1 if negative (it is
+*                   negative for the clockwise list), so that areasign * shoelace = A > 0.
+*
+* WHY
+* With these, dA/dgamma and d2A/(dgamma dy_j) follow exactly from the shoelace formula,
+* with no geometric case analysis (corner cells, cells crossing more than once, edge
+* direction heuristics), which is where the previous implementations went wrong.
+*/
+static void HelperLEBCUnwrap(vector<Vertex*>& cwverts, vector<int>& level, vector<double>& yunwrapped, double& areasign)
+{
+	int n = cwverts.size();
+	vector<double> xu(n), yu(n);
+	level.assign(n, 0);
+	xu[0] = cwverts[0]->r.x;
+	yu[0] = cwverts[0]->r.y;
+	for (int k = 0; k < n - 1; k++)
+	{
+		Vertex* va = cwverts[k];
+		Vertex* vb = cwverts[k + 1];
+		Edge* e = va->GetEdgeBetween(vb);
+		Vect d = e->GetVectorDifference(va, vb);                 // r_b - r_a across the boundaries
+		int ny = (int)lround((d.y - (vb->r.y - va->r.y)) / LY);  // box heights jumped by this edge
+		level[k + 1] = level[k] + ny;
+		xu[k + 1] = xu[k] + d.x;
+		yu[k + 1] = yu[k] + d.y;
+	}
+	double shoelace = 0;
+	for (int k = 0; k < n; k++)
+	{
+		int kp = (k + 1) % n;
+		shoelace += 0.5 * (xu[k] * yu[kp] - xu[kp] * yu[k]);
+	}
+	areasign = (shoelace < 0) ? -1.0 : 1.0;
+	yunwrapped = yu;
+}
+
+/*
+* double GetdAdgammaForSimpleShearAlongXAxisALTERNATE()
+*
+* dA/dgamma for Lees-Edwards simple shear along x: the periodic image above the main box is
+* shifted to the right by gamma * LY.
+*
+* REWRITTEN 2026-10-14 (bug 3 of the FD check). The previous version took |dA/dgamma| from the
+* y-midpoints of the two crossing edges, which was right, but chose the sign from the x
+* component of a partial edge sum ("crosscellvec"). That heuristic gave the wrong sign for
+* about 2.7% of boundary-crossing cells (41 of 1546 in the T2ss tissues), including cells
+* that do not touch a corner.
+*
+* HOW IT WORKS NOW
+* In the unwrapped polygon, vertex k is displaced by level[k] * gamma * LY in x (see
+* HelperLEBCUnwrap). By the chain rule,
+*     dA/dgamma = LY * sum_k level[k] * dA/dx_k,   with   dA/dx_k = areasign * 1/2 (y_{k+1} - y_{k-1})
+* (shoelace formula; y in unwrapped coordinates, indices cyclic). Cells that do not cross the
+* top/bottom boundary have all levels equal, so the result is exactly 0 for them. The
+* function name is kept so that existing callers are unchanged.
 */
 double AGCell::GetdAdgammaForSimpleShearAlongXAxisALTERNATE()
 {
-	int ycrossingEdges = 0;
-	double dAdLy = 0;
-	Vertex* v1, * v2;
-	Edge* e1;
-	vector<Edge*> clockwiseEdges;
-	vector<Vertex*> clockwiseVertex = (*this).GetClockWiseVertices();
-	int vertexNum = clockwiseVertex.size();
-	double vectDiff;
-	double y1 = 0;
-	double y2 = 0;
-	double x1 = 0;
-	double x2 = 0;
-	double finalVal = 0;
-	Vect ev;
-	Vect crosscellvec(0, 0);
-	bool evecadder = false;
-	clockwiseVertex.push_back(clockwiseVertex[0]);
-
-	for (int i = 0; i < vertexNum; i++)
+	vector<Vertex*> cwverts = (*this).GetClockWiseVertices();
+	int n = cwverts.size();
+	vector<int> level;
+	vector<double> yu;
+	double areasign;
+	HelperLEBCUnwrap(cwverts, level, yu, areasign);
+	double dAdgamma = 0;
+	for (int k = 0; k < n; k++)
 	{
-		v1 = clockwiseVertex[i];
-		v2 = clockwiseVertex[i + 1];
-		e1 = (*v1).GetEdgeBetween(v2);
-		clockwiseEdges.push_back(e1);
-		ev = (*e1).GetVectorDifference(v1, v2);
-
-		if (((*e1).yflag))
-		{
-			if (ycrossingEdges < 1)
-			{
-				y1 = 0.5 * ((*v2).r.y + (*v1).r.y);// 9/9/2024 fixing this to ignore boundary conditions//0.5 * ev.y;//(*e1).GetCenter().y;
-				x1 = (*v1).r.x + 0.5 * ev.x;//(*e1).GetCenter().x;
-				ycrossingEdges++;
-				evecadder = true;
-			}
-			else
-			{
-				y2 = 0.5 * ((*v2).r.y + (*v1).r.y);// 9/9/2024 fixing this to ignore boundary conditions// - 0.5 * ev.y;//(*e1).GetCenter().y;
-				x2 = (*v2).r.x - 0.5 * ev.x;//(*e1).GetCenter().x;
-				// alternatively, (*e1).getCenter().y can do the same thing 
-				i = vertexNum;
-			}
-			// the y1, x1 and y2, x2 calculations are done this way to get around boundary condition concerns
-			crosscellvec = crosscellvec + ev;
-
-		}
-		else
-		{
-			if (evecadder)
-			{
-				crosscellvec = crosscellvec + ev;
-			}
-		}
-
-
+		double dAdxk = areasign * 0.5 * (yu[(k + 1) % n] - yu[(k + n - 1) % n]);
+		dAdgamma += level[k] * dAdxk;
 	}
-
-	// account for boundary conditions and getting the direction right
-	// 7/11/2024, CHECK THIS CROSSCELLVEC calculation
-	if (crosscellvec.x > 0)
-	{
-		finalVal = y1 - y2;
-	}
-	else
-	{
-		finalVal = y2 - y1;
-	}
-	/*
-	if (x2 > x1)
-	{
-		if (evxflag)
-		{
-			finalVal = y1 - y2;
-		}
-		else
-		{
-			finalVal = y2 - y1;
-		}
-	}
-	else
-	{
-		if (evxflag)
-		{
-			finalVal = y2 - y1;
-		}
-		else
-		{
-			finalVal = y1 - y2;
-		}
-
-	}
-	*/
-	return LY * finalVal; // 4/12/24 ORDERING SHOULD BE RIGHT - POTENTIAL WORRIES ABOUT CORNER CELLS (KEEP IN MIND IF BUGS COME UP)
+	return LY * dAdgamma;
 }
 /*
 * double Getd2AdgammadyForSimpleShearAlongXAxis(Vertex* V)
 *
+* d2A/(dgamma dy_V): derivative of this cell's dA/dgamma (above) with respect to the y
+* coordinate of vertex V. (The x derivative is exactly zero, because dA/dx_k depends only on
+* y coordinates, so the shear-modulus code only needs this y component.)
+*
+* REWRITTEN 2026-10-14 (bug 2 of the FD check). The previous version located the crossing
+* points on the top boundary and picked the sign from their x ordering; it had the wrong sign
+* for corner cells (cells that also cross the left/right boundary): 122 of 122 failures.
+*
+* HOW IT WORKS NOW
+* Differentiating dA/dgamma = LY * sum_k level[k] * areasign * 1/2 (y_{k+1} - y_{k-1}) with
+* respect to y_j (j = position of V in the clockwise list) leaves only the k = j-1 and k = j+1
+* terms:
+*     d2A/(dgamma dy_j) = areasign * LY/2 * (level[j-1] - level[j+1])
+* Returns 0 if V is not a vertex of this cell.
 */
 double AGCell::Getd2AdgammadyForSimpleShearAlongXAxis(Vertex* V)
 {
-	unsigned long int targetvertexid = V->id;
-	bool id_match;
-	int ycrossingEdges = 0;
-	double d2AdLxdy = 0;
-	Vertex* v1, * v2;
-	Edge* e1;
-	//vector<Edge*> clockwiseEdges;
-	vector<Vertex*> clockwiseVertex = (*this).GetClockWiseVertices();
-	int vertexNum = clockwiseVertex.size();
-	double vectDiff;
-	int firstEdgeContribution = 0;
-	int secondEdgeContribution = 0;
-	int totalContribution = 0;
-	double x1 = 0;
-	double x2 = 0;
-	Vect ev;
-	Vect crosscellvec(0, 0);
-	bool evecadder = false;
-	double edgeslope;
-	double xcw, ycw; // coordinates of vertex 1
-	double xint1 = 0; // the x-coordinates of the point at which edges cross the top of the box
-	double xint2 = 0; // the x-coordinates of the point at which edges cross the top of the box
-	int xcrossings = 0;
-	clockwiseVertex.push_back(clockwiseVertex[0]);
-
-	for (int i = 0; i < vertexNum; i++)
+	vector<Vertex*> cwverts = (*this).GetClockWiseVertices();
+	int n = cwverts.size();
+	int j = -1;
+	for (int k = 0; k < n; k++)
 	{
-		v1 = clockwiseVertex[i];
-		v2 = clockwiseVertex[i + 1];
-		id_match = ((v1->id) == targetvertexid) || ((v2->id) == targetvertexid);
-		e1 = (*v1).GetEdgeBetween(v2);
-		ev = (*e1).GetVectorDifference(v1, v2);
-		xcw = v1->r.x;
-		ycw = v1->r.y;
-
-		// ADJUST BOUNDARY CONDITIONS FOR CROSSING LEFT OR RIGHT BOUNDARY TO GET INTERSECTION RIGHT 
-		if (((*e1)).xflag)
-		{
-			if (ev.x > 0)
-			{
-				xcw = xcw - LX;
-			}
-			else
-			{
-				xcw = LX + xcw;
-			}
-		}
-		// ADJUST BOUNDARY CONDITIONS FOR CROSSING TOP BOUNDARY
-		if ((*e1).yflag)
-		{
-			if (ev.y < 0)
-			{
-				ycw = LY + ycw;
-			}
-		}
-		// THIS IS THE SECTION WHERE INTERSECTIONS ARE CALCULATED
-		if (((*e1)).yflag)
-		{
-			edgeslope = ev.y / ev.x; // SLOPE OF CROSSING EDGE, TO SOLVE FOR WHERE IT CROSSES Y-BOUNDARY
-			if (ycrossingEdges < 1)
-			{
-				if (id_match)
-				{
-					firstEdgeContribution = 1;
-				}
-				//xint1 = xcw + (LY - ycw) / edgeslope;
-				xint1 = xcw + (LY - ycw) / edgeslope; // CALCULATES THE X-COORDINATE OF THE INTERCEPTION OF THE FIRST CROSSING EDGE
-			}
-			else
-			{
-				if (id_match)
-				{
-					secondEdgeContribution = 1;
-				}
-				xint2 = xcw  + (LY - ycw) / edgeslope; // CALCULATES THE X-COORDINATE OF THE INTERCEPTION OF THE SECOND CROSSING EDGE
-			}
-			ycrossingEdges++;
-		}
-		/*
-		if (((*e1)).xflag)
-		{	
-			if (ycrossingEdges == 1)
-			{
-				if (!((*e1).yflag))
-				{
-					xcrossings++; // MIGHT BE UNNECESSARY
-				}
-				else
-				{
-					if (xint2 > 0)
-					{
-						xcrossings++; //MIGHT BE UNECESSARY
-					}
-				}
-			}
-		}
-		*/
+		if (cwverts[k]->id == V->id) { j = k; }
 	}
-	// xcrossing count might be unnecessary because you got the boundary conditions right before
-	if (ycrossingEdges > 0)
-	{
-		if (xint2 < xint1)
-		{
-			totalContribution = secondEdgeContribution - firstEdgeContribution;
-		}
-		else
-		{
-			totalContribution = firstEdgeContribution - secondEdgeContribution;
-		}
-	}
-	return 0.5 * LY * totalContribution; // 4/12/24 ORDERING SHOULD BE RIGHT - POTENTIAL WORRIES ABOUT CORNER CELLS (KEEP IN MIND IF BUGS COME UP
+	if (j < 0) { return 0.0; }
+	vector<int> level;
+	vector<double> yu;
+	double areasign;
+	HelperLEBCUnwrap(cwverts, level, yu, areasign);
+	return areasign * 0.5 * LY * (level[(j + n - 1) % n] - level[(j + 1) % n]);
 }
 /*
 * double GetCellStressXX();

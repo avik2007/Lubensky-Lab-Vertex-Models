@@ -16,8 +16,9 @@
   - [ ] §2.1 the area gradient is internally inconsistent: ½ ẑ×(r_{i+1}−r_{i−1}) = ½(−Δy, Δx), but the explicit vector written is ½(Δy, −Δx). The explicit one is correct for CCW order.
   - [ ] §4.2 "∂A_α/∂γ = 0" is false per cell under LEBC. Boundary-crossing cells have dA/dγ ≠ 0 (only the sum over cells vanishes; the FD check confirms values ~10³). So §5 Ξ is missing the K_A ∇A_α ∂A_α/∂γ term, and §6.1 G_aff is missing K_A (∂A_α/∂γ)². The code includes both, correctly.
   - [ ] §4.1/§4.3/§5.1 use the homogeneous-affine-shear forms (all edges, x → x + γy), while §1.3/§8.4 use the Lagrangian LEBC form (only y-crossing edges shift by n_y γ L_y). The code uses LEBC. Pick one convention and write the strain derivatives consistently. In LEBC form: ∂P/∂γ = Σ_crossing n_y L_y Δx/l; ∂²A/∂γ∂y_j = σ (L_y/2)(ℓ_{j−1} − ℓ_{j+1}) with ℓ = cumulative image level; ∂²A/∂γ∂x_j = 0.
-- [ ] **NEXT — Bug 2:** `AGCell::Getd2AdgammadyForSimpleShearAlongXAxis` has the wrong sign for corner cells (122/122 bad cells cross both x and y).
-- [ ] **NEXT — Bug 3:** `AGCell::GetdAdgammaForSimpleShearAlongXAxisALTERNATE` flips sign for 41/1546 y-crossing cells (`crosscellvec.x` heuristic). This also revises Issue 6: ALTERNATE is not fully correct.
+- [x] **Bug 2 (fixed 2026-10-14):** `AGCell::Getd2AdgammadyForSimpleShearAlongXAxis` had the wrong sign for corner cells (122/122 bad cells crossed both x and y). Rewritten from the shoelace formula on the unwrapped polygon: d²A/dγdy_j = σ (L_y/2)(ℓ_{j−1} − ℓ_{j+1}).
+- [x] **Bug 3 (fixed 2026-10-14):** `AGCell::GetdAdgammaForSimpleShearAlongXAxisALTERNATE` flipped sign for 41/1546 y-crossing cells (the `crosscellvec.x` heuristic). Rewritten as dA/dγ = L_y Σ_k ℓ_k ∂A/∂x_k. This also revises Issue 6: ALTERNATE was not fully correct; it is now. The non-ALTERNATE version is unchanged and unused.
+  - Verification on 128 tissues: 0 bad cells; Ξ matches FD to 1e-10. G_code_d = G_FD to ~5e-9 relative for every tissue with p0 ≤ 3.82. For p0 ≥ 3.83 the remaining differences are floppy-state returns in genuinely fluid tissues.
 - [ ] **THEN:** investigate the median G_FD/G_squeeze = 1.04 in the solid (p0 ≤ 3.78); the user wants this closer to 1.
 
 ## Backlog
