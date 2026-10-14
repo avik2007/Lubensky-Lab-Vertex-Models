@@ -2236,10 +2236,19 @@ MatrixXf AGPerimTissue::calculateHessian(ofstream* errorfile)
 			// the second order derivatives section
 			//*errorfile << "indices: " << jm1_id << " " << j_id << " " << jp1_id << endl;
 			// first the area portion - these only act on cases where j is not equal to i and off-diagonal components
-			d2Adridrj_percell(2 * jm1_id, 2 * j_id + 1) += 0.5 * cell_pressure;
-			d2Adridrj_percell(2 * jm1_id + 1, 2 * j_id) -= 0.5 * cell_pressure;
-			d2Adridrj_percell(2 * jp1_id, 2 * j_id + 1) -= 0.5 * cell_pressure;
-			d2Adridrj_percell(2 * jp1_id + 1, 2 * j_id ) += 0.5 * cell_pressure; //SIGNS SET BY CCW CONVENTION
+			// SIGN FIX (2026-10-14, FD check in claude_VM_runs/T2ss_SM_Hess_testing):
+			// For the positive polygon area A = 1/2 sum_k (x_k y_{k+1} - x_{k+1} y_k) with k -> k+1
+			// counterclockwise, d2A/(dx_a dy_b) = +1/2 and d2A/(dy_a dx_b) = -1/2 when b is the
+			// CCW-next vertex of a. cwverts (SavedInfoForEvolve_CWVerts) is CLOCKWISE, so list
+			// index j-1 is the CCW-next vertex of j; hence entry (x_{j-1}, y_j) = d2A/(dy_j dx_{j-1})
+			// = -1/2 and entry (y_{j-1}, x_j) = d2A/(dx_j dy_{j-1}) = +1/2 (and the mirror image
+			// for j+1). The previous signs assumed a CCW list ("SIGNS SET BY CCW CONVENTION") and
+			// had the whole d2A block with the wrong sign (finite-difference Hessian on 128
+			// tissues: relative error exactly 2; after the fix the Hessian agrees to ~1e-11).
+			d2Adridrj_percell(2 * jm1_id, 2 * j_id + 1) -= 0.5 * cell_pressure;
+			d2Adridrj_percell(2 * jm1_id + 1, 2 * j_id) += 0.5 * cell_pressure;
+			d2Adridrj_percell(2 * jp1_id, 2 * j_id + 1) += 0.5 * cell_pressure;
+			d2Adridrj_percell(2 * jp1_id + 1, 2 * j_id ) -= 0.5 * cell_pressure; // signs for the CW vertex list
 			
 
 
@@ -2602,10 +2611,13 @@ MatrixXd AGPerimTissue::calculateHessiand(ofstream* errorfile)
 			// the second order derivatives section
 			//*errorfile << "indices: " << jm1_id << " " << j_id << " " << jp1_id << endl;
 			// first the area portion - these only act on cases where j is not equal to i and off-diagonal components
-			d2Adridrj_percell(2 * jm1_id, 2 * j_id + 1) += 0.5 * cell_pressure;
-			d2Adridrj_percell(2 * jm1_id + 1, 2 * j_id) -= 0.5 * cell_pressure;
-			d2Adridrj_percell(2 * jp1_id, 2 * j_id + 1) -= 0.5 * cell_pressure;
-			d2Adridrj_percell(2 * jp1_id + 1, 2 * j_id) += 0.5 * cell_pressure; //SIGNS SET BY CCW CONVENTION
+			// SIGN FIX (2026-10-14): see the identical block in calculateHessian (float) above.
+			// cwverts is CLOCKWISE, so the previous "CCW convention" signs were all flipped
+			// (verified against a finite-difference Hessian on 128 tissues).
+			d2Adridrj_percell(2 * jm1_id, 2 * j_id + 1) -= 0.5 * cell_pressure;
+			d2Adridrj_percell(2 * jm1_id + 1, 2 * j_id) += 0.5 * cell_pressure;
+			d2Adridrj_percell(2 * jp1_id, 2 * j_id + 1) += 0.5 * cell_pressure;
+			d2Adridrj_percell(2 * jp1_id + 1, 2 * j_id) -= 0.5 * cell_pressure; // signs for the CW vertex list
 
 
 
