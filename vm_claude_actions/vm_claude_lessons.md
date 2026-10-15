@@ -21,3 +21,8 @@ Each lesson: **Mistake** → **Lesson** → **How to Apply**
 **Mistake**: (2026-10-14) Closing out, I listed three uncommitted items: the todo, the recent-actions log, and the untracked `vm_claude_plans/`. The user said "commit that folder", and I committed only `vm_claude_plans/`. The user wanted the `vm_claude_actions` logs committed too and had to ask again, frustrated.
 **Lesson**: The session's agent-state files (`vm_claude_actions/*`, `vm_claude_plans/*`) form one unit. When the user approves committing part of it at close-out, the rest of that bookkeeping belongs in the same pass.
 **How to Apply**: When asked to commit at close-out, include every changed `vm_claude_actions/` and `vm_claude_plans/` file from the session, staged by explicit path, never `git add -A` (the CRLF drift). Ask only if source code or data would be included.
+
+### L004 — Report the quantity the user asked for; don't push my own side-variants
+**Mistake**: (2026-10-14/15) I kept attaching G_pure and ½(G_simple + G_pure) to every G comparison and framed the next step as a choice about them. The user said: "DON'T GIVE ME THIS NONSENSE ABOUT G_SIMPLE+G_PURE."
+**Lesson**: The deliverable is the library's Hessian G (simple shear) against the squeeze benchmark. Derived variants I came up with during a diagnosis are not deliverables.
+**How to Apply**: Plot and report only the series the user names. Mention a side-variant at most once, and only if it changes a conclusion. Use the x axis the user asks for (here, the shape index P0/sqrt(<A>)).

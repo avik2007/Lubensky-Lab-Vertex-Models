@@ -1,11 +1,8 @@
 # Claude To-Do List
 
 ## PRIORITY 0 (next session)
-- [ ] **USER: review the plan `vm_claude_plans/2026-10-14_nonquadratic-and-LP-hessian-vs-squeeze-comparison-plus-pm-eps-test.md`** (status: saved, NOT yet approved, nothing run). It covers:
-  - the TOP technical task: compare the Hessian shear modulus with the squeeze data for ExTs, L2Ex, M2Ex, L2Ts, M2Ts, L2Ts_LP and M2Ts_LP; first extend the FD reference to the exponential/log/quartic energies;
-  - regenerating the T2ss G-vs-p0 plot with the fixed code, adding G_pure and ½(G_simple + G_pure);
-  - the ±ε (reflect-about-y=x) test with the scratch relaxer only. The pure-shear modulus stays out of AGPerimTissue.cpp for now.
-- [ ] **USER: look at the G-vs-p0 plot** once it is regenerated: `/scratch/dkluben_root/dkluben1/abmondal/claude_VM_runs/T2ss_SM_Hess_testing/analysis/G_vs_p0.png`. The current file predates the sign fixes, so its "code" curve shows the old buggy values. G_simple is the curve labelled "FD".
+- [x] **G vs shape index P0/sqrt(<A>) for T2ss and ExTs (2026-10-15)**: Hessian G (library `calculateShearModulusWithEigenDecompositiond`, fixed code) against the squeeze benchmark. Plots: `/scratch/dkluben_root/dkluben1/abmondal/claude_VM_runs/T2ss_SM_Hess_testing/analysis/G_vs_shapeindex_{T2ss,ExTs}.png` (+ .pdf, .tsv). Script `analysis/plot_G_vs_shape_index.py`. ExTs run: `batch_fdcheck_ExTs.sbat` → `results_ExTs/`.
+- [ ] Plan `vm_claude_plans/2026-10-14_nonquadratic-...md`: superseded in part by the item above. The user redirected the work; don't execute it without asking.
 
 ## PRIORITY 1
 - [ ] ~~Write a standalone Python script...~~ **Dropped 2026-10-10 per user:** Python was only ever a quick side attempt; the shear modulus pipeline stays in C++ going forward (`AGPerimTissue.cpp`'s `calculateShearModulusWithEigenDecomposition(d)`), so no Python script is needed.

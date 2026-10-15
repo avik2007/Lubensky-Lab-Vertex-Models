@@ -21,7 +21,10 @@ Lubensky-Lab-Vertex-Models/
 ├── [Vertex Model Documentation/](Vertex%20Model%20Documentation/)    # [DOCUMENTATION] LaTeX/PDF docs and slides
 ├── [Vertex Model Tutorial v2.0 2020/](Vertex%20Model%20Tutorial%20v2.0%202020/) # [DOCUMENTATION] Tutorials and examples
 ├── [vm_claude_actions/](vm_claude_actions/)               # [AGENT STATE] Claude task tracking
+├── [vm_claude_plans/](vm_claude_plans/)                 # [AGENT STATE] Dated, approved Claude implementation plans awaiting/undergoing execution
+├── vm_claude_proposed_fixes.md         # [AGENT STATE] Claude's audit of shear-modulus/Hessian code vs. the derivations doc
 ├── [vm_gemini_actions/](vm_gemini_actions/)               # [AGENT STATE] Gemini task tracking, lessons, and logs
+├── [vm_human_calculations/](vm_human_calculations/)             # [DOCUMENTATION] Hand-derived notes, LaTeX writeups, and Mathematica notebooks
 └── [vm_llm_research/](vm_llm_research/)                 # [RESEARCH] Gemini-powered project research and planning
 ```
 
@@ -93,6 +96,14 @@ Post-processing and analysis scripts.
 - `script_TO_CALC_SM_FROM_CPP.py`: [ANALYSIS] **BRANCH SCOPE** Shear modulus processing.
 - `shapely_VM_analyzer.py`: [ANALYSIS] Geometry analysis using Shapely.
 - `bristle-data-mondal-2025.yml`: Conda environment definition.
+
+---
+
+## [vm_claude_plans/](vm_claude_plans/)
+
+User-approved implementation plans awaiting or undergoing execution, written when a task is non-trivial enough to require plan mode (per `CLAUDE.md`). Each file is dated and named descriptively.
+
+- `YYYY-MM-DD_<descriptive-slug>.md`: one plan per file, with a `**Status:**` line at the top tracking whether it's approved-but-not-started, in progress, or done.
 
 ---
 
