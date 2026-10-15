@@ -1,5 +1,12 @@
 # Claude Recent Actions
 
+## 2026-10-15 (high polydispersity + SWAB)
+- Read `ExperimentalConditions_CodeNames.csv` and `SM_shearmodulus_fitting_100cells_QuadraticFullPlotScript.m` (HP overlay sections; "Sweeping Abox plot with comparison for reference" = SWAB vs T2ss).
+- Matched every EQ input to its squeeze runs by energy (finalEnergy = E0). `T2ss_LP_files`/`_2.0` and `L2Ts_LP_files`/`_2.0` are identical where they overlap; used `_2.0`.
+- SLURM jobs 64091368-71 (HTs, HLo, HEx, SWAB): 1115/1115 completed with `MainHess_claude.cpp`. Extended `analysis/plot_groups_hess_vs_squeeze.py`.
+- Result: Hessian/squeeze 0.997-1.005 (p0 <= 3.80) for all nine *_LP sets, SWAB 1.004. L2Ts_LP/M2Ts_LP/T2ss_LP give identical G (K proportional to A0, so A0 drops out at fixed box): this is physics, not a copied file.
+- Backed up to turbo (no `_error.txt` dumps).
+
 ## 2026-10-15 (Hessian G for the low-poly triplets)
 - Added `AG Vertex Model/AGVertexModel/AGPerimHessian_test/AGPerimHessian_test/MainHess_claude.cpp`: copy of MainHessianTest.cpp with minimal changes (argv input, no evolution per user, debug dumps and the Python-path call removed, Smd now uses the double-precision function, per-cell CW vertex lists set, writes `<tissue>_SM.txt`). Listed in `vm_file_structure.md`.
 - Built in `/scratch/dkluben_root/dkluben1/abmondal/claude_VM_runs/Hess_SM_groups/` against the repo library in place; smoke test job 64086589 reproduced the FD-verified G_code_d to 5e-13 (the first smoke run, without the CW-vertex set-up, was ~96x off).

@@ -5,6 +5,7 @@
 - [x] **Hessian G for the low-poly triplets L2Ts/M2Ts/T2ss, L2Lo/M2Lo/LoTs, L2Ex/M2Ex/ExTs (2026-10-15)**, run with the user's own driver: new `AGPerimHessian_test/AGPerimHessian_test/MainHess_claude.cpp` (plan `vm_claude_plans/2026-10-15_hessian-SM-low-poly-triplets-with-MainHess_claude.md`). 1007 tissues, results + plots in `/scratch/dkluben_root/dkluben1/abmondal/claude_VM_runs/Hess_SM_groups/` (README there). Hessian/squeeze ≈ 1.01–1.04 for p0 ≤ 3.80 in all 9 datasets.
   - Note: earlier `T2ss_SM_Hess_testing/inputs/ExTs_EQ` + its smdataExTs.mat are a DIFFERENT ExTs equilibration from `Avik/PhaseTransitionProject/ExTs_files` (the set behind the user's plot script). Use the PhaseTransitionProject set.
   - Gotcha: without Evolve, each cell's `SavedInfoForEvolve_CWVerts` must be set before the Hessian/shear-modulus calls, or the result is wrong (~100x).
+- [x] **High-polydispersity triplets (*_LP) + SWAB vs T2ss (2026-10-15)**: same driver, 1115 tissues, same work folder (README "Round 2"). Hessian/squeeze 0.997–1.005 for all *_LP sets at p0 ≤ 3.80, SWAB 1.004. Plots `G_vs_shapeindex_{HTs,HLo,HEx}_group.png`, `G_vs_shapeindex_SWAB_vs_T2ss.png`.
 - [ ] Plan `vm_claude_plans/2026-10-14_nonquadratic-...md`: superseded in part by the item above. The user redirected the work; don't execute it without asking.
 
 ## PRIORITY 1
