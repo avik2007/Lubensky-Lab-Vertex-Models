@@ -1,5 +1,11 @@
 # Claude Recent Actions
 
+## 2026-10-15 (Hessian G for the low-poly triplets)
+- Added `AG Vertex Model/AGVertexModel/AGPerimHessian_test/AGPerimHessian_test/MainHess_claude.cpp`: copy of MainHessianTest.cpp with minimal changes (argv input, no evolution per user, debug dumps and the Python-path call removed, Smd now uses the double-precision function, per-cell CW vertex lists set, writes `<tissue>_SM.txt`). Listed in `vm_file_structure.md`.
+- Built in `/scratch/dkluben_root/dkluben1/abmondal/claude_VM_runs/Hess_SM_groups/` against the repo library in place; smoke test job 64086589 reproduced the FD-verified G_code_d to 5e-13 (the first smoke run, without the CW-vertex set-up, was ~96x off).
+- SLURM jobs 64086617/8/9: 1007/1007 tissues completed. Inputs from `Avik/PhaseTransitionProject` (read-only). Plots `analysis/G_vs_shapeindex_{Ts,Lo,Ex}_group.png`; tables `G_hess_all.tsv`, `G_groups_summary.tsv`.
+- Result: Hessian/squeeze ratio of seed means for p0 <= 3.80 is 1.01-1.04 in every dataset (L2Ex 0.84 at p0 = 3.80 only); both ~0 beyond 3.81.
+
 ## 2026-10-14 (squeeze-benchmark offset)
 - Wrote `src/MainSqueezeCheck.cpp` and `analysis/compare_squeeze.py` in the scratch FD-check folder (`/scratch/dkluben_root/dkluben1/abmondal/claude_VM_runs/T2ss_SM_Hess_testing/`); no repo source touched. SLURM job 63973299.
 - Result: the Hessian vs squeeze-fit offset is sample anisotropy (pure vs simple shear) plus a one-sided finite-strain fit bias. It is not a code error. Details are in that folder's README §5; the next step is a user decision (see todo).

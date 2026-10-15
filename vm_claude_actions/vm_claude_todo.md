@@ -2,6 +2,9 @@
 
 ## PRIORITY 0 (next session)
 - [x] **G vs shape index P0/sqrt(<A>) for T2ss and ExTs (2026-10-15)**: Hessian G (library `calculateShearModulusWithEigenDecompositiond`, fixed code) against the squeeze benchmark. Plots: `/scratch/dkluben_root/dkluben1/abmondal/claude_VM_runs/T2ss_SM_Hess_testing/analysis/G_vs_shapeindex_{T2ss,ExTs}.png` (+ .pdf, .tsv). Script `analysis/plot_G_vs_shape_index.py`. ExTs run: `batch_fdcheck_ExTs.sbat` → `results_ExTs/`.
+- [x] **Hessian G for the low-poly triplets L2Ts/M2Ts/T2ss, L2Lo/M2Lo/LoTs, L2Ex/M2Ex/ExTs (2026-10-15)**, run with the user's own driver: new `AGPerimHessian_test/AGPerimHessian_test/MainHess_claude.cpp` (plan `vm_claude_plans/2026-10-15_hessian-SM-low-poly-triplets-with-MainHess_claude.md`). 1007 tissues, results + plots in `/scratch/dkluben_root/dkluben1/abmondal/claude_VM_runs/Hess_SM_groups/` (README there). Hessian/squeeze ≈ 1.01–1.04 for p0 ≤ 3.80 in all 9 datasets.
+  - Note: earlier `T2ss_SM_Hess_testing/inputs/ExTs_EQ` + its smdataExTs.mat are a DIFFERENT ExTs equilibration from `Avik/PhaseTransitionProject/ExTs_files` (the set behind the user's plot script). Use the PhaseTransitionProject set.
+  - Gotcha: without Evolve, each cell's `SavedInfoForEvolve_CWVerts` must be set before the Hessian/shear-modulus calls, or the result is wrong (~100x).
 - [ ] Plan `vm_claude_plans/2026-10-14_nonquadratic-...md`: superseded in part by the item above. The user redirected the work; don't execute it without asking.
 
 ## PRIORITY 1

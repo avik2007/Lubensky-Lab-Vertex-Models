@@ -71,6 +71,7 @@ AG Vertex Model/
     ├── AGStiffness/                   # ** BRANCH SCOPE ** Shear/elastic stiffness
     ├── AGStiffEquilibrate/            # Equilibrate tissue before stiffness calc
     ├── AGPerimHessian_test/           # ** BRANCH SCOPE ** Hessian matrix extraction
+    │   └── AGPerimHessian_test/MainHess_claude.cpp  # batch copy of MainHessianTest.cpp: argv in, no evolve, writes <tissue>_SM.txt (2026-10-15)
     ├── AGPerimAffine_test/            # Affine response testing
     ├── AGProliferate/                 # Proliferating tissue simulation
     ├── AGCompressFluidize/            # Compression-driven fluidization
