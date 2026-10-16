@@ -1,5 +1,16 @@
 # Claude Recent Actions
 
+## 2026-10-15 (floppy states)
+- The user noticed LqOw points missing at p0 3.89/3.90: every seed there returned the floppy-state 0, and the MATLAB-style averaging drops zeros. Per the user, floppy now counts as G = 0. All Hessian plots were regenerated; the non-floppy-only means are kept in the tables.
+- Recorded the rate of floppiness for all 22 Hessian sets: `Hess_SM_groups/analysis/floppy_fraction.{tsv,png}`. Found that the library's floppy test uses absolute thresholds and so depends on K. A fluid fraction (floppy OR |G|/K < 1e-5; clean gap in the data between 1e-6 and 1e-4) is recorded alongside it.
+- Quartic C4 = 1 vs T2ss comparison: `Quartic_C4fix/analysis/C4one_vs_T2ss.png`. AqOw ≈ T2ss; QuOw and LqOw are stiffer near the transition (area stiffness 2.5× and 7× from the quartic term at a = 0.5 and 2).
+
+## 2026-10-15 (quartic C4 shadowing bug)
+- Before running the quartic sets, found that every quartic file's pressures imply C4 = 1 and that sets with different C4 have identical geometry. Cause: the member `double C4;` in `AGTissue.h` shadowed the global C4, so `ReadInputData` and `CalculateFreeEnergy` used the file's C4 while `AGCell::GetPressure`/`GetNegativeDPressureDArea` (forces, Hessian) used the global, left at 1. Fixed by removing the member (commit `4090de861`).
+- Consequence: the C4 != 1 sets (QuTs, QuTw, Qu2w, Aq2w, Lq2w, MTQ3) were equilibrated with C4 = 1 forces, and their squeeze benchmarks mixed C4 = 1 forces with a C4 = file energy. The user decided: fix the bug, re-equilibrate, Hessian only (no squeeze), and overwrite the old EQ files.
+- Verified the fix (FD check with a quartic reference energy; QuOw re-equilibration regression; T2ss unchanged). Added `MainAGPerim_claude.cpp`. Made a safety copy of the old EQ files. The re-equilibration is running (job 64105735); see the todo list for the remaining steps.
+- C4 = 1 sets done: QuOw/AqOw/LqOw Hessian vs squeeze 1.023/1.033/0.996.
+
 ## 2026-10-15 (high polydispersity + SWAB)
 - Read `ExperimentalConditions_CodeNames.csv` and `SM_shearmodulus_fitting_100cells_QuadraticFullPlotScript.m` (HP overlay sections; "Sweeping Abox plot with comparison for reference" = SWAB vs T2ss).
 - Matched every EQ input to its squeeze runs by energy (finalEnergy = E0). `T2ss_LP_files`/`_2.0` and `L2Ts_LP_files`/`_2.0` are identical where they overlap; used `_2.0`.

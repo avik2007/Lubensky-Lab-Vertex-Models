@@ -22,6 +22,7 @@ Lubensky-Lab-Vertex-Models/
 ├── [Vertex Model Tutorial v2.0 2020/](Vertex%20Model%20Tutorial%20v2.0%202020/) # [DOCUMENTATION] Tutorials and examples
 ├── [vm_claude_actions/](vm_claude_actions/)               # [AGENT STATE] Claude task tracking
 ├── [vm_claude_plans/](vm_claude_plans/)                 # [AGENT STATE] Dated, approved Claude implementation plans awaiting/undergoing execution
+├── [vm_claude_reports/](vm_claude_reports/)             # Detailed reports of all vertex-model code changes, for publication (2026-10-15 onward)
 ├── vm_claude_proposed_fixes.md         # [AGENT STATE] Claude's audit of shear-modulus/Hessian code vs. the derivations doc
 ├── [vm_gemini_actions/](vm_gemini_actions/)               # [AGENT STATE] Gemini task tracking, lessons, and logs
 ├── [vm_human_calculations/](vm_human_calculations/)             # [DOCUMENTATION] Hand-derived notes, LaTeX writeups, and Mathematica notebooks
@@ -67,6 +68,7 @@ AG Vertex Model/
     ├── AGVertexModel.sln              # Master VS solution
     ├── AGVertexModel/                 # Core AG class library
     ├── AGPerimVertex/                 # Perimeter vertex model (AG variant)
+    │   └── MainAGPerim_claude.cpp     # batch copy of MainAGPerim.cpp: argv in + output folder, writes _EQ.txt only if equilibrated (2026-10-15)
     ├── AGPerimModuli/                 # ** BRANCH SCOPE ** Elastic moduli calculation
     ├── AGStiffness/                   # ** BRANCH SCOPE ** Shear/elastic stiffness
     ├── AGStiffEquilibrate/            # Equilibrate tissue before stiffness calc
