@@ -2,6 +2,7 @@
 
 ## PRIORITY 0 (next session)
 - [ ] **>>> NEXT SESSION, START HERE: QUARTIC C4 REDO, IN PROGRESS (2026-10-15)**. Plan: `vm_claude_plans/2026-10-15_quartic-C4-shadowing-fix-and-redo.md`. Work folder: `/scratch/dkluben_root/dkluben1/abmondal/claude_VM_runs/Quartic_C4fix/`.
+  - [ ] First check that the detached turbo backup of `Quartic_C4fix` finished: `tail -1 /scratch/dkluben_root/dkluben1/abmondal/claude_VM_runs/Quartic_C4fix/logs/turbo_backup_2026-10-15.log` should say DONE. If not, re-run the rsync from the README (`Hess_SM_groups` was already backed up).
   - Note: run the Hessian on the new EQ tissues with `Quartic_C4fix/agperim_hess_claude`. It is built with BOTH fixes (C4 `4090de861` + relative floppy thresholds `9b39943bb`). Write the new sets' Hessian output to `Quartic_C4fix/relthr/<code>/` (the same tree as every other set after the threshold fix), then regenerate ALL plots with `export SM_ROOT=/scratch/dkluben_root/dkluben1/abmondal/claude_VM_runs/Quartic_C4fix/relthr`, and add the final quartic results to `vm_claude_reports/2026-10-15_vertex_model_code_changes_report.md` §5/§8.
   - [x] Bug found: `AGTissue.h` had a member `C4` that shadowed the global, so forces and the Hessian used C4 = 1 while the energy used the file's C4. Fixed in commit `4090de861`.
   - [x] FD check with an independent quartic energy (C4 = 1, 3, 30): pressure 1e-16, Hessian 1.8e-11, G_code = G_FD to 1e-9. QuOw re-equilibration reproduces the 2023 EQ files (energy to 1e-13). T2ss Smd is unchanged.
