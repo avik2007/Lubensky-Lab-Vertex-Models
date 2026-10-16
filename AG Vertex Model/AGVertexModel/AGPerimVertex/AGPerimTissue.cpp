@@ -2912,9 +2912,23 @@ double AGPerimTissue::calculateShearModulusWithEigenDecomposition(ofstream* erro
 	// non-negligible ("floppy state"). Matches the threshold already used in
 	// calculateShearModulusWithEigenDecompositiond so single- and double-precision
 	// agree (vm_claude_proposed_fixes.md Issue 3).
-	const double EIGENVALUE_THRESHOLD = 1e-5;
-	const double FLOPPY_TOLERANCE = 1e-4;
-	for (int index = hessianeigen.eigenvalues().size() - lu_decomp.rank(); index < hessianeigen.eigenvalues().size(); index++)
+	// 2026-10-15: thresholds made RELATIVE to the matrix scale, and every mode is now examined.
+	// Before: absolute cuts (1e-5 on eigenvalues, 1e-4 on xi_dot_u) and a loop that started at
+	// size - lu_decomp.rank(), i.e. it silently skipped every mode Eigen's LU counted as null space.
+	// A fluid tissue has ~N_v - 2N_c genuine zero modes, so which of them reached the floppy test
+	// depended on round-off in the LU rank: identical tissues (T2ss / L2Ts / M2Ts, which share the
+	// same Hessian) were flagged floppy or not at random, triggered by xi_dot_u ~ 4e-9 * |Xi| (noise).
+	// Now: a mode is a zero mode if |lambda| <= 1e-8 * max|lambda| (equal to the old 1e-5 at the
+	// typical lambda_max ~ 630 of these tissues, so verified results are unchanged), and the floppy
+	// return fires only if a zero/negative mode couples to the shear with |xi_dot_u| > 1e-6 * |Xi|
+	// (~250x above the measured round-off). Zero modes with negligible coupling are dropped, as in
+	// the pseudo-inverse; a fluid then gives G ~ 0 through the exact affine/nonaffine cancellation.
+	const double REL_EIGENVALUE_THRESHOLD = 1e-8;
+	const double REL_FLOPPY_TOLERANCE = 1e-6;
+	const double EIGENVALUE_THRESHOLD = REL_EIGENVALUE_THRESHOLD * (double)hessianeigen.eigenvalues().cwiseAbs().maxCoeff();
+	const double FLOPPY_TOLERANCE = REL_FLOPPY_TOLERANCE * (double)FullBoundaryVector.norm();
+	*errorfile << "Relative thresholds: eigenvalue cut = " << EIGENVALUE_THRESHOLD << ", floppy xi_dot_u cut = " << FLOPPY_TOLERANCE << endl;
+	for (int index = 0; index < hessianeigen.eigenvalues().size(); index++)
 	{
 		int jndex = 0;
 		currenteigenvalue = real(hessianeigen.eigenvalues()(index, 0));
@@ -3152,9 +3166,23 @@ double AGPerimTissue::calculateShearModulusWithEigenDecompositiond(ofstream* err
 	// Threshold below which an eigenvalue is treated as numerically zero, and the
 	// tolerance above which a near-zero mode's force projection (xi_dot_u) counts as
 	// non-negligible ("floppy state") - see vm_claude_proposed_fixes.md Issue 3.
-	const double EIGENVALUE_THRESHOLD = 1e-5;
-	const double FLOPPY_TOLERANCE = 1e-4;
-	for (int index = hessianeigen.eigenvalues().size() - lu_decomp.rank(); index < hessianeigen.eigenvalues().size(); index++)
+	// 2026-10-15: thresholds made RELATIVE to the matrix scale, and every mode is now examined.
+	// Before: absolute cuts (1e-5 on eigenvalues, 1e-4 on xi_dot_u) and a loop that started at
+	// size - lu_decomp.rank(), i.e. it silently skipped every mode Eigen's LU counted as null space.
+	// A fluid tissue has ~N_v - 2N_c genuine zero modes, so which of them reached the floppy test
+	// depended on round-off in the LU rank: identical tissues (T2ss / L2Ts / M2Ts, which share the
+	// same Hessian) were flagged floppy or not at random, triggered by xi_dot_u ~ 4e-9 * |Xi| (noise).
+	// Now: a mode is a zero mode if |lambda| <= 1e-8 * max|lambda| (equal to the old 1e-5 at the
+	// typical lambda_max ~ 630 of these tissues, so verified results are unchanged), and the floppy
+	// return fires only if a zero/negative mode couples to the shear with |xi_dot_u| > 1e-6 * |Xi|
+	// (~250x above the measured round-off). Zero modes with negligible coupling are dropped, as in
+	// the pseudo-inverse; a fluid then gives G ~ 0 through the exact affine/nonaffine cancellation.
+	const double REL_EIGENVALUE_THRESHOLD = 1e-8;
+	const double REL_FLOPPY_TOLERANCE = 1e-6;
+	const double EIGENVALUE_THRESHOLD = REL_EIGENVALUE_THRESHOLD * (double)hessianeigen.eigenvalues().cwiseAbs().maxCoeff();
+	const double FLOPPY_TOLERANCE = REL_FLOPPY_TOLERANCE * (double)FullBoundaryVector.norm();
+	*errorfile << "Relative thresholds: eigenvalue cut = " << EIGENVALUE_THRESHOLD << ", floppy xi_dot_u cut = " << FLOPPY_TOLERANCE << endl;
+	for (int index = 0; index < hessianeigen.eigenvalues().size(); index++)
 	{
 		int jndex = 0;
 		currenteigenvalue = real(hessianeigen.eigenvalues()(index, 0));
