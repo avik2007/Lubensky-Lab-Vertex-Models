@@ -38,7 +38,13 @@ public:
 	bool equilibriumChecker;      		// determines whether packing is equilibrated or not
 	double currentFreeEnergy;			// used to determine equilibrium
 	double pastFreeEnergy;				// used to determine equilibrium
-	double C4; // for the quartic potential
+	// double C4; // for the quartic potential	<- REMOVED 2026-10-15 (C4 shadowing bug).
+	// This member shadowed the global "extern double C4" (AGConstants.h). Tissue member functions
+	// (ReadInputData, CalculateFreeEnergy) read/wrote this member, so C4 from the input file went
+	// into the member, while AGCell::GetPressure / GetNegativeDPressureDArea (forces, Hessian) read
+	// the global, which stayed at the Main*.cpp default (1). Quartic tissues with C4 != 1 were
+	// therefore relaxed with C4 = 1 forces while their energy used the file C4. With the member
+	// gone, every function uses the one global C4, which ReadInputData sets from the input file.
 	//NOTE: the list cells that is instantiated in the TissueClass will contain AGCells when AGVertex Model code
 	// is being used 
 	//CONSTRUCTOR
