@@ -17,7 +17,9 @@ This report records every change made to the vertex-model C++ code for the Hessi
 | 5 | **C4 shadowing**: forces always used C4 = 1 | `AGTissue.h` | `4090de861` | Quartic tissues with C4 ≠ 1 must be re-equilibrated (§5, §8) |
 | 6 | Zero-mode and floppy thresholds made relative to the matrix scale; every mode examined | `AGPerimTissue.cpp`, `calculateShearModulusWithEigenDecomposition[d]` | `9b39943bb` | Removes random, round-off-driven floppy flags. Solid-side G is unchanged |
 | D1 | New batch driver for the Hessian G | `AGPerimHessian_test/AGPerimHessian_test/MainHess_claude.cpp` | `143e54893` | No physics change |
-| D2 | New batch driver for equilibration | `AGPerimVertex/MainAGPerim_claude.cpp` | uncommitted | No physics change |
+| D2 | New batch driver for equilibration | `AGPerimVertex/MainAGPerim_claude.cpp` | `e52d1279c` (+ `_NE.txt` output 2026-10-16, chunked restarts and save-on-signal 2026-10-17) | No physics change |
+
+**Lesson for future code:** every bug above came from writing the code like a derivation, i.e. assuming exact arithmetic and conventions that were never tested numerically. See §11.
 
 **End result.**
 - After changes 1–4, the library's G matches an independent finite-difference (FD) reference to ~5e-9 relative for every T2ss tissue with p0 ≤ 3.82 (128 tissues).
@@ -324,7 +326,16 @@ for (int index = 0; index < size; index++)          // every mode is examined
 - argv input and an output folder.
 - No per-step `_out.txt` dump.
 - Writes `_EQ.txt` only if the tissue equilibrated, with the initial/final energy footer, as the 2023 Great Lakes driver did.
-- The evolution loop is unchanged.
+- (2026-10-16) If the tissue did not equilibrate by TOTALTIME, it writes the final state to `_NE.txt`, as the user's Great Lakes `MainAGDebug.cpp` does. That file is a complete input file, so a run can be continued from it. Checked: the restart's initial energy equals the saved final energy exactly, and a rerun reproduces the original run's log bit for bit.
+- (2026-10-17) Chunked, restartable runs (protocol: `vm_claude_plans/2026-10-17_chunked-equilibration-protocol.md`):
+  - An optional third argument sets the chunk length, overriding the file's TOTALTIME. The batch file `batch_EQ_chunked.sbat` runs chunks of 1000 from the latest `_NE.txt` until the tissue equilibrates or reaches a total of t = 10000.
+  - CURRENTTIME in the output is the tissue's total evolved time (start time read from the input + time run in this chunk).
+  - SIGUSR1/SIGTERM set a flag that ends the loop after the current `Evolve` call, and the state is written to `_NE.txt`. SLURM sends USR1 15 min before the time limit, so a run that hits the limit still saves its state. Tested in a 10-min SLURM job.
+  - Output names stay `<tissue>_ELS_3_EQ.txt` / `_NE.txt` over any number of chunks (the previous `_NE.txt` is kept as `_NE_prev.txt`). `_error.txt` is appended with a header per chunk. Each chunk adds one line to `<tissue>_ELS_3_chunks.tsv` (start/end time, energies, final slope, outcome, wall time).
+  - Each chunk restarts the energy-slope window and the step size, as any restart from a file does. Checked: the restart's initial energy equals the saved final energy exactly.
+- (2026-10-17) 36 tissues still running under the old binary were stopped with gdb (`set var tissue.equilibrated = 1`, user-approved), so the old driver wrote its state. These files were renamed to `_NE.txt` with the footer corrected and continued under the chunked protocol. The originals are kept as `_gdbstop_EQ.txt`.
+- The evolution loop and the equilibrium criteria are unchanged.
+- Observation, not changed: in this re-equilibration, 544 of 607 tissues met the slope test (< 1e-15) only after the step size collapsed and the last 3 energies became identical, so the regression slope was exactly 0. The slopes just before were 1e-13 to 1e-9. This is the existing termination behavior of `AGPerimTissue::Evolve`.
 
 **Data overwrite** (user-approved)
 - The old C4-bug EQ files of QuTs, QuTw, Qu2w, Aq2w, Lq2w and MTQ3 (652 files) are kept in `CompressionInducedFluidizationData/claude_hessian_testing/Quartic_C4fix/original_EQ_C4bug/`.
@@ -344,3 +355,20 @@ for (int index = 0; index < size; index++)          // every mode is examined
 - **Commits:** `5f7a19504`, `f09065e4b`, `7a398ed78`, `4090de861`, `9b39943bb` (library); `143e54893` (D1).
 - **Work folders:** `/scratch/dkluben_root/dkluben1/abmondal/claude_VM_runs/{T2ss_SM_Hess_testing, Hess_SM_groups, Quartic_C4fix}/` (each has a README), backed up to `/nfs/turbo/lsa-dkluben/abmondal/CompressionInducedFluidizationData/claude_hessian_testing/`.
 - **Derivation notes:** `vertex_model_master_derivations.{md,tex}` carry ALL-CAPS "CLAUDE CORRECTION" notes for the author to rewrite.
+
+## 11. Lesson for future code: don't code like a theorist
+
+Every bug in this report has the same root cause. The code was written as a transcription of a derivation, with exact arithmetic and the derivation's conventions taken for granted. It was never checked numerically against the energy it was supposed to differentiate. Each bug was locally plausible and invisible on paper. Once a finite-difference check existed, each one showed up directly as a mismatch.
+
+| Theorist's assumption | Where it broke | What to do instead |
+|---|---|---|
+| "The derivation uses counterclockwise order, so the code does too" | Change 2: the d²A/dr dr signs were written for a counterclockwise list, but `cwverts` is clockwise. The comment even said "SIGNS SET BY CCW CONVENTION". | State each convention as a property of the data structure and check it in code (e.g. the sign of the shoelace sum). Never infer it from the notes. |
+| "Zero is zero" | Changes 1 and 6: absolute cuts (1e-5, 1e-4) sat at round-off in some tissues and above it in others. `FullPivLU`'s rank, used to skip null modes, depended on noise, so identical Hessians were classified differently. | Make every tolerance relative to the scale of the quantity (λ_max, ‖Ξ‖). Never let a decision depend on a numerically computed rank. Log what was cut. |
+| "In exact arithmetic, skipping the null space is the pseudo-inverse" | Change 6: the `size − rank` loop start (your 2024 code) is correct in exact arithmetic. In floating point it silently skipped modes, including any negative ones and any zero mode that couples to the shear, so they never reached the floppy check. | Examine every mode and decide explicitly, with a stated criterion, what to drop. A mode should never be skipped by index arithmetic. |
+| "I can handle the geometry case by case" | Changes 3 and 4: the boundary-crossing area derivatives picked their sign with heuristics (edge-sum direction, the x ordering of intercepts). They failed for 2.7% of crossing cells and for every corner cell. A comment had already flagged "POTENTIAL WORRIES ABOUT CORNER CELLS". | Derive from one general formula (here, the shoelace formula on the unwrapped polygon) instead of special-casing the geometry. A known worry in a comment means a test is due, not a comment. |
+| "Single vs double precision doesn't matter" | Change 1: a `float currenteigenvalue` inside the double-precision function cut its eigenvalues down to float precision. | Keep one precision through each pipeline and grep for stray `float` in double code paths. |
+| "A parameter is just a parameter" | Change 5: a member `AGTissue::C4` shadowed the global C4. The energy used the file's value and the forces used the default of 1. The two disagreed silently, with no error or warning. | Keep a single source of truth for each physical constant. Compile with `-Wshadow`. Check that forces are the exact negative gradient of the energy for every potential. |
+| "The run will finish" | Driver D2 (Claude's own code, 2026-10-15): tissues that did not equilibrate exited without saving their state, so 37 tissues had to be rerun from t = 0. | Every exit path of a long run writes its state. Here that means `_NE.txt`, as the user's `MainAGDebug.cpp` already did. |
+
+**The single most valuable practice: a finite-difference check against the energy.** One independent reference (`MainHessFDCheck.cpp`: energy → FD gradient → FD Hessian → FD Ξ → FD G) exposed changes 2–5 immediately. It also confirmed that the method itself was right, and it is cheap to rerun after any change. For any new energy term or derivative, write the FD check first, then the analytic code. Test it on tissues that hit the edge cases: corner cells, fluid tissues, C4 ≠ 1, every potential.
+

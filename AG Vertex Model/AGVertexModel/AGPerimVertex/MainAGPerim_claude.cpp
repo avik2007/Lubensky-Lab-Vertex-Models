@@ -19,6 +19,8 @@
 #include <typeinfo>
 #include <cassert> 
 #include <stddef.h>
+#include <csignal>	// signal(), sig_atomic_t: save the state when SLURM signals a time limit
+#include <iomanip>	// setprecision for the chunk ledger
 
 #include "CellClass.h"
 #include "EdgeClass.h"
@@ -110,18 +112,46 @@ AGPerimTissue tissue;
 //   3. The _EQ.txt file is written only if the tissue equilibrated before TOTALTIME, with the
 //      "initialEnergy / finalEnergy" footer the Great Lakes version writes (the original repo
 //      version always wrote _EQ.txt and had no footer).
+//   4. (2026-10-16) If the tissue did NOT equilibrate by TOTALTIME, its final state is written to
+//      <name>_NE.txt, following the user's Great Lakes MainAGDebug.cpp (same footer and message).
+//      The _NE.txt file is a complete input file (WriteOutputDataAppend writes all globals, cells
+//      and vertices), so it can be fed straight back in as <input file> to continue the
+//      equilibration for another TOTALTIME from where it stopped. Without this, an unequilibrated
+//      run's state was lost when the program exited.
+//   5. (2026-10-17) Chunked, restartable equilibration (protocol in
+//      vm_claude_plans/2026-10-17_chunked-equilibration-protocol.md):
+//      a. Optional 3rd argument <chunk>: run this many time units, overriding the file's TOTALTIME
+//         (the raw inputs carry TOTALTIME up to 1e5, longer than a 72 h SLURM job can reach).
+//      b. SIGUSR1 / SIGTERM (sent by SLURM before the time limit, or by scancel) set a flag. The
+//         loop stops after the current Evolve(TIMEINTERVAL) call and the state is saved to _NE.txt,
+//         so a timeout never loses the run.
+//      c. Cumulative time: the CURRENTTIME written to _EQ/_NE.txt is the input file's CURRENTTIME
+//         (0 for a raw input) plus the time run in this chunk. The evolution itself still starts
+//         each chunk at CURRENTTIME = 0, exactly as before.
+//      d. Stable names: any trailing "_NE" is stripped from the input name, so continuing from
+//         X_ELS_3_NE.txt writes X_ELS_3_NE.txt / X_ELS_3_EQ.txt again (not X_ELS_3_NE_NE.txt).
+//         _error.txt is appended to, with a header line per chunk.
+//      e. One line per chunk is appended to <name>_chunks.tsv (the tissue's history).
 // The evolution itself (the while loop calling tissue.Evolve) is unchanged.
+
+// Set by the signal handler; checked by the evolve loop after every Evolve(TIMEINTERVAL) call.
+// sig_atomic_t + volatile is the only kind of variable a signal handler may safely write.
+volatile sig_atomic_t stopRequested = 0;
+void requestStop(int) { stopRequested = 1; }
 
 int main(int argc, char* argv[])
 {
 	if (argc < 3) {
-		cout << "Usage: " << argv[0] << " <raw input file> <output folder>" << endl;
+		cout << "Usage: " << argv[0] << " <input file (raw or _NE.txt)> <output folder> [chunk length]" << endl;
 		return 1;
 	}
 	InputFileName = argv[1];
 	string OutputFolder = argv[2];
 	cout << "Reading argv[1] (name) it is:  " << InputFileName << endl;
 	starttime = std::chrono::system_clock::now();
+	// Install the stop handlers before the (long) evolution starts.
+	signal(SIGUSR1, requestStop);
+	signal(SIGTERM, requestStop);
 
 	//Read the input file
 	bool readfile;
@@ -131,6 +161,10 @@ int main(int argc, char* argv[])
 		return 0;
 
 	}
+	// Chunk length (5a) and the tissue's cumulative time at the start of this chunk (5c).
+	if (argc >= 4) { TOTALTIME = atof(argv[3]); }
+	double startCumulativeTime = CURRENTTIME;
+	cout << "Chunk length " << TOTALTIME << ", cumulative time at start " << startCumulativeTime << endl;
 	//Seed the random number generator
 	mt19937_64 generator(SEED);
 	uniform_real_distribution<double> distribution(0.0, 1.0);
@@ -139,11 +173,16 @@ int main(int argc, char* argv[])
 	//Set up the output files: <output folder>/<input file name without folder and without ".txt">
 	string basename = InputFileName.substr(InputFileName.find_last_of('/') + 1);
 	basename = basename.substr(0, basename.size() - 4);
+	// 5d: strip any trailing "_NE" so all chunks of one tissue share one set of file names.
+	while (basename.size() > 3 && basename.compare(basename.size() - 3, 3, "_NE") == 0)
+		basename = basename.substr(0, basename.size() - 3);
 	string filename = OutputFolder + "/" + basename;
 	string OutputFileName2 = filename + "_error.txt";
-	
+
 	ofstream eqfile, errorfile;
-	errorfile.open(OutputFileName2);
+	errorfile.open(OutputFileName2, ios::app);	// 5d: append, one header line per chunk
+	errorfile << "##### CHUNK from " << InputFileName << " at cumulative time " << startCumulativeTime
+		<< ", chunk length " << TOTALTIME << endl;
 	
 	//******************************INITIAlIZE***********************************************************************
 	//**********************************************************************************************************
@@ -166,14 +205,20 @@ int main(int argc, char* argv[])
 	errorfile << initialEnergy << endl;
 	
 	// above time variables allow us to pick how often we write to the appendfile
-	while ((CURRENTTIME < TOTALTIME) && !(tissue.equilibrated))
+	while ((CURRENTTIME < TOTALTIME) && !(tissue.equilibrated) && !stopRequested)	// 5b: also stop on signal
 	{
 		cout << "CURRENTTIME " << CURRENTTIME << endl;
 		tissue.Evolve(TIMEINTERVAL, &stepSize, &errorfile);
 		// equilibrated gets updated in Evolve
 	}
 	double finalEnergy = tissue.CalculateFreeEnergy();
-	if (tissue.IsEquilibrated())
+	double chunkTime = CURRENTTIME;
+	bool isEQ = tissue.IsEquilibrated();
+	// Final slope of the equilibrium checker (same quantity IsEquilibrated tests), for the ledger.
+	double finalSlope = (tissue.energyList.size() > 1) ? getLinearRegressionSlope(tissue.timeList, tissue.energyList) : 0;
+	// 5c: write the cumulative time into the saved state.
+	CURRENTTIME = startCumulativeTime + chunkTime;
+	if (isEQ)
 	{
 		string OutputFileName3 = filename + "_EQ.txt";
 		eqfile.open(OutputFileName3);
@@ -184,8 +229,28 @@ int main(int argc, char* argv[])
 	}
 	else
 	{
-		cout << "NOT EQUILIBRATED by TOTALTIME = " << TOTALTIME << "; no _EQ.txt written" << endl;
+		// Not equilibrated: save the final state as <name>_NE.txt (as in the user's MainAGDebug.cpp)
+		// so a follow-up run can restart from it instead of from the raw input.
+		cout << "NOT EQUILIBRATED by TOTALTIME = " << TOTALTIME << "; final state written to _NE.txt" << endl;
+		string OutputFileName3 = filename + "_NE.txt";
+		eqfile.open(OutputFileName3);
+		tissue.WriteOutputDataAppend(&eqfile);
+		eqfile << "initialEnergy: " << initialEnergy << "\t finalEnergy: " << finalEnergy << endl;
+		eqfile << "number of cells: " << tissue.cells.size() << endl;
+		eqfile << "This tissue DID not equilibrate prior to exiting solve. This the final recorded state." << endl;
+		if (stopRequested) { eqfile << "Stopped by signal (SLURM time limit or scancel) before the end of the chunk." << endl; }
 	}
+	eqfile.close();
+
+	// 5e: one ledger line per chunk. Header is written only when the ledger is new.
+	string ledgerName = filename + "_chunks.tsv";
+	bool ledgerIsNew = !ifstream(ledgerName).good();
+	ofstream ledger(ledgerName, ios::app);
+	if (ledgerIsNew) { ledger << "input\tstart_t\tend_t\tinitialE\tfinalE\tfinal_slope\toutcome\twall_min" << endl; }
+	std::chrono::duration<double> chunk_seconds = std::chrono::system_clock::now() - starttime;
+	ledger << std::setprecision(17) << InputFileName << "\t" << startCumulativeTime << "\t" << CURRENTTIME << "\t"
+		<< initialEnergy << "\t" << finalEnergy << "\t" << finalSlope << "\t"
+		<< (isEQ ? "EQ" : (stopRequested ? "SIGNAL" : "NE")) << "\t" << chunk_seconds.count() / 60.0 << endl;
 
 	///////******************************End***********************************************************************
 	///////**********************************************************************************************************
