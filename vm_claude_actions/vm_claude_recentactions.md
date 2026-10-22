@@ -1,5 +1,21 @@
 # Claude Recent Actions
 
+## 2026-10-21 (quartic re-equilibration: resubmissions; QUARTIC2.0 plan revised; negative-mode plan stub)
+- Status check: every earlier job had ended (64223071, 64218833, 64217475 COMPLETED; 64105735 tasks 376/392 and 64101709 task 11 TIMEOUT).
+- Classified each of the 672 tissues in `EQparameters_quartic.txt`: 630 EQ, 23 NE at CAP 10000, 17 NE below the cap (15 QuTs, 2 MTQ3), 2 with no state (Aq2w rng120/130 p0 3.83). My first count (641 EQ) was wrong: it globbed every `*_EQ.txt` under `results/`, including files that are not one of the 672 tissues.
+- Submitted job **64520645**: the 17 below-cap tissues + the 2 with no state, CAP 10000 (`EQparameters_chunk_resub18.txt`, 19 lines). Verified that each task started its chunk from the right state (`_NE.txt` or raw at t = 0). Every chunk end and every SLURM warning writes `_EQ.txt` or `_NE.txt` (MainAGPerim_claude.cpp:223-241).
+  - Slip: I renamed the PARAMS file right after `sbatch`. The tasks read it at start, so I renamed it back while all tasks were still pending; no harm. Lesson L007.
+- Submitted job **64522185**: the 23 tissues at the cap, continued from `_NE.txt` with **CAP = 20000** (user's choice; `EQparameters_chunk_cap20k.txt`). Verified that all 23 started at t = 10000 with chunk length 1000.
+- QUARTIC2.0 + bidisperse plan revised with the user's decisions:
+  - Step 1 copies `AGStiffTissue::CalculateFreeEnergy` (per-cell a0 inside the loop; keep the pressure-type branches).
+  - QZ sets use K = 1.414214 (the T2ss value) for all three.
+  - The bidisperse sets start from the T2ss_OG raw files. Checked that their header equals Aq2w's and that the Vertices md5 is identical across T2ss_OG/Aq2w/Qu2w at rng 120.
+  - Step 0 removed: the MTQ3 Hessian + plot are already in the C4-redo wrap-up, and the A0 = 2 Abar overlay + MATLAB snapshots were added there.
+- Confirmed that the eigenvalue thresholds live in the library (AGPerimTissue.cpp:2926/3180), not in MainHess_claude.cpp. Found that negative eigenvalues currently fall into the floppy branch and are never logged.
+- Found the user's MATLAB cell-colouring code: `MATLAB Code Folder/CreateMovie_HelpperFunctions/PlotSimulationOutput.m` (fill() per cell; the cell block is commented out and skips boundary-crossing cells). To be used through a wrapper in the work folder.
+- Wrote the planning stub `vm_claude_plans/2026-10-21_negative-mode-push.md` (push along the most negative mode, borrowing T1's vertex-resolution push; re-equilibrate; RECORD stuck tissues) and put it at the top of the todo list for discussion.
+- Nothing in the library was edited or committed today.
+
 ## 2026-10-15 (floppy states)
 - The user noticed LqOw points missing at p0 3.89/3.90: every seed there returned the floppy-state 0, and the MATLAB-style averaging drops zeros. Per the user, floppy now counts as G = 0. All Hessian plots were regenerated; the non-floppy-only means are kept in the tables.
 - Recorded the rate of floppiness for all 22 Hessian sets: `Hess_SM_groups/analysis/floppy_fraction.{tsv,png}`. Found that the library's floppy test uses absolute thresholds and so depends on K. A fluid fraction (floppy OR |G|/K < 1e-5; clean gap in the data between 1e-6 and 1e-4) is recorded alongside it.

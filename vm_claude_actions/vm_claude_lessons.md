@@ -37,3 +37,8 @@ Each lesson: **Mistake** → **Lesson** → **How to Apply**
 **Lesson**: If a new driver changes when output is written, every exit path must still save the state, and the user has probably already solved this somewhere. Their Great Lakes home folder (`~/Main*.cpp`, `~/*.sbat`, `~/parameters*`) is the reference for workflow conventions.
 **How to Apply**: Before writing or editing a driver, grep `~/Main*.cpp` and the user's batch/parameter files for how each exit path is handled, and copy their convention. Never let a long run exit without writing its final state.
 
+
+### L007 — Never rename or move a file that a pending or running SLURM job reads
+**Mistake**: (2026-10-21) Right after `sbatch --array=1-19 --export=ALL,PARAMS=EQparameters_chunk_resub18.txt`, I renamed the parameter file to fix its name. `batch_EQ_chunked.sbat` reads `$PARAMS` only when each array task starts, so every pending task would have failed. I renamed it back before any task started.
+**Lesson**: A batch script's inputs, such as parameter files, binaries and scripts, are read at task start, not at submit time. Choose the final name before `sbatch`.
+**How to Apply**: Check the counts and the file name before submitting (e.g. `wc -l` against the intended number). After submitting, leave every file the job touches alone until the job is done.
