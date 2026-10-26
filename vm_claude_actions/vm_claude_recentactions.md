@@ -1,5 +1,54 @@
 # Claude Recent Actions
 
+## 2026-10-26 (redo wrap-up; capped tissues excluded; quartic G vs T2ss; QUARTIC2.0 C4 = 1/6 A0 sweep submitted)
+- **Old-QUARTIC C4 redo:** 648 EQ / 13 capped at t = 20000 / 11 running of 672. Resubmitted the 10 QuTs SIGNAL stops as 64823317 (CAP 20000).
+- **Capped tissues:**
+  - New read-only driver `MainForceHessCheck_claude.cpp` (uncommitted, awaiting review), folder `claude_VM_runs/ForceHessCheck/`, job 64824602.
+  - Residual forces do not separate NE from EQ (Frms ~1e-5 for both). The Newton-step distance does: NE 2e-3..0.47 edge lengths, EQ median 1e-5..6e-4.
+  - NE G is 3–1000x off the EQ seeds.
+  - **User decision: capped tissues are left out of the G analysis.**
+  - Side finding: every EQ seed of QuTw/Qu2w/Lq2w at p0 3.89/3.9 has negative modes and G < 0.
+- **Hessian G on the 648 EQ tissues** of the 6 C4 != 1 sets (job 64827116).
+  - `plot_quartic_hess.py` now reads `SMparameters_C4redo.txt` (EQ only).
+  - A0 = Abar sets (AqOw/Aq2w/QuTs) = T2ss at any C4.
+  - A0 = 2Abar and 0.5Abar sets are stiffer near the transition, growing with C4. MTQ3 (C4 = 10) is the largest: x2.5 at 3.80 and x7–13 at 3.81–3.83 vs M2Ts/T2ss. M2Ts = T2ss, so A0 alone does nothing for a quadratic area energy.
+  - A0-sweep figures restyled to match the non-quartic triplets; copies in `claude_VM_runs/plots_2026-10-26/`.
+- **Explained to the user:**
+  - Why the potentials are convex per cell (QZ20 is the deliberate exception).
+  - Why a larger K does not strengthen the quartic relative to the quadratic.
+- **Found:** no C4 = 10 set at 0.5Abar. The only old-form strong-quartic A0 sweep is C4 = 30 (L2Qu / QuTs / M2Qu); L2Qu and M2Qu need re-equilibration (awaiting the user).
+- **QUARTIC2.0 redesigned as A0 sweeps at fixed C4** (plan `vm_claude_plans/2026-10-26_quartic2-A0-sweeps.md`; K proportional to A0; A0 = 0.5/1/2 Abar).
+  - **C4 = 1/6 sweep submitted: job 64834279** (336 tissues, `claude_VM_runs/Quartic2_Sweep/`, committed-library binaries).
+  - Checks: energy = independent formula to 1e-10; the force difference of 1.5e-5 rel equals an old-QUARTIC control (stale file force); Hessian binary = relthr on T2ss.
+  - The pilot was skipped (user); monitor the early chunks instead.
+- **Lessons:** L011 (compare the moduli as a table of numbers, not figures), L012 (explicit scp commands to ~/GreatLakesImages/).
+- **Close-out:** committed and pushed bookkeeping and plans only, no library code. Detached turbo backup started (log `claude_VM_runs/logs_backup_2026-10-26.log`).
+
+## 2026-10-24 (job check; code reviews #1/#2 revised per user feedback; Hessian equilibrium check filed away)
+- **Jobs:** 644 EQ / 28 NE of 672 (up from 634/38). No tissue has reached t = 20000; all NE have p0 ≥ 3.83.
+  - Queued continuations with `afterany` dependencies: **64745542** (14 lines of `EQparameters_chunk_cap20k.txt`) and **64745543** (lines 16–17 of `EQparameters_chunk_resub18.txt`), both CAP 20000.
+  - At 23:23 both are RUNNING. 64522185 and 64520645 ended COMPLETED at their 72 h limit. 64631968 (11 tasks) and 64637430 are still running, ending ~10-25 18:00.
+- **Review #2 (QUARTIC2.0 per-cell A0/P0), user feedback:**
+  - Each pressure-type branch now sets `cellAreaTerm`, and `a0 *` is applied once after the if-chain (both energy functions).
+  - Energies are bit-identical to the reviewed version on all 11 regression files, including bidisperse.
+  - `double freeenergy = 0;` was never removed; only the final line's extra `a0*` was.
+- **Review #1 (negative-mode probe), user feedback and decisions:**
+  - **Exact reset:** `PushAlongMostNegativeModed` saves and restores state the way Evolve's backtracker does (rold, LXold/LYold, xflagold/yflagold, `Update_Old_Mechanical_Variables`) and sets currentFreeEnergy/pastFreeEnergy. Bit-exact on tests.
+  - Boundary-wrapping test closed by the user: the backtracker already handles wrapping.
+  - **Translations:** sort by |λ|; the two smallest must each have overlap > 0.99 with t_x/t_y (TRANSFAIL otherwise). It passed on all 19 test tissues, with the 3rd |λ| ≥ 800× larger.
+  - **Determinant rejected** (always 0 because of the translations; its sign only gives parity; it overflows).
+  - **Negative mode** = any non-translation λ < 0 (no cut).
+  - **Push size:** s = √(2ΔE/|λ|), ΔE = 100·ε·|E|·4^(k−1), cap 0.1⟨ℓ⟩ (MARGINAL above). The user rejected my bare "1/|λ|" scalings on units (lesson L010).
+  - `batch_negmode.sbat`: ledger columns now 17/18; MARGINAL/TRANSFAIL are final. Backup `.pre-2026-10-24`.
+  - **Round-1 test on 19 tissues** (scratchpad): Smd unchanged; solids MIN; 3 PUSHED; 4 NOPUSH (quartic, E ≈ 1e5).
+  - **Curvature scan:** the Hessian is right (FD curvature → λ). The energy stiffens as λ + c·s² with c ≈ 0.13, so NOPUSH = the resolvable push lies beyond s* = √(|λ|/c).
+  - T2ss 3.88: λ_min = −3.4e-4 with F·u ≈ 2e-3, i.e. not a minimum (an equilibration shortfall). The user is not worried about T2ss: its G matches squeeze and the other potentials.
+- **Filed away (not approved):** a Hessian negative-mode check after the dE/dt equilibrium test, plus the full discussion record for the paper: `vm_claude_plans/2026-10-24_hessian-equilibrium-check-and-negative-mode-discussion.md`. Mandatory code review recorded for any push / equilibrium-check code.
+- **Bookkeeping:**
+  - Lessons L009 (restore via Evolve's backtrack; factor shared multipliers out of branches) and L010 (units and symbol definitions).
+  - Review patches regenerated; old copies kept as `.pre-2026-10-24`.
+- **Saved, not committed (user):** git stash `stash@{0}` holds the 8 files of today's work, which are also still in the working tree. Older uncommitted changes were not included.
+
 ## 2026-10-21 (quartic re-equilibration: resubmissions; QUARTIC2.0 plan revised; negative-mode plan stub)
 - Status check: every earlier job had ended (64223071, 64218833, 64217475 COMPLETED; 64105735 tasks 376/392 and 64101709 task 11 TIMEOUT).
 - Classified each of the 672 tissues in `EQparameters_quartic.txt`: 630 EQ, 23 NE at CAP 10000, 17 NE below the cap (15 QuTs, 2 MTQ3), 2 with no state (Aq2w rng120/130 p0 3.83). My first count (641 EQ) was wrong: it globbed every `*_EQ.txt` under `results/`, including files that are not one of the 672 tissues.
@@ -80,3 +129,10 @@
 - Created `claude_actions/` directory with `claude_todo.md`, `claude_recentactions.md`, and `claude_lessons.md`.
 - Rewrote `CLAUDE.md` using Boris Chernsky's workflow template as the core, adding: scientific workflow context (prompts come from external LLM), branch scope restriction to shear modulus/Hessian work only, task management conventions pointing to `claude_actions/` files.
 - Recorded L001 in `claude_lessons.md`: don't assume you know a named reference — ask first.
+
+## 2026-10-22
+- Re-equilibration: 634/672 EQ. Resubmitted the 16 tissues that hit CAP 10000 with CAP 20000 (jobs 64631968, 64637430).
+- Negative-mode probe: plan approved (`vm_claude_plans/2026-10-22_negative-mode-probe.md`); implemented in AGPerimTissue + `MainNegMode_claude.cpp` + `NegMode/batch_negmode.sbat`. Smoke test 64634314: G bit-identical; push mechanics OK on stiff modes; weak negative modes (lambda ~ -1e-5) in fluid tissues, where the +/- sign choice is below the energy resolution (open issue). Awaiting CODE REVIEW #1.
+- QUARTIC2.0 plan refreshed and approved (two mandatory code reviews). Step 1 done: per-cell a0 in the energy sums, per-cell P0 reader; regression passed. Awaiting CODE REVIEW #2. Patches: `claude_VM_runs/Quartic2_Bidisperse/review/`.
+- Lesson L008 (CRLF line endings, grep -a). Nothing committed (library code awaits review).
+- End of session: MTQ3 rng150 p0 3.89 resubmitted with CAP 20000 (job 64637430). Detached turbo backup of Quartic_C4fix, NegMode and Quartic2_Bidisperse started (log `claude_VM_runs/logs_backup_2026-10-22.log`; no `_error.txt`, no files > 100 MB). The todo lists the overnight checks for next session.

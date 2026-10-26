@@ -42,3 +42,28 @@ Each lesson: **Mistake** → **Lesson** → **How to Apply**
 **Mistake**: (2026-10-21) Right after `sbatch --array=1-19 --export=ALL,PARAMS=EQparameters_chunk_resub18.txt`, I renamed the parameter file to fix its name. `batch_EQ_chunked.sbat` reads `$PARAMS` only when each array task starts, so every pending task would have failed. I renamed it back before any task started.
 **Lesson**: A batch script's inputs, such as parameter files, binaries and scripts, are read at task start, not at submit time. Choose the final name before `sbatch`.
 **How to Apply**: Check the counts and the file name before submitting (e.g. `wc -l` against the intended number). After submitting, leave every file the job touches alone until the job is done.
+
+### L008 — Library sources are CRLF (and some are not pure ASCII): preserve line endings and search with grep -a
+**Mistake**: (2026-10-22) I edited `AGPerimTissue.cpp` with Python in text mode. That silently converted the whole file from CRLF to LF, and `git diff` showed 7305 changed lines. The Edit tool also added LF lines to a header. Separately, a plain `grep` skipped `AGCell.cpp` (CRLF plus non-ASCII bytes) as binary, so I briefly concluded that the force code had no QUARTIC2.0 branch.
+**Lesson**: Check `file <name>` and the HEAD version's line endings before editing. Edit at the byte level (`open(p,'rb')`, with `\r\n` in the search strings), and afterwards check that `git diff --stat` shows only the intended lines.
+**How to Apply**: After any library edit, run `file` and `git diff --stat`. Search library sources with `grep -a`. Don't conclude that something is absent from a search that may have skipped files.
+
+### L009 — Undo a trial move by restoring the saved state (Evolve's backtrack), not by an opposite move; factor shared multipliers out of branches
+**Mistake**: (2026-10-24, user code review) `PushAlongMostNegativeModed` undid its trial pushes by pushing back (+s, -2s, +s). That restores the positions only up to round-off, and it left `currentFreeEnergy` at the pre-push value. The user asked: "don't you have to reset those afterwards? UpdateOldMechanicalVariables or something." In the same review, I had put the per-cell `a0 *` into every branch of the pressure-type if-chain instead of applying it once after the chain.
+**Lesson**: The codebase already has a save/restore pattern: Evolve saves rold, LXold/LYold and the edge flags, and its backtrack calls `Update_Old_Mechanical_Variables`. Reuse it for any trial move. Keep the energy bookkeeping members consistent with the state that is kept. A factor shared by every branch goes after the branches.
+**How to Apply**: Before writing any code that moves vertices, read how Evolve saves and restores state, and copy it. Test that a restore is bit-exact.
+
+### L010 — Check the units of every formula I propose; label options by formulas with consistent units, not bare scalings
+**Mistake**: (2026-10-24) I presented push-size options as "1/|λ|" and "1/√|λ|" scalings. The user pointed out that the units don't make sense: s = MINLENGTH/|λ| is not a length. Only s = √(2ΔE/|λ|) is dimensionally consistent. The user also had to ask what E, t_x and t_y were, because I used symbols without defining them.
+**Lesson**: Every formula I propose must be dimensionally consistent, written out in full, and come with a definition of every symbol and its units.
+**How to Apply**: Before proposing a formula, write its units next to it. Define each variable the first time it appears, in the message itself.
+
+### L011 — When asked to compare shear moduli, give the moduli: a table of G, not a figure or a commentary
+**Mistake**: (2026-10-26) Asked "how do MTQ3 and QuTs compare to T2ss?", I made and viewed a figure and led with ratios and mechanism. The user wanted the shear moduli themselves compared.
+**Lesson**: A comparison question means numbers first: G mean ± SEM (n seeds) per p0 for each set, side by side. Plots, ratios and explanations come only if asked.
+**How to Apply**: Answer with the G table straight from the summary TSV. Don't make or view figures unless the user asks for one.
+
+### L012 — File-transfer commands for the user: explicit full paths, no brace expansion, no extra steps
+**Mistake**: (2026-10-26) I gave scp commands with {a,b} brace globs and an unnecessary mkdir. The braces did nothing on the user's setup, and the command was too long.
+**Lesson**: The user copies figures to WSL at ~/GreatLakesImages/ (it already exists). Give plain scp commands with every remote file written out in full.
+**How to Apply**: One scp per folder, each file as `abmondal@greatlakes.arc-ts.umich.edu:<full path>`, destination `~/GreatLakesImages/`. No braces, no mkdir, no tar.

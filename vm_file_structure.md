@@ -73,7 +73,9 @@ AG Vertex Model/
     ├── AGStiffness/                   # ** BRANCH SCOPE ** Shear/elastic stiffness
     ├── AGStiffEquilibrate/            # Equilibrate tissue before stiffness calc
     ├── AGPerimHessian_test/           # ** BRANCH SCOPE ** Hessian matrix extraction
-    │   └── AGPerimHessian_test/MainHess_claude.cpp  # batch copy of MainHessianTest.cpp: argv in, no evolve, writes <tissue>_SM.txt (2026-10-15)
+    │   ├── AGPerimHessian_test/MainHess_claude.cpp  # batch copy of MainHessianTest.cpp: argv in, no evolve, writes <tissue>_SM.txt (2026-10-15)
+    │   └── AGPerimHessian_test/MainNegMode_claude.cpp  # negative-mode probe: counts lambda<0 modes, pushes along the most negative, writes <tissue>_negmode.tsv; use for double-well Hessian runs (2026-10-22)
+    │   │   (also) AGPerimHessian_test/MainForceHessCheck_claude.cpp  # read-only: forces, Hessian spectrum, Newton-step distance to the minimum, Smd on a saved tissue; writes <tissue>_FH.tsv + _eig.txt (2026-10-26; not yet committed, awaiting review)
     ├── AGPerimAffine_test/            # Affine response testing
     ├── AGProliferate/                 # Proliferating tissue simulation
     ├── AGCompressFluidize/            # Compression-driven fluidization
@@ -107,6 +109,8 @@ Post-processing and analysis scripts.
 User-approved implementation plans awaiting or undergoing execution, written when a task is non-trivial enough to require plan mode (per `CLAUDE.md`). Each file is dated and named descriptively.
 
 - `YYYY-MM-DD_<descriptive-slug>.md`: one plan per file, with a `**Status:**` line at the top tracking whether it's approved-but-not-started, in progress, or done.
+- `2026-10-24_hessian-equilibrium-check-and-negative-mode-discussion.md`: filed-away (not approved) plan to add a Hessian negative-mode check after the dE/dt equilibrium test, plus the record of the 2026-10-24 negative-mode discussion (translations, push size, curvature scan, T2ss) for writing the paper.
+- `2026-10-26_quartic2-A0-sweeps.md`: QUARTIC2.0 redesigned as A0 sweeps (0.5/1/2 Abar, K proportional to A0) at fixed C4; C4 = 1/6 running, then 1/12, then QZ20. Supersedes the QZ05/QZ10/QZ20 design in `2026-10-17_quartic2-and-bidisperse.md`.
 
 ---
 

@@ -1,14 +1,60 @@
 # Claude To-Do List
 
 ## PRIORITY 0 (next session)
-- [ ] **FIRST THING (overnight 2026-10-21 -> 22): check the two running re-equilibration jobs.** In `/scratch/dkluben_root/dkluben1/abmondal/claude_VM_runs/Quartic_C4fix/`: `squeue -u abmondal`, then `sacct -j 64520645 -X -n -o JobID,State` and the same for 64522185.
+- [ ] **QUARTIC2.0 A0 SWEEPS: the paper's core data (plan `vm_claude_plans/2026-10-26_quartic2-A0-sweeps.md`).** Fixed C4, A0 = 0.5/1/2 Abar, K proportional to A0. Sets L2Z*/AqZ*/M2Z* are made from the Lq2w/Aq2w/Qu2w raw files, changing only C4 and the cell type. Work folder `claude_VM_runs/Quartic2_Sweep/`: binaries built from a git archive of HEAD 7fe67a3d5; inputs from `make_inputs.py`.
+  - **C4 = 1/6 (pure quartic) RUNNING: job 64834279** (`--array=1-336`, `PARAMS=EQparameters_Z6.txt`, `CAP=20000`, submitted 2026-10-26 ~18:00). Resubmit SIGNAL stops with the same command (72 h limit, so ~10-29 18:00).
+  - Checks passed before submission:
+    - Each input differs from its source only in the C4 line and the 100 cell-type fields.
+    - The library energy equals the independent QUARTIC2.0 formula to 1e-10 on all 3 sets.
+    - The library force differs from the independent gradient by 1.5e-5 rel; an old-QUARTIC control gives the same, so it is the one-step-stale force in the file.
+    - The Hessian binary reproduces the relthr Smd on 3 T2ss tissues.
+  - **Monitor first (pilot skipped, user OK):** on the early chunks check that energy decreases, the cell count stays 100, min cell area > 0 with no inversions, the A/A0 histogram looks sensible, and no `_EQ` is written by a stall. Start with seed 100 at p0 3.75 / 3.82 / 3.90 of each set. Expect AqZ6 to be slow (zero area stiffness at a = 1).
+  - Then: Hessian G on the EQ tissues (`agperim_hess_claude` -> `relthr/<code>/`), with capped tissues excluded and counted. Triplet figure in the Hess_SM_groups style against L2Ts/T2ss/M2Ts, plus the G table (mean ± SEM (n) per p0).
+  - Then C4 = 1/12 (`python3 -I make_inputs.py 1/12 Z1`, same submission), then the _LP versions, then QZ20 (needs review #1).
+- [ ] **OLD-QUARTIC C4 REDO, wrap-up.** 672 tissues: 648 EQ with Hessian G (job 64827116, `Quartic_C4fix/relthr/<code>/`), 13 capped and EXCLUDED, 11 still running:
+  - 64823317: 10 QuTs, resub18 lines 1,3–6,10–13,15, CAP 20000, started 10-26 ~15:40.
+  - 64745543_16: Aq2w rng120 3.83, t ≈ 11400, hits its 72 h limit ~10-27 20:00.
+  - When they end: resubmit SIGNAL stops (`sbatch --array=<lines> --export=ALL,PARAMS=EQparameters_chunk_resub18.txt,CAP=20000 batch_EQ_chunked.sbat`).
+  - For new EQ tissues: run G (append to `SMparameters_C4redo.txt` + relthr).
+  - For new capped tissues: run the force/Hessian check (`ForceHessCheck/batch_forcehess.sbat`) and exclude them.
+  - Then regenerate the plots (`SM_ROOT=.../Quartic_C4fix/relthr python3 -I analysis/plot_quartic_hess.py`) and add the results to the 2026-10-15 report §5/§8.
+  - Open decision: how EQ tissues with negative G (saddles; 1–4 seeds per point at p0 >= 3.85) enter the averages.
+- [ ] **Awaiting the user's yes:** re-equilibrate L2Qu / M2Qu (old-QUARTIC C4 = 30 at 0.5Ā / 2Ā; their EQ files carry the C4 bug). Together with QuTs this is the only strong-quartic A0 sweep in the old form.
+- [ ] **Code reviews, parked by the user 2026-10-26:**
+  - #1b: negative-mode push code.
+  - #2: QUARTIC2.0 per-cell energy and P0 reader.
+  - Patches are in `claude_VM_runs/Quartic2_Bidisperse/review/`. Also the read-only `MainForceHessCheck_claude.cpp` (uncommitted).
+  - Pending decision: NOPUSH -> final "SHALLOW" outcome.
+- Note: the 2026-10-24 library work is saved as git stash `stash@{0}` AND still in the working tree; library code is not committed (awaiting review). Restore with `git stash apply` only if the working copies get lost.
+- [x] **USER DECISION 2026-10-26: capped (NE at t = 20000) fluid tissues are LEFT OUT of the shear-modulus analysis.** Report the dropped count per (set, p0) with every G plot or table. Applies to tissues that cap later too.
+- [x] Force/Hessian check of NE tissues (2026-10-26), driver `MainForceHessCheck_claude.cpp`, results in `claude_VM_runs/ForceHessCheck/results/`. Capped tissues are 2e-3 to 0.47 edge lengths (Newton step) from their minimum, against 1e-5 to 6e-4 for EQ.
+- [x] Hessian G for the 6 C4 != 1 sets (job 64827116, 648/648). QuTs = T2ss within error; MTQ3 = M2Ts x2.5 (3.80) to x7–13 (3.81–3.83). Plots in `Quartic_C4fix/analysis/` and `claude_VM_runs/plots_2026-10-26/`.
+- [x] (superseded 2026-10-26) "NEXT SESSION (from 2026-10-24)" and "STATUS 2026-10-24": the jobs were checked, SIGNAL stops resubmitted (64823317), and the 672 re-counted.
+- [x] (superseded by the 2026-10-24 status above) **FIRST THING (overnight 2026-10-22 -> 23): check the re-equilibration jobs** (`squeue -u abmondal`; `sacct -j <job> -X -n -o JobID,State`), all CAP 20000 except 64520645:
+  - 64631968 (15 tissues, lines 1-13,15,19 of `EQparameters_chunk_resub18.txt`, CAP 20000) and 64637430 (line 18, MTQ3 rng150 3.89, CAP 20000).
+  - 64520645 tasks 16-17 (Aq2w rng120/130 p0 3.83, CAP 10000): if NE at t = 10000, resubmit with CAP=20000.
+  - 64522185 (20 running, CAP 20000). Resubmit SIGNAL stops with the same command; report any tissue at t = 20000 not EQ.
+  - Re-count the 672 (634 EQ / 38 NE on 2026-10-22).
+  - Verify the 2026-10-22 turbo backup: `tail -1 /scratch/dkluben_root/dkluben1/abmondal/claude_VM_runs/logs_backup_2026-10-22.log` says DONE.
+- [x] (superseded) **check the two running re-equilibration jobs (2026-10-21 -> 22).** In `/scratch/dkluben_root/dkluben1/abmondal/claude_VM_runs/Quartic_C4fix/`: `squeue -u abmondal`, then `sacct -j 64520645 -X -n -o JobID,State` and the same for 64522185.
   - 64520645 (19 tissues, CAP 10000): for each line of `EQparameters_chunk_resub18.txt` with no `_EQ.txt`: if `_NE.txt` is at t = 10000, resubmit with `CAP=20000` (user's new cap). If it stopped earlier (SIGNAL), resubmit the same line.
   - 64522185 (23 tissues, CAP 20000, `EQparameters_chunk_cap20k.txt`): resubmit unfinished lines with the same command including `CAP=20000`. Report any tissue that reaches t = 20000 without equilibrating.
   - Then rerun the per-tissue classification of all 672 lines of `EQparameters_quartic.txt` (EQ / NE t / none) and update the counts here.
   - Do not touch `agperim_equilibration_claude_chunk` or the PARAMS files while jobs are running (lesson L007).
   - Back up `Quartic_C4fix` to turbo at the end of the session (no `_error.txt`, no files > 100 MB).
-- [ ] **>>> TOP (added 2026-10-21): NEGATIVE-MODE PLAN, TO DISCUSS WITH THE USER.** Stub: `vm_claude_plans/2026-10-21_negative-mode-push.md`. A Hessian mode with lambda < -threshold (|lambda| bound; threshold in the library) means a saddle. Push along the MOST negative mode (borrowing T1's vertex-resolution "push": small fixed displacement, keep the lower-energy sign), re-equilibrate, and rerun the Hessian. **Any tissue that stays stuck in negative curvature MUST be recorded.** Discuss the open questions in the stub before designing further. Needed before the QZ20 Hessian runs.
-- [ ] **>>> TOP PRIORITY (added 2026-10-17 night): QUARTIC2.0 + bidisperse plan.** Plan: `vm_claude_plans/2026-10-17_quartic2-and-bidisperse.md` (draft, not yet approved; re-present it with plan mode before executing). Nothing has been run or edited yet.
+- [ ] **>>> TOP: NEGATIVE-MODE PROBE (plan APPROVED 2026-10-22: `vm_claude_plans/2026-10-22_negative-mode-probe.md`; supersedes the 10-21 stub).** Implemented 2026-10-22, NOT committed, awaiting the user's code review.
+  - Library (`AGPerimTissue.h/.cpp`): class constant `REL_EIGENVALUE_THRESHOLD` (1e-8; both G functions now use it, value unchanged), `FindNegativeModesd`, `PushAlongModed`, `PushAlongMostNegativeModed`.
+  - Driver `AGPerimHessian_test/AGPerimHessian_test/MainNegMode_claude.cpp` (round 1: push MINLENGTH·u; round 2: 2·MINLENGTH·u; round 3: final probe). Ledger `<tissue>_negmode.tsv`: MIN / PUSHED / NOPUSH / STUCK / NE_CAP.
+  - Work folder `/scratch/dkluben_root/dkluben1/abmondal/claude_VM_runs/NegMode/` (own binaries, `batch_negmode.sbat` restartable loop, `batch_smoke.sbat`, `src/MainPushCheck.cpp`).
+  - [x] Smoke test job 64634314 (2026-10-22): Smd bit-identical on 11 T2ss/QuOw; stiff-mode curvature = lambda to 1e-5..1e-8, restore 1e-13; 0 boundary crossings exercised. Detection: 4/18 C4!=1 fluid tissues (p0 3.86) + QuOw 3.88 + T2ss rng150 3.88 have lambda_min ~ -1e-5 (threshold ~7e-6). **Flaw:** for such weak modes 1/2|lambda|s^2 ~ 6e-12 < ULP(E ~ 3e5) ~ 6e-11, so the +u/-u choice is round-off noise (NOPUSH x3, PUSHED x1 are noise). Output: `NegMode/logs/negmode_smoke_64634314.out`.
+  - **2026-10-24 user review feedback, applied (not committed, not run in production):** `PushAlongMostNegativeModed` now saves the start state the way Evolve does (rold, LXold/LYold, edge xflagold/yflagold) and restores it the way Evolve's backtrack does (`Update_Old_Mechanical_Variables` + flags + CW lists), instead of using opposite pushes. It also sets currentFreeEnergy/pastFreeEnergy to the kept state. Test (scratchpad `reset_check`, T2ss 3.88 and 3.75, modes min/mid/max, s = 0.1/3/20): restore and the kept push are bit-identical to a fresh single push, and currentFE matches. Boundary crossings were not exercised (0 flag flips even at s = 20). **Item (c) CLOSED 2026-10-24 by the user:** no boundary-wrapping test needed, because the restore uses the same save/restore as AGPerim's Evolve backtracker, which already handles wrapping. Patches regenerated (old copies `*.pre-2026-10-24.patch`).
+  - **2026-10-24 revision (user-approved design, implemented, NOT committed):** translations removed by |λ| sort + overlap > 0.99 check (TRANSFAIL otherwise); negative = λ < 0 (no cut); push s = √(2ΔE/|λ|), ΔE = 100·ε·|E|·4^(k−1), cap 0.1⟨ℓ⟩ (MARGINAL above). Documented in the plan (§ Revision 2026-10-24), the driver header and the library comments. Round-1 test on 19 tissues: Smd unchanged; 3 PUSHED, 4 NOPUSH (quartic E≈1e5: the energy stiffens past s* = √(|λ|/c), c ≈ 0.13, before the push is resolvable), solids MIN. **Open: how to treat NOPUSH** (round 2 doubling s only goes deeper into the stiffening).
+  - [ ] **CODE REVIEW #1b (mandatory, user 2026-10-24): review the REVISED push code** (translations, s = √(2ΔE/|λ|) + cap, exact reset, MARGINAL/TRANSFAIL, `batch_negmode.sbat` columns 17/18) in `review/review1_negmode.patch` before any commit or run. Same rule for any future push / Hessian-equilibrium-check code.
+  - [ ] **CODE REVIEW #1 (mandatory, plan Step 0):** user reviews the probe diff + smoke results and decides (a) real saddle vs zero-mode smear / wider negative cut, (b) sign choice below energy resolution, (c) a boundary-wrapping test. Probe is used for nothing until approved.
+  - [ ] Open: how STUCK tissues enter G averages (decide after real data). Use this driver for all double-well (QZ20) Hessian runs.
+- [ ] **>>> TOP PRIORITY: QUARTIC2.0 + bidisperse plan.** Plan: `vm_claude_plans/2026-10-17_quartic2-and-bidisperse.md` (**APPROVED 2026-10-22**, refreshed). Step 1 DONE 2026-10-22 (not committed): per-cell a0 inside `CalculateFreeEnergy`/`CalculatePressureEnergy`; per-cell `P0` column read. Regression: 10 uniform files unchanged to ~1e-15; synthetic bidisperse matches an independent sum to 5e-16 (old code wrong). Work folder `claude_VM_runs/Quartic2_Bidisperse/` (`regression/`, `review/`).
+  - **2026-10-24 user review feedback, applied:** a per-cell `cellAreaTerm` is set in each branch, and `a0 *` is applied once after the if-chain (both energy functions). Energies are bit-identical to the reviewed version on all 11 regression files (including bidisperse BDtest). `double freeenergy = 0;` is still present in both functions (unchanged).
+  - [ ] **CODE REVIEW #2 (mandatory):** user reviews `Quartic2_Bidisperse/review/review2_quartic2_energy_P0.patch`. Then Step 2 (FD checks). Review #1 patch: `review/review1_negmode.patch`.
   - [ ] **MANDATORY: Avik reviews the code before anything runs on it.** After Step 1 (AGPerimTissue.cpp: per-cell `a0` inside the energy sum in `CalculateFreeEnergy`/`CalculatePressureEnergy`; read a per-cell `P0` column) and the QUARTIC2.0 FD-check changes, STOP and hand the diff to the user. No pilots, no production, no commit of library code until the user has reviewed and approved it.
   - Step 0 (MTQ3 look) REMOVED 2026-10-21: it is already part of the C4-redo wrap-up below.
   - [ ] Step 2 (top priority after review): verify QUARTIC2.0 (energy, forces, Hessian, G vs FD) at C4 = 1/12, 1/6, 1/2 and on one bidisperse tissue.
@@ -26,7 +72,8 @@
     - **STATE AT 2026-10-21:** all earlier jobs have ended. Of the 672 tissues, 630 are EQ, 23 reached CAP 10000 as NE, 17 are NE below the cap (15 QuTs, 2 MTQ3), and 2 have no state (Aq2w rng120/130 p0 3.83, the 64105735 timeouts). 64101709 task 11 timed out.
     - [ ] Job **64520645** (submitted 2026-10-21): the 17 below-cap NE tissues + the 2 no-state tissues, CAP 10000 (`EQparameters_chunk_resub18.txt`, lines 1–19; the name says 18, but it holds 19 lines).
     - [ ] Job **64522185** (submitted 2026-10-21): the 23 tissues that reached CAP 10000, continued from their `_NE.txt` with **CAP = 20000** (user's choice; `EQparameters_chunk_cap20k.txt`, lines 1–23). To resubmit unfinished lines, use the same command, including `CAP=20000`.
-    - [ ] When 64520645 ends, resubmit any of its 19 that are NE at t = 10000 with `CAP=20000` too (the user set the new cap to 20000).
+    - [x] When 64520645 ends, resubmit any of its 19 that are NE at t = 10000 with `CAP=20000` too. **Done 2026-10-22:** 1 EQ (line 14); 15 hit CAP 10000 (lines 1–13, 15, 19) → resubmitted as job **64631968** (`--array=1-13,15,19`, `PARAMS=EQparameters_chunk_resub18.txt`, `CAP=20000`). Lines 16–18 were still running in 64520645 (72 h limit) at that point; check them when it ends.
+    - **STATE AT 2026-10-22 morning:** 634 EQ / 38 NE of 672 (every tissue has a state). 64522185: 3 EQ, 20 running at t ≈ 12000.
     - [x] Job **64223071**: 26 QuTs from t = 2000 (`EQparameters_chunk_QuTs.txt`, lines 1–26).
     - [ ] Job **64218833**: 36 C2 tissues (QuTw/Qu2w/Aq2w/Lq2w/MTQ3) from t ≈ 3900–4300, two slow ones (QuTs rng150 3.81, Aq2w rng150 3.81) from t ≈ 135/161 (`EQparameters_chunk_C2.txt`, lines 1–36). 3 already EQ (lines 14, 30, 36).
     - [ ] Job **64217475**: 3 MTQ3 (rng150 p0 3.88–3.9) from t = 200 (`EQparameters_chunk_MTQ3.txt`, lines 1–3).
@@ -80,6 +127,7 @@
 - [x] **Investigated the G_FD/G_squeeze ≈ 1.02–1.04 offset (2026-10-14): not a code error.** New scratch driver `MainSqueezeCheck.cpp` (README §5 of the FD-check folder) reproduces every benchmark energy in the solid to 6 digits (frozen topology, fixed box). The offset factorizes into (1) pure-vs-simple shear anisotropy of each finite 100-cell sample, which is seed-locked (0.93–1.07 per seed) and averages toward 1, and (2) a ~1% bias from the one-sided quadratic fit over ε ≤ 0.01 (a quartic fit of the same energies recovers the Hessian pure-shear modulus to ≤ 0.6%). The ratio of 7-seed means is 1.016–1.027 for p0 3.75–3.79.
 
 ## Backlog
+- [ ] **FILED AWAY (user, 2026-10-24): Hessian check of equilibrium.** After the dE/dt test passes, diagonalize the Hessian and look for non-translation negative modes. Plan + discussion record (for the paper): `vm_claude_plans/2026-10-24_hessian-equilibrium-check-and-negative-mode-discussion.md`. Do not implement until the user asks. No T2ss residual-force study (user: not needed).
 - [x] Review shear modulus and Hessian calculation code to understand current state (`AGStiffness`, `AGPerimModuli`, `AGPerimHessian_test`, `script_TO_CALC_SM_FROM_CPP.py`) (done 2026-10-10 to 10-15)
 
 ## Completed

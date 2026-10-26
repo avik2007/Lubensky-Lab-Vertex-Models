@@ -1,4 +1,4 @@
-**Status:** PLANNING STUB, NOT APPROVED (2026-10-21). The user wants this at the top of the todo list and will discuss it before any design is final. Nothing implemented.
+**Status:** SUPERSEDED 2026-10-22 by `2026-10-22_negative-mode-probe.md` (approved). Was: PLANNING STUB, NOT APPROVED (2026-10-21). The user wants this at the top of the todo list and will discuss it before any design is final. Nothing implemented.
 
 # Plan: detect negative Hessian modes, push along the most negative one, re-equilibrate, and record stuck tissues
 
