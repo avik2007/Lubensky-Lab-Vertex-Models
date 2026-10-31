@@ -688,6 +688,22 @@ void AGPerimTissue::Evolve(double interval, double *stepsize, ofstream* errorfil
 
 				//BACKTRACK STEP 5: Decrease stepsize AND change integrator
 				*stepsize = *stepsize * 0.75;
+				// WARNING (2026-10-31): the switch below is permanent for the rest of this process -- nothing switches back
+				// to "RK4_Adaptive" -- so from here on the step can only shrink (x0.75 at every later energy increase).
+				// This can throttle equilibration by orders of magnitude and let the dE/dt equilibrium test pass falsely
+				// (see vm_claude_plans/2026-10-31_rk4-fallback-slow-tissue-incidents.md). Behaviour is deliberately left
+				// unchanged; the warnings only make the event visible so users can decide whether to re-run a tissue.
+				if (INTEGRATORNAME == "RK4_Adaptive")
+				{
+					*errorfile << std::setprecision(outputPrecision) << "WARNING: RK4_Adaptive -> fixed-step RK4 at chunk time t = " << CURRENTTIME
+						<< ", step size now " << *stepsize << " (permanent for this run; equilibration may be throttled)" << endl;
+					cout << "WARNING: RK4_Adaptive -> fixed-step RK4 at chunk time t = " << CURRENTTIME << ", step size now " << *stepsize << endl;
+				}
+				else
+				{
+					*errorfile << std::setprecision(outputPrecision) << "WARNING: fixed-step RK4 step size reduced to " << *stepsize
+						<< " at chunk time t = " << CURRENTTIME << endl;
+				}
 				INTEGRATORNAME = "RK4";
 
 				//*errorfile << "--------------------------------------------------------------------------\n";

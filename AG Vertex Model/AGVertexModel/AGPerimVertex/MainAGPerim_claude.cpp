@@ -240,17 +240,27 @@ int main(int argc, char* argv[])
 		eqfile << "This tissue DID not equilibrate prior to exiting solve. This the final recorded state." << endl;
 		if (stopRequested) { eqfile << "Stopped by signal (SLURM time limit or scancel) before the end of the chunk." << endl; }
 	}
+	// 6 (2026-10-31): flag a run whose integrator fell back to fixed-step RK4 (AGPerimTissue::Evolve backtrack).
+	// The fallback is permanent within a process, so the rest of this chunk ran at a step that could only shrink.
+	bool rk4Fallback = (INTEGRATORNAME != "RK4_Adaptive");
+	if (rk4Fallback)
+	{
+		eqfile << "WARNING: RK4_Adaptive switched to fixed-step RK4 during this run (final step size " << stepSize
+			<< "). Equilibration may have been throttled and an EQ verdict may be false; consider re-running from this file." << endl;
+		cout << "WARNING: RK4_Adaptive switched to fixed-step RK4 during this run (final step size " << stepSize << ")" << endl;
+	}
 	eqfile.close();
 
 	// 5e: one ledger line per chunk. Header is written only when the ledger is new.
 	string ledgerName = filename + "_chunks.tsv";
 	bool ledgerIsNew = !ifstream(ledgerName).good();
 	ofstream ledger(ledgerName, ios::app);
-	if (ledgerIsNew) { ledger << "input\tstart_t\tend_t\tinitialE\tfinalE\tfinal_slope\toutcome\twall_min" << endl; }
+	if (ledgerIsNew) { ledger << "input\tstart_t\tend_t\tinitialE\tfinalE\tfinal_slope\toutcome\twall_min\trk4_fallback\tfinal_stepsize" << endl; }
 	std::chrono::duration<double> chunk_seconds = std::chrono::system_clock::now() - starttime;
 	ledger << std::setprecision(17) << InputFileName << "\t" << startCumulativeTime << "\t" << CURRENTTIME << "\t"
 		<< initialEnergy << "\t" << finalEnergy << "\t" << finalSlope << "\t"
-		<< (isEQ ? "EQ" : (stopRequested ? "SIGNAL" : "NE")) << "\t" << chunk_seconds.count() / 60.0 << endl;
+		<< (isEQ ? "EQ" : (stopRequested ? "SIGNAL" : "NE")) << "\t" << chunk_seconds.count() / 60.0 << "\t"
+		<< (rk4Fallback ? "WARNING_RK4_FALLBACK" : "none") << "\t" << stepSize << endl;
 
 	///////******************************End***********************************************************************
 	///////**********************************************************************************************************
