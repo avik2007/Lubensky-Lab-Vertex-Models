@@ -1,3 +1,5 @@
+**2026-10-31: C4 = 1/12 sweep STOPPED by the user** (job 65136026, all tasks stopped with USR1, state saved): 150 EQ (L2Z1 55, AqZ1 43, M2Z1 52) and 186 NE saved as `_NE.txt`. Not resubmitted. The user's reason: "If [the] quadratic term is there, likely, we shouldn't expect too much deviation from quadratic." The C4 = 1/6 (pure quartic) sweep is the focus. The saved states let it be resumed later if wanted. It ran on the OLD binary (no WARNING output) with CHUNK=1000, so its EQ tissues have not been checked for the RK4 fallback.
+
 **Status:** APPROVED by the user 2026-10-26 (verbally: "submit the quartic 2.0"). C4 = 1/6 sweep submitted (job 64834279); the 18-tissue pilot was skipped at the user's request and replaced by monitoring the first chunks.
 
 # Plan: QUARTIC2.0 A0 sweeps — C4 = 1/12 first, then C4 = 1/6 (QZ20 later)

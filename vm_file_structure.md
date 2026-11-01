@@ -111,6 +111,8 @@ User-approved implementation plans awaiting or undergoing execution, written whe
 - `YYYY-MM-DD_<descriptive-slug>.md`: one plan per file, with a `**Status:**` line at the top tracking whether it's approved-but-not-started, in progress, or done.
 - `2026-10-24_hessian-equilibrium-check-and-negative-mode-discussion.md`: filed-away (not approved) plan to add a Hessian negative-mode check after the dE/dt equilibrium test, plus the record of the 2026-10-24 negative-mode discussion (translations, push size, curvature scan, T2ss) for writing the paper.
 - `2026-10-26_quartic2-A0-sweeps.md`: QUARTIC2.0 redesigned as A0 sweeps (0.5/1/2 Abar, K proportional to A0) at fixed C4; C4 = 1/6 running, then 1/12, then QZ20. Supersedes the QZ05/QZ10/QZ20 design in `2026-10-17_quartic2-and-bidisperse.md`.
+- `2026-10-31_rk4-fallback-slow-tissue-incidents.md`: record (for the paper) of every tissue throttled by the permanent fixed-step RK4 fallback in `AGPerimTissue::Evolve`: mechanism, evidence, detection scan, incident log.
+- `2026-10-31_reequilibrate-older-sets.md`: plan (in progress) to re-equilibrate the 506 older-set tissues flagged by the residual-force check, into scratch `claude_VM_runs/ReEQ_older/`, then re-check forces and recompute G. Child of the incident record above.
 
 ---
 

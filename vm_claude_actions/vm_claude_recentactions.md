@@ -136,3 +136,13 @@
 - QUARTIC2.0 plan refreshed and approved (two mandatory code reviews). Step 1 done: per-cell a0 in the energy sums, per-cell P0 reader; regression passed. Awaiting CODE REVIEW #2. Patches: `claude_VM_runs/Quartic2_Bidisperse/review/`.
 - Lesson L008 (CRLF line endings, grep -a). Nothing committed (library code awaits review).
 - End of session: MTQ3 rng150 p0 3.89 resubmitted with CAP 20000 (job 64637430). Detached turbo backup of Quartic_C4fix, NegMode and Quartic2_Bidisperse started (log `claude_VM_runs/logs_backup_2026-10-22.log`; no `_error.txt`, no files > 100 MB). The todo lists the overnight checks for next session.
+
+## 2026-10-31
+- C4 = 1/6 QUARTIC2.0 sweep (job 64834279) finished its first pass: 227 EQ / 109 NE. Resubmitted the 106 NE (job 65135510, CAP 20000); Hessian G on the 227 EQ (job 65135521).
+- C4 = 1/12 sweep (Z1 codes) submitted (65136026) and then STOPPED by the user; 150 EQ / 186 NE saved, not resubmitted. Six Z1/Z6 codes added to `ExperimentalConditions_CodeNames.csv` (backup `.bak_2026-10-31`).
+- Diagnosed the slow AqZ6 rng150 p0 3.81 tissue: an energy increase in `AGPerimTissue::Evolve` permanently switches RK4_Adaptive to fixed-step RK4 and the step only shrinks (0.75 per rejection) until the process exits. The box is frozen (not involved). Consequences: throttled equilibration and false EQ verdicts.
+- Log scan (`Quartic2_Sweep/analysis/slow_steps/scan_steps.py`): Z6 114/336 throttled; 18 false EQ (seed 150, p0 3.75–3.80). Quartic_C4fix sets scanned too.
+- User: NO library fix; add a WARNING to the outputs. Committed fe741fdf3 (output only).
+- Residual-force check of 3139 older EQ files (`vmcheck_all.py`, job 65144451): 534 flagged (126 written at the time cap by old drivers).
+- Re-equilibration: 79 Z6 tissues (job 65137664; the 18 false EQ now have clean-peer forces) and 506 older tissues into scratch `ReEQ_older/` (job 65151016; originals untouched; QuOw/AqOw/LqOw skipped).
+- Lesson L013 (attribution of the user's own earlier choices). Turbo backup of Quartic2_Sweep and ReEQ_older (log `claude_VM_runs/logs_backup_2026-10-31.log`).

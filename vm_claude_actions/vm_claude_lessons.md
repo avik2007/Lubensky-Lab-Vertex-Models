@@ -67,3 +67,8 @@ Each lesson: **Mistake** → **Lesson** → **How to Apply**
 **Mistake**: (2026-10-26) I gave scp commands with {a,b} brace globs and an unnecessary mkdir. The braces did nothing on the user's setup, and the command was too long.
 **Lesson**: The user copies figures to WSL at ~/GreatLakesImages/ (it already exists). Give plain scp commands with every remote file written out in full.
 **How to Apply**: One scp per folder, each file as `abmondal@greatlakes.arc-ts.umich.edu:<full path>`, destination `~/GreatLakesImages/`. No braces, no mkdir, no tar.
+
+### L013 — Don't present the user's own earlier choice as my recommendation, and don't invent its rationale
+**Mistake**: (2026-10-31) I presented the C4 = 1/12 sweep as the obvious next step, labelled it "matched stiffness", and implied a reason. The user asked whether it was their idea and why; it was their 2026-10-17 choice with no recorded reason, and the label was mine.
+**Lesson**: When a planned step comes from the user, say so, and say whether a reason was recorded. Labels or justifications I add must be marked as mine.
+**How to Apply**: Before recommending a queued item, check the plan files for who decided it and why; quote the recorded reason or state "no reason recorded".

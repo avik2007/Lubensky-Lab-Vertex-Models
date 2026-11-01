@@ -1,6 +1,12 @@
 # Claude To-Do List
 
 ## PRIORITY 0 (next session)
+- [ ] **FIRST (from 2026-10-31): RK4-fallback re-equilibrations.** Record: `vm_claude_plans/2026-10-31_rk4-fallback-slow-tissue-incidents.md` (record EVERY slow/throttled tissue; the user needs them for the paper). Plan: `vm_claude_plans/2026-10-31_reequilibrate-older-sets.md`.
+  - Job 65151016: 506 force-flagged older tissues → `claude_VM_runs/ReEQ_older/results/<set>/`. Check `sacct -j 65151016 -X -n -o JobID,State`, resubmit unfinished lines (same command, they continue from `_NE.txt`). Force-check the new `_EQ.txt` files with `Quartic2_Sweep/analysis/slow_steps/vmcheck_all.py` (bare `python3 -I`, NOT `module load python`: no numpy there), fill `reEQ_older_ledger.tsv`, then recompute G and report the per-(set, p0) change.
+  - Job 65137664: 79 Z6 tissues (19 EQ on 10-31, all 18 false EQ fixed). When done: force-check, G on the new EQ (`SMparameters` → `relthr/<code>/`), update the record.
+  - Job 65135510: the 48 untroubled Z6 restarts; G job 65135521 (false-EQ G moved to `relthr_falseEQ/`).
+  - Verify the 10-31 turbo backup: `tail -3 /scratch/dkluben_root/dkluben1/abmondal/claude_VM_runs/logs_backup_2026-10-31.log` says DONE with rc=0.
+  - C4 = 1/12 sweep STOPPED by the user (not resubmitted). No library fix for the fallback (user).
 - [ ] **QUARTIC2.0 A0 SWEEPS: the paper's core data (plan `vm_claude_plans/2026-10-26_quartic2-A0-sweeps.md`).** Fixed C4, A0 = 0.5/1/2 Abar, K proportional to A0. Sets L2Z*/AqZ*/M2Z* are made from the Lq2w/Aq2w/Qu2w raw files, changing only C4 and the cell type. Work folder `claude_VM_runs/Quartic2_Sweep/`: binaries built from a git archive of HEAD 7fe67a3d5; inputs from `make_inputs.py`.
   - **C4 = 1/6 (pure quartic) RUNNING: job 64834279** (`--array=1-336`, `PARAMS=EQparameters_Z6.txt`, `CAP=20000`, submitted 2026-10-26 ~18:00). Resubmit SIGNAL stops with the same command (72 h limit, so ~10-29 18:00).
   - Checks passed before submission:
