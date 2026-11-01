@@ -145,4 +145,6 @@
 - User: NO library fix; add a WARNING to the outputs. Committed fe741fdf3 (output only).
 - Residual-force check of 3139 older EQ files (`vmcheck_all.py`, job 65144451): 534 flagged (126 written at the time cap by old drivers).
 - Re-equilibration: 79 Z6 tissues (job 65137664; the 18 false EQ now have clean-peer forces) and 506 older tissues into scratch `ReEQ_older/` (job 65151016; originals untouched; QuOw/AqOw/LqOw skipped).
+- Smoke test before job 65151016: all 25 older sets parse and run on the current driver; five flagged tissues relaxed from Fmax 0.02–0.31 to ≤ 1.6e-5 within 0.014 time units (premature EQ verdicts, localized forces).
+- Committed 140a04798 (this bookkeeping). Push FAILED: no GitHub credentials in the session; the user pushes manually. Review #1/#2 code and report §12 left uncommitted on purpose.
 - Lesson L013 (attribution of the user's own earlier choices). Turbo backup of Quartic2_Sweep and ReEQ_older (log `claude_VM_runs/logs_backup_2026-10-31.log`).

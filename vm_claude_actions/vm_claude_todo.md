@@ -7,8 +7,12 @@
   - Job 65135510: the 48 untroubled Z6 restarts; G job 65135521 (false-EQ G moved to `relthr_falseEQ/`).
   - Verify the 10-31 turbo backup: `tail -3 /scratch/dkluben_root/dkluben1/abmondal/claude_VM_runs/logs_backup_2026-10-31.log` says DONE with rc=0.
   - C4 = 1/12 sweep STOPPED by the user (not resubmitted). No library fix for the fallback (user).
+  - Push: commit 140a04798 (and 20 earlier commits) are NOT on GitHub; the push needs the user's credentials (`git push origin MondalShearDev`). Check `git status -sb`.
+  - Still uncommitted, awaiting the user's review: review #1/#2 library edits in `AGPerimTissue.cpp/.h` + `MainNegMode_claude.cpp`, and their write-up §12 of `vm_claude_reports/2026-10-15_vertex_model_code_changes_report.md`.
+  - Open note: 51 older EQ files have stale stored force columns (|F_file − F_recomputed| > 1e-6); listed in `forces_older/all_forces_with_peer_ratio.tsv`. Decide whether it matters for anything that reads the stored forces.
+  - Until the re-equilibration results are in, relthr G from the 534 flagged older files (and the 18 Z6 false EQ, moved to `relthr_falseEQ/`) must not be used.
 - [ ] **QUARTIC2.0 A0 SWEEPS: the paper's core data (plan `vm_claude_plans/2026-10-26_quartic2-A0-sweeps.md`).** Fixed C4, A0 = 0.5/1/2 Abar, K proportional to A0. Sets L2Z*/AqZ*/M2Z* are made from the Lq2w/Aq2w/Qu2w raw files, changing only C4 and the cell type. Work folder `claude_VM_runs/Quartic2_Sweep/`: binaries built from a git archive of HEAD 7fe67a3d5; inputs from `make_inputs.py`.
-  - **C4 = 1/6 (pure quartic) RUNNING: job 64834279** (`--array=1-336`, `PARAMS=EQparameters_Z6.txt`, `CAP=20000`, submitted 2026-10-26 ~18:00). Resubmit SIGNAL stops with the same command (72 h limit, so ~10-29 18:00).
+  - **C4 = 1/6 (pure quartic): first pass DONE (job 64834279, 227 EQ / 109 NE); follow-ups are in the 2026-10-31 item above.** Original submission: `--array=1-336`, `PARAMS=EQparameters_Z6.txt`, `CAP=20000`.
   - Checks passed before submission:
     - Each input differs from its source only in the C4 line and the 100 cell-type fields.
     - The library energy equals the independent QUARTIC2.0 formula to 1e-10 on all 3 sets.
@@ -16,7 +20,7 @@
     - The Hessian binary reproduces the relthr Smd on 3 T2ss tissues.
   - **Monitor first (pilot skipped, user OK):** on the early chunks check that energy decreases, the cell count stays 100, min cell area > 0 with no inversions, the A/A0 histogram looks sensible, and no `_EQ` is written by a stall. Start with seed 100 at p0 3.75 / 3.82 / 3.90 of each set. Expect AqZ6 to be slow (zero area stiffness at a = 1).
   - Then: Hessian G on the EQ tissues (`agperim_hess_claude` -> `relthr/<code>/`), with capped tissues excluded and counted. Triplet figure in the Hess_SM_groups style against L2Ts/T2ss/M2Ts, plus the G table (mean ± SEM (n) per p0).
-  - Then C4 = 1/12 (`python3 -I make_inputs.py 1/12 Z1`, same submission), then the _LP versions, then QZ20 (needs review #1).
+  - C4 = 1/12 (Z1) was run and STOPPED by the user 2026-10-31 (quadratic term present, little deviation expected); do not resubmit. Next after Z6: the _LP versions, then QZ20 (needs review #1).
 - [ ] **OLD-QUARTIC C4 REDO, wrap-up.** 672 tissues: 648 EQ with Hessian G (job 64827116, `Quartic_C4fix/relthr/<code>/`), 13 capped and EXCLUDED, 11 still running:
   - 64823317: 10 QuTs, resub18 lines 1,3–6,10–13,15, CAP 20000, started 10-26 ~15:40.
   - 64745543_16: Aq2w rng120 3.83, t ≈ 11400, hits its 72 h limit ~10-27 20:00.
