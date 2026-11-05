@@ -1,5 +1,26 @@
 # Claude Recent Actions
 
+## 2026-11-05 (round 2 results; round 3 submitted; final _RE naming + guide with provenance decided)
+- **Round 2 finished**: jobs 65135510, 65137664 and 65151016 all ended with every task COMPLETED, most stopped by the 72 h signal. Queue was empty.
+  - The two Z6 jobs did not run any tissue twice: the 58 throttled tissues in 65135510 were stopped after about 1.7 h and moved to 65137664.
+  - Z6: 242 EQ / 94 NE (L2Z6 9, AqZ6 69, M2Z6 16 NE; every NE has p0 >= 3.79). 5 AqZ6 tissues are CAPPED at t = 20000 (`Quartic2_Sweep/EQparameters_Z6_capped.txt`), so they are excluded from G.
+  - Older sets (ReEQ_older): 441 EQ / 65 NE, with the NE at t ~ 7100-11600. The new EQ files are NOT force-checked yet.
+- **Round 3 submitted** (user: resubmit ONCE; if still NE, investigate, don't resubmit). CHUNK=10, CAP=20000, WARNING build:
+  - **65462965**: 89 Z6 (`EQparameters_Z6_resub2.txt`).
+  - **65462966**: 65 older (`ReEQ_older/EQparameters_reEQ_older_resub2.txt`).
+  - All 154 were RUNNING at last check. Expected end ~11-08.
+- **G recompute ON HOLD** (user) until round 3 is done and checked. The current `Quartic2_Sweep/relthr/` G (227 original EQ) is stale.
+- **Storage** (user: be careful): scratch fileset 1.7 TB of 10 TB. Each AqZ6 `_error.txt` is ~9 GB, each round-2 log ~1 GB (Quartic2_Sweep/logs 155 GB, ReEQ_older/logs 65 GB).
+- **Turbo backup** (`CompressionInducedFluidizationData/claude_hessian_testing/`):
+  - rsync of Quartic2_Sweep and ReEQ_older, skipping `_error.txt`, `_NE_prev.txt` and `logs/`. Overwritten files are kept as `*.pre-2026-11-05` (569 files; can be cleaned up after round 3).
+  - Log tails (last 300 lines of each of 918 round-2 logs) in `logtails_round2_2026-11-05.tar.gz` (32 KB, 5.9 MB uncompressed).
+  - The `logs/` folders on turbo are partial Oct 31 copies.
+- **User decisions on the final organization**:
+  - Updated sets get an `_RE` code suffix, like `_LP`, in folder AND file names (`T2ss_RE_EQ/T2ss_RE_rng_..._EQ.txt`), in the original `<code>_files/_EQ/_SM` layout.
+  - Each folder holds the COMPLETE set (re-equilibrated tissues plus copied originals) with a manifest, and gets a CodeNames row (ask before editing the csv/xlsx).
+  - A GUIDE is to be written, with a PROVENANCE section separating the user's work from Claude's.
+- **Explained**: relthr = relative zero-mode/floppy thresholds in the Hessian G. That is Claude's change, commit 9b39943bb (2026-10-15), report Change 6. Git author is always the user; Claude's commits carry the Co-Authored-By trailer. Whether the user prompted that change is not recorded.
+
 ## 2026-10-26 (redo wrap-up; capped tissues excluded; quartic G vs T2ss; QUARTIC2.0 C4 = 1/6 A0 sweep submitted)
 - **Old-QUARTIC C4 redo:** 648 EQ / 13 capped at t = 20000 / 11 running of 672. Resubmitted the 10 QuTs SIGNAL stops as 64823317 (CAP 20000).
 - **Capped tissues:**

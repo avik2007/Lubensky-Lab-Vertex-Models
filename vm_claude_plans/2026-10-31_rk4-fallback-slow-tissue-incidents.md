@@ -153,3 +153,9 @@ Files: `Quartic2_Sweep/analysis/slow_steps/forces_older/`
 - How many older sets (Quartic_C4fix, Hess_SM_groups sources, L2Ts/T2ss/M2Ts …) were throttled the same way? They were
   equilibrated with drivers that share this `Evolve`. Their logs, where they still exist, can be scanned the same way.
 - Library fix: DECLINED by the user on 2026-10-31. The workaround is short chunks plus the WARNING output.
+
+## 2026-11-05 update: round 2 finished, round 3 submitted
+- Round 2 (jobs 65135510, 65137664, 65151016) all ended. Most tasks were stopped by the 72 h signal, not equilibrated.
+- Z6: 242 EQ / 94 NE (L2Z6 9, AqZ6 69, M2Z6 16 NE; all NE at p0 >= 3.79). 5 AqZ6 tissues reached CAP 20000 (`EQparameters_Z6_capped.txt`): capped, excluded from G.
+- Older sets: 441 EQ / 65 NE (NE spread over 18 sets, t ~ 7100-11600).
+- Round 3 (CHUNK=10, CAP=20000, WARNING build): job 65462965 (89 Z6), job 65462966 (65 older). By the user's rule, tissues still NE after round 3 are investigated, not resubmitted. Every one of them is to be recorded here.
